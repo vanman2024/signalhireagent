@@ -1291,22 +1291,6 @@ async def example_search_workflow():
 if __name__ == "__main__":
     # Example usage
     asyncio.run(example_search_workflow())
-"""
-
-import asyncio
-import json
-import logging
-import os
-import random
-import uuid
-from collections import deque
-from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import Any
-
-import httpx
-import structlog
 
 
 @dataclass

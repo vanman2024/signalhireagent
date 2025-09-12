@@ -56,3 +56,12 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*.env
+
+# Docker
+.dockerignore
+docker-compose.yml
+docker-compose.override.yml
+.env.docker
+docker-volumes/
+docker-data/
+.docker/

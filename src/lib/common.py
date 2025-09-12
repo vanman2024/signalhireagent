@@ -202,6 +202,7 @@ def debounce(wait_seconds: float):
     return decorator
 
 
+
 async def batch_process(
     items: list[T],
     process_func: Callable[[T], Any],
@@ -354,6 +355,117 @@ def validate_url(url: str) -> bool:
         r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
         r'(?::\d+)?'  # optional port
         r'(?:/?|[/?]\S+)
+
+
+def chunk_list(items: list[T], chunk_size: int) -> list[list[T]]:
+    """
+    Split a list into chunks of specified size.
+    Args:
+        items: List to chunk
+        chunk_size: Size of each chunk
+    Returns:
+        List of chunks
+    """
+    return [items[i:i + chunk_size] for i in range(0, len(items), chunk_size)]
+
+
+def flatten_dict(data: dict[str, Any], separator: str = '.') -> dict[str, Any]:
+    """
+    Flatten a nested dictionary.
+    Args:
+        data: Dictionary to flatten
+        separator: Separator for nested keys
+    Returns:
+        Flattened dictionary
+    """
+    def _flatten(obj: Any, parent_key: str = '', sep: str = '.') -> dict[str, Any]:
+        items = []
+        if isinstance(obj, dict):
+            for k, v in obj.items():
+                new_key = f"{parent_key}{sep}{k}" if parent_key else k
+                items.extend(_flatten(v, new_key, sep=sep).items())
+        else:
+            return {parent_key: obj}
+        return dict(items)
+
+    return _flatten(data, sep=separator)
+
+
+# Commonly used regex patterns
+EMAIL_PATTERN = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}
+
+
+def is_valid_email(email: str) -> bool:
+    """Check if string is a valid email address."""
+    return bool(EMAIL_PATTERN.match(email.strip()))
+
+
+def is_valid_linkedin_profile(url: str) -> bool:
+    """Check if string is a valid LinkedIn profile URL."""
+    return bool(LINKEDIN_PROFILE_PATTERN.match(url.strip()))
+
+
+def is_valid_phone(phone: str) -> bool:
+    """Check if string is a valid phone number."""
+    # Remove common separators and spaces
+    cleaned = re.sub(r'[\s\-\(\)]+', '', phone.strip())
+    return bool(PHONE_PATTERN.match(cleaned))
+)
+LINKEDIN_PROFILE_PATTERN = re.compile(r'^https?://(?:www\.)?linkedin\.com/in/[\w-]+/?
+
+
+def is_valid_email(email: str) -> bool:
+    """Check if string is a valid email address."""
+    return bool(EMAIL_PATTERN.match(email.strip()))
+
+
+def is_valid_linkedin_profile(url: str) -> bool:
+    """Check if string is a valid LinkedIn profile URL."""
+    return bool(LINKEDIN_PROFILE_PATTERN.match(url.strip()))
+
+
+def is_valid_phone(phone: str) -> bool:
+    """Check if string is a valid phone number."""
+    # Remove common separators and spaces
+    cleaned = re.sub(r'[\s\-\(\)]+', '', phone.strip())
+    return bool(PHONE_PATTERN.match(cleaned))
+)
+PHONE_PATTERN = re.compile(r'^\+?[1-9]\d{1,14}
+
+
+def is_valid_email(email: str) -> bool:
+    """Check if string is a valid email address."""
+    return bool(EMAIL_PATTERN.match(email.strip()))
+
+
+def is_valid_linkedin_profile(url: str) -> bool:
+    """Check if string is a valid LinkedIn profile URL."""
+    return bool(LINKEDIN_PROFILE_PATTERN.match(url.strip()))
+
+
+def is_valid_phone(phone: str) -> bool:
+    """Check if string is a valid phone number."""
+    # Remove common separators and spaces
+    cleaned = re.sub(r'[\s\-\(\)]+', '', phone.strip())
+    return bool(PHONE_PATTERN.match(cleaned))
+)
+
+
+def is_valid_email(email: str) -> bool:
+    """Check if string is a valid email address."""
+    return bool(EMAIL_PATTERN.match(email.strip()))
+
+
+def is_valid_linkedin_profile(url: str) -> bool:
+    """Check if string is a valid LinkedIn profile URL."""
+    return bool(LINKEDIN_PROFILE_PATTERN.match(url.strip()))
+
+
+def is_valid_phone(phone: str) -> bool:
+    """Check if string is a valid phone number."""
+    # Remove common separators and spaces
+    cleaned = re.sub(r'[\s\-\(\)]+', '', phone.strip())
+    return bool(PHONE_PATTERN.match(cleaned))
 , re.IGNORECASE)
 
     return url_pattern.match(url) is not None
@@ -395,10 +507,61 @@ def flatten_dict(data: dict[str, Any], separator: str = '.') -> dict[str, Any]:
 
 # Commonly used regex patterns
 EMAIL_PATTERN = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}
+
+
+def is_valid_email(email: str) -> bool:
+    """Check if string is a valid email address."""
+    return bool(EMAIL_PATTERN.match(email.strip()))
+
+
+def is_valid_linkedin_profile(url: str) -> bool:
+    """Check if string is a valid LinkedIn profile URL."""
+    return bool(LINKEDIN_PROFILE_PATTERN.match(url.strip()))
+
+
+def is_valid_phone(phone: str) -> bool:
+    """Check if string is a valid phone number."""
+    # Remove common separators and spaces
+    cleaned = re.sub(r'[\s\-\(\)]+', '', phone.strip())
+    return bool(PHONE_PATTERN.match(cleaned))
 )
 LINKEDIN_PROFILE_PATTERN = re.compile(r'^https?://(?:www\.)?linkedin\.com/in/[\w-]+/?
+
+
+def is_valid_email(email: str) -> bool:
+    """Check if string is a valid email address."""
+    return bool(EMAIL_PATTERN.match(email.strip()))
+
+
+def is_valid_linkedin_profile(url: str) -> bool:
+    """Check if string is a valid LinkedIn profile URL."""
+    return bool(LINKEDIN_PROFILE_PATTERN.match(url.strip()))
+
+
+def is_valid_phone(phone: str) -> bool:
+    """Check if string is a valid phone number."""
+    # Remove common separators and spaces
+    cleaned = re.sub(r'[\s\-\(\)]+', '', phone.strip())
+    return bool(PHONE_PATTERN.match(cleaned))
 )
-PHONE_PATTERN = re.compile(r'^[\\+]?[1-9][\d]{0,15}
+PHONE_PATTERN = re.compile(r'^\+?[1-9]\d{1,14}
+
+
+def is_valid_email(email: str) -> bool:
+    """Check if string is a valid email address."""
+    return bool(EMAIL_PATTERN.match(email.strip()))
+
+
+def is_valid_linkedin_profile(url: str) -> bool:
+    """Check if string is a valid LinkedIn profile URL."""
+    return bool(LINKEDIN_PROFILE_PATTERN.match(url.strip()))
+
+
+def is_valid_phone(phone: str) -> bool:
+    """Check if string is a valid phone number."""
+    # Remove common separators and spaces
+    cleaned = re.sub(r'[\s\-\(\)]+', '', phone.strip())
+    return bool(PHONE_PATTERN.match(cleaned))
 )
 
 
