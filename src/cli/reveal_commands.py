@@ -183,8 +183,17 @@ def format_reveal_results(results: dict[str, Any], format_type: str = "human") -
     return "\n".join(output)
 
 
-def load_prospects_from_file(file_path: str) -> list[str]:
-    """Load prospect UIDs from a search results file."""
+def load_prospects_from_file(file_path: str, skip_existing_contacts: bool = True) -> list[str]:
+    """
+    Load prospect UIDs from a search results file.
+    
+    Args:
+        file_path: Path to the search results file
+        skip_existing_contacts: If True, skip prospects that already have contactsFetched
+    
+    Returns:
+        List of prospect UIDs that need contact reveals
+    """
     path = Path(file_path)
 
     if not path.exists():
@@ -196,10 +205,32 @@ def load_prospects_from_file(file_path: str) -> list[str]:
 
         # Handle different file formats
         if isinstance(data, list):
-            # List of UIDs
+            # List of UIDs - assume all need revealing
             return data
         if isinstance(data, dict):
             # Search results format
+            if 'profiles' in data:
+                profiles = data['profiles']
+                uids = []
+                skipped_count = 0
+                
+                for p in profiles:
+                    uid = p.get('uid') or p.get('id')
+                    if not uid:
+                        continue
+                    
+                    # Check if contacts already exist
+                    if skip_existing_contacts and p.get('contactsFetched'):
+                        skipped_count += 1
+                        continue
+                    
+                    uids.append(uid)
+                
+                if skip_existing_contacts and skipped_count > 0:
+                    click.echo(f"ℹ️  Skipped {skipped_count} prospects that already have contacts")
+                    click.echo(f"🔍 Will reveal {len(uids)} prospects that need contacts")
+                
+                return uids
             if 'prospects' in data:
                 prospects = data['prospects']
                 return [p.get('uid') or p.get('id') for p in prospects if p.get('uid') or p.get('id')]
@@ -527,9 +558,15 @@ async def execute_reveal(prospect_uids: list[str], config, logger, **options) ->
     is_flag=True,
     help='Require API mode only - do not fallback to browser automation'
 )
+@click.option(
+    '--skip-existing',
+    is_flag=True,
+    default=True,
+    help='Skip prospects that already have contactsFetched (saves credits) [default: True]'
+)
 @click.pass_context
 def reveal(ctx, prospect_uids, search_file, bulk_size, use_native_export,
-          export_format, timeout, output, dry_run, save_to_list, browser_wait, api_only):
+          export_format, timeout, output, dry_run, save_to_list, browser_wait, api_only, skip_existing):
     """
     Reveal contact information (API-first with browser fallback).
     🚀 API-FIRST: Uses SignalHire API by default (100 contacts/day limit)
@@ -569,7 +606,7 @@ def reveal(ctx, prospect_uids, search_file, bulk_size, use_native_export,
 
     if search_file:
         try:
-            file_uids = load_prospects_from_file(search_file)
+            file_uids = load_prospects_from_file(search_file, skip_existing_contacts=skip_existing)
             all_prospect_uids.extend(file_uids)
 
             if config.verbose:

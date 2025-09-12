@@ -76,16 +76,17 @@ class CallbackServerConfig(BaseModel):
 
 class ApiConfig(BaseModel):
     """API operation configuration."""
-    daily_reveal_limit: int = Field(100, description="Daily API reveal limit for tracking")
     timeout: float = Field(30.0, description="API request timeout in seconds")
     retry_attempts: int = Field(3, description="Number of API retry attempts")
-    batch_size: int = Field(10, description="Default batch size for API operations")
+    batch_size: int = Field(100, description="Default batch size for API operations (max per request)")
+    without_contacts_mode: bool = Field(False, description="Use withoutContacts mode to preserve credits")
 
 
 class RateLimitConfig(BaseModel):
-    """Rate limiting configuration."""
-    requests_per_minute: int = Field(600, description="Max requests per minute")
-    burst_limit: int = Field(100, description="Burst limit for requests")
+    """Rate limiting configuration based on SignalHire API limits."""
+    elements_per_minute: int = Field(600, description="Max elements processed per minute (SignalHire limit)")
+    max_elements_per_request: int = Field(100, description="Max elements per single request")
+    max_parallel_requests: int = Field(10, description="Max parallel requests (conservative limit)")
     retry_attempts: int = Field(3, description="Number of retry attempts")
     retry_delay: float = Field(1.0, description="Base retry delay in seconds")
     rate_limit_warnings: bool = Field(True, description="Show warnings at usage thresholds")
