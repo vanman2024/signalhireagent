@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# Archive directory for legacy/experimental code
+archive/
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/settings.json
+.vscode/launch.json
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.local
+*.env
+
+# Logs
+*.log
+logs/
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+*.csv
+*.xlsx
+output/
+temp/
+cache/
+credentials.json
+config.local.json
+
+# Node (if using Stagehand)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*.env
