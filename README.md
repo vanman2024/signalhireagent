@@ -94,7 +94,7 @@ python3 -m src.cli.main search \
 Set up your SignalHire API credentials:
 
 ```bash
-# Get your API key from SignalHire (contact support@signalhire.com for API access)
+# Get your API key from SignalHire
 export SIGNALHIRE_API_KEY="your_api_key"
 
 # Or create .env file (works in WSL too)
@@ -105,7 +105,6 @@ python3 -m src.cli.main doctor
 ```
 
 **Getting API Access**: 
-- Contact support@signalhire.com to request Search API access
 - API key authentication required for all operations
 - Search API limited to 3 concurrent requests
 
