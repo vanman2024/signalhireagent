@@ -1,4 +1,4 @@
-# SignalHire Agent
+# SignalHire API
 
 AI-powered lead generation automation for SignalHire with full API integration. Search for prospects, reveal contact information, and export data using SignalHire's official API with comprehensive Boolean search capabilities.
 
