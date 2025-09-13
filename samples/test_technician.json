@@ -1,0 +1,760 @@
+{
+  "requestId": 27898401,
+  "total": 2624,
+  "profiles": [
+    {
+      "uid": "179984da0cca4dc48f52e9ed0c281405",
+      "fullName": "Mark Anthony Pineda",
+      "location": "Calgary, Alberta, Canada",
+      "experience": [
+        {
+          "company": "NorthStar Equipment Rentals",
+          "title": "Heavy Equipment Technician"
+        },
+        {
+          "company": "Leavitt Machinery",
+          "title": "Heavy Equipment Technician"
+        },
+        {
+          "company": "FLINT Corp.",
+          "title": "Heavy Equipment Technician"
+        },
+        {
+          "company": "Cooper Equipment Rentals Ltd.",
+          "title": "Heavy Equipment Technician"
+        },
+        {
+          "company": "Hertz Equipment Rental",
+          "title": "Heavy Equipment Technician Trainee"
+        }
+      ],
+      "skills": [
+        "Customer Service",
+        "Editing",
+        "English",
+        "Leadership",
+        "Marketing",
+        "Microsoft Excel",
+        "Microsoft Office",
+        "Microsoft Word",
+        "Operations Management",
+        "Outlook",
+        "PowerPoint",
+        "Project Planning",
+        "Research",
+        "Software Documentation",
+        "Team Building",
+        "Teamwork",
+        "Time Management",
+        "Training",
+        "Windows"
+      ],
+      "contactsFetched": null,
+      "openToWork": false
+    },
+    {
+      "uid": "c37768fd885e437298bb8cf3b6df975d",
+      "fullName": "BRADEN POIRIER",
+      "location": "Inverness, Nova Scotia, Canada",
+      "experience": [
+        {
+          "company": "Finning",
+          "title": "Heavy Equipment Technician"
+        },
+        {
+          "company": "Toromont Cat",
+          "title": "Heavy Equipment Technician"
+        },
+        {
+          "company": "SMS Equipment Inc.",
+          "title": "Heavy Equipment Technician"
+        },
+        {
+          "company": "Baffinland",
+          "title": "Mobile maintenance supervisor"
+        },
+        {
+          "company": "Baffinland",
+          "title": "Heavy Equipment Mechanic/Truck and Transport Mechanic"
+        },
+        {
+          "company": "Government of Nova Scotia",
+          "title": "Truck Mechanic"
+        },
+        {
+          "company": "Mac Motors",
+          "title": "Truck Mechanic"
+        },
+        {
+          "company": "Broad Cove Auto",
+          "title": "Automotive Mechanic"
+        }
+      ],
+      "skills": [
+        "Automotive",
+        "Communication",
+        "Diesel",
+        "Documentation",
+        "Electrical Troubleshooting",
+        "Engineering",
+        "Equipment Maintenance",
+        "Forestry",
+        "Heavy Equipment",
+        "Hydraulics",
+        "Interpersonal Skills",
+        "Leadership",
+        "Maintenance",
+        "Maintenance & Repair",
+        "Maintenance Management",
+        "Management",
+        "Mechanics",
+        "Microsoft Office",
+        "Mining",
+        "Planning",
+        "Preventive Maintenance",
+        "Problem Solving",
+        "SAP Products",
+        "Snow Removal",
+        "Supervisory Skills",
+        "Team Leadership",
+        "Teamwork",
+        "Training"
+      ],
+      "contactsFetched": null,
+      "openToWork": false
+    },
+    {
+      "uid": "a59ddab04e0c40b9a55b4661992b04db",
+      "fullName": "Brett Lawrence",
+      "location": "Ear Falls, Ontario, Canada",
+      "experience": [
+        {
+          "company": "Impala Canada",
+          "title": "Heavy Equipment Technician"
+        },
+        {
+          "company": "PureGold Mining Inc. TSX-V:PGM, LSE:PUR",
+          "title": "Mechanic"
+        },
+        {
+          "company": "Tramin Ltd",
+          "title": "HD Mechanic & Millwright"
+        },
+        {
+          "company": "EACOM Timber Corporation",
+          "title": "HD Mechanic & Millwright"
+        },
+        {
+          "company": "Martin Deerline Equipment",
+          "title": "HD Mechanic & Service Technician"
+        }
+      ],
+      "skills": [
+        "Communication",
+        "Health & Safety",
+        "Heavy Equipment",
+        "Maintenance & Repair",
+        "Mechanics",
+        "Metal Fabrication",
+        "Part Fabrication",
+        "Preventive Maintenance",
+        "Project Planning",
+        "Team Leadership",
+        "Welding"
+      ],
+      "contactsFetched": null,
+      "openToWork": false
+    },
+    {
+      "uid": "1f777bba08b148059def5c0bdf28a224",
+      "fullName": "Paul Eastwood (RSE)",
+      "location": "Canada",
+      "experience": [
+        {
+          "company": "SMS Equipment Inc.",
+          "title": "Heavy Equipment Technician"
+        },
+        {
+          "company": "ATI Canada",
+          "title": "Heavy Duty Mechanic"
+        },
+        {
+          "company": "Infinis",
+          "title": "Engine Technician"
+        },
+        {
+          "company": "Agnico Eagle Mines Limited",
+          "title": "Heavy Equipment Technician"
+        },
+        {
+          "company": "Toromont Industries Ltd",
+          "title": "Heavy Duty Mechanic (Engine Rebuild Specialist)"
+        },
+        {
+          "company": "Brandt tractor",
+          "title": "Field Service Technician"
+        },
+        {
+          "company": "Aecon Group Inc.",
+          "title": "Mining Equipment Maintenance Mechanic"
+        },
+        {
+          "company": "Ground Force Mechanical and Rental Services",
+          "title": "Heavy Duty Equipment Mechanic"
+        },
+        {
+          "company": "Rickard Construction",
+          "title": "Heavy Duty Equipment Field Mechanic (Lead Hand)"
+        },
+        {
+          "company": "SITE ENERGY SERVICES LIMITED",
+          "title": "Heavy Duty Equipment Field and Shop Mechanic"
+        },
+        {
+          "company": "Kramer Ltd.",
+          "title": "Heavy Duty Equipment Mechanic"
+        },
+        {
+          "company": "Finning (UK)",
+          "title": "Heavy Duty Equipment Mechanic"
+        }
+      ],
+      "skills": [
+        "Air Brakes",
+        "Air Compressors",
+        "Air Conditioning",
+        "Brake",
+        "Construction",
+        "Construction Safety",
+        "Diesel",
+        "Diesel Engine",
+        "Diesel Generators",
+        "Electrical Repairs",
+        "Electrical Troubleshooting",
+        "Electro-mechanical",
+        "Electro-mechanical Troubleshooting",
+        "Electronics",
+        "Engine Performance",
+        "Engine Rebuilding",
+        "Failure Analysis",
+        "Fault Finding",
+        "Heavy Equipment",
+        "Hydraulics",
+        "Hydraulic Systems",
+        "Hydrostatic Testing",
+        "Internal Combustion Engines",
+        "Maintenance & Repair",
+        "Manual Testing",
+        "Mechanical Systems",
+        "Mechanical Testing",
+        "Mechanics",
+        "Mining",
+        "Oil & Gas",
+        "Oil & Gas Industry",
+        "Oil Sands",
+        "Overhaul",
+        "Pneumatics",
+        "Powertrain",
+        "Power Transmission",
+        "Small Engine Repair",
+        "Steering",
+        "Suspension",
+        "System Testing",
+        "Testing",
+        "Transmission Lines",
+        "Transmissions",
+        "Troubleshooting"
+      ],
+      "contactsFetched": null,
+      "openToWork": false
+    },
+    {
+      "uid": "be66eac1db64432cb788d12327c14943",
+      "fullName": "Luke Radke, RSE",
+      "location": "Canada",
+      "experience": [
+        {
+          "company": "Truck Zone",
+          "title": "Heavy Equipment Technician"
+        },
+        {
+          "company": "P & R Truck Centre ",
+          "title": "Heavy Equipment Technician"
+        },
+        {
+          "company": "Springbank Truck & RV Repair",
+          "title": "Heavy Equipment Technician"
+        },
+        {
+          "company": "Rocky View Diesel & RV",
+          "title": "Owner"
+        },
+        {
+          "company": "Fenton Bus Lines Inc.",
+          "title": "Heavy Equipment Technician"
+        },
+        {
+          "company": "Paradise Truck and Trailers Repair Inc",
+          "title": "Heavy Equipment Technician"
+        },
+        {
+          "company": "Big Hill Towing",
+          "title": "Heavy Equipment Technician"
+        },
+        {
+          "company": "Conaker Equipment",
+          "title": "Heavy Duty Equipment Mechanic"
+        },
+        {
+          "company": "StromTech Energy Ltd",
+          "title": "Corporate Controller"
+        },
+        {
+          "company": "Albi, Luxury by Brookfield Residential",
+          "title": "Assistant Controller"
+        },
+        {
+          "company": "Unified Valve Group Ltd.",
+          "title": "Controller"
+        },
+        {
+          "company": "Weiss-Johnson Sheet Metal Ltd.",
+          "title": "Financial Controller"
+        },
+        {
+          "company": "Cameron, a Schlumberger company",
+          "title": "Accountant"
+        }
+      ],
+      "skills": [
+        "Accounting",
+        "Account Reconciliation",
+        "Accounts Payable",
+        "Accruals",
+        "Business Strategy",
+        "Cost Accounting",
+        "Customer Satisfaction",
+        "Customer Service",
+        "Documentation",
+        "Emotional Intelligence",
+        "Engineering",
+        "Finance",
+        "Financial Accounting",
+        "Financial Analysis",
+        "Financial Reporting",
+        "Financial Statements",
+        "Fleet Maintenance",
+        "Heavy Equipment",
+        "Hydraulics",
+        "Internal Controls",
+        "Interpersonal Communication",
+        "Invoicing",
+        "Journal Entries",
+        "Machine Operation",
+        "Maintenance & Repair",
+        "Management",
+        "Managerial Finance",
+        "Mechanics",
+        "Microsoft Office",
+        "Microsoft PowerPoint",
+        "Mobile Equipment",
+        "Preventive Maintenance",
+        "Project Management",
+        "Requisitions",
+        "Revenue Recognition",
+        "SAP",
+        "Sarbanes-Oxley",
+        "Sarbanes-Oxley Act",
+        "Seals",
+        "Tax",
+        "Teamwork",
+        "Troubleshooting",
+        "Variance Analysis"
+      ],
+      "contactsFetched": null,
+      "openToWork": false
+    },
+    {
+      "uid": "0449996eaa2c49eba155f1decf495de5",
+      "fullName": "Gerry Tokar",
+      "location": "Hamilton, Ontario, Canada",
+      "experience": [
+        {
+          "company": "Toromont Cat",
+          "title": "Heavy Equipment Technician"
+        },
+        {
+          "company": "Liebherr",
+          "title": "Heavy Equipment Technician"
+        },
+        {
+          "company": "Taylor diesel",
+          "title": "Mechanic"
+        },
+        {
+          "company": "Axxess Rentals",
+          "title": "Heavy Equipment Technician"
+        },
+        {
+          "company": "Westar Photographic",
+          "title": "Owner, Photographer"
+        }
+      ],
+      "skills": [
+        "architectural photography",
+        "Customer Service",
+        "Diesel Engine",
+        "Electronics",
+        "Field Service",
+        "Heavy Equipment",
+        "Hydraulics",
+        "industrial photography",
+        "Manufacturing",
+        "Metal Fabrication",
+        "Parts Ordering",
+        "Photography",
+        "Service Parts",
+        "Training",
+        "Troubleshooting",
+        "Welding"
+      ],
+      "contactsFetched": null,
+      "openToWork": false
+    },
+    {
+      "uid": "c2c784fffead409abac90a4146e26ff5",
+      "fullName": "Jatin David",
+      "location": "Mississauga, Ontario, Canada",
+      "experience": [
+        {
+          "company": "Stephenson's Rental Services",
+          "title": "Heavy Equipment Technician"
+        },
+        {
+          "company": "Stephenson's Rental Services",
+          "title": "Heavy"
+        },
+        {
+          "company": "ACC Limited",
+          "title": "Automobile/Mechanical Supervisor"
+        },
+        {
+          "company": "ACC Limited",
+          "title": "Diesel Mechanic"
+        }
+      ],
+      "skills": [
+        "Automobile Liability",
+        "Automotive",
+        "Automotive Engineering",
+        "Automotive Equipment",
+        "Engineering",
+        "Equipment Maintenance",
+        "Field Supervision",
+        "Heavy Equipment",
+        "Hydraulics",
+        "Industrial Safety",
+        "Machinery Repair",
+        "Maintenance Supervision",
+        "Mechanical Engineering",
+        "Microsoft Excel",
+        "Microsoft Office",
+        "Preventive Maintenance",
+        "Quality, Health, Safety, and Environment (QHSE)",
+        "Record Keeping",
+        "Regulatory Compliance",
+        "Risk Assessment",
+        "Strategic Planning",
+        "Used Equipment",
+        "Vehicles"
+      ],
+      "contactsFetched": null,
+      "openToWork": false
+    },
+    {
+      "uid": "975f890a5a4b11e68155feb79ce8b6d8",
+      "fullName": "Dane Neil Middlemiss",
+      "location": "Tumbler Ridge, British Columbia, Canada",
+      "experience": [
+        {
+          "company": "Finning",
+          "title": "Heavy Equipment Technician"
+        },
+        {
+          "company": "Big Country Equipment Repair LTD",
+          "title": "Heavy Equipment Technician"
+        },
+        {
+          "company": "Conuma Resources",
+          "title": "Maintenance Superintendent"
+        },
+        {
+          "company": "Conuma Resources",
+          "title": "Senior Maintenance Supervisor "
+        },
+        {
+          "company": "Wajax",
+          "title": "Heavy Equipment Technician"
+        },
+        {
+          "company": "Big Horse Mechanical ",
+          "title": "Heavy Equipment Technician"
+        },
+        {
+          "company": "Conuma Coal Resources",
+          "title": "Lead Hand drill shovel crew"
+        },
+        {
+          "company": "Conuma Coal Resources",
+          "title": "Maintenance Supervisor"
+        },
+        {
+          "company": "Surface mine in northern B.C",
+          "title": "heavy duty mechanic "
+        },
+        {
+          "company": "HJ Banks Mining",
+          "title": "Heavy Duty Mechanic"
+        },
+        {
+          "company": "Pirtek UK Ltd",
+          "title": "Mobile sales and service technician"
+        },
+        {
+          "company": "G.A Smiths",
+          "title": "HGV / plant mechanic"
+        },
+        {
+          "company": "National Tyres and Autocare",
+          "title": "Assistant Manager "
+        },
+        {
+          "company": "David Gair Car sales",
+          "title": "Technician"
+        }
+      ],
+      "skills": [
+        "Analytical Skills",
+        "Automotive",
+        "Automotive Engineering",
+        "Budgeting",
+        "Car Repair",
+        "Communication",
+        "Critical Thinking",
+        "Cultural Awareness",
+        "Data Analysis",
+        "Engineering",
+        "English",
+        "Equipment Maintenance",
+        "Equipment Repair",
+        "Field Maintenance",
+        "Fleet Management",
+        "Fluid Power",
+        "General Public",
+        "Heavy Equipment",
+        "Hydraulics",
+        "Hydraulic Systems",
+        "Interpersonal Communication",
+        "Job Safety",
+        "Maintenance",
+        "Maintenance & Repair",
+        "Maintenance Engineering",
+        "Maintenance Management",
+        "Mechanical Engineering",
+        "Mechanics",
+        "Mine Maintenance",
+        "Mining",
+        "Mobile Equipment",
+        "Mobile Hydraulics",
+        "Open-Pit Mining",
+        "Planned Preventative Maintenance",
+        "Planning & Scheduling",
+        "Plant Maintenance",
+        "Pneumatics",
+        "Power Tools",
+        "Preventive Maintenance",
+        "Problem Solving",
+        "Reliability",
+        "Reliability Centered Maintenance",
+        "Safety Audits",
+        "Teamwork",
+        "Troubleshooting",
+        "Vehicle Maintenance",
+        "Written Communication"
+      ],
+      "contactsFetched": null,
+      "openToWork": false
+    },
+    {
+      "uid": "7b4e884ec88041c98d2c95d9751b4e5f",
+      "fullName": "Gordon Walker RSE",
+      "location": "Calgary, Alberta, Canada",
+      "experience": [
+        {
+          "company": "ATI Canada",
+          "title": "Heavy Equipment Technician"
+        },
+        {
+          "company": "Self-employed",
+          "title": "Heavy Equipment Technician"
+        },
+        {
+          "company": "Canadian Natural Resources Limited (CNRL)",
+          "title": "Heavy Equipment Technician"
+        },
+        {
+          "company": "Gladiator Equipment Inc.",
+          "title": "Heavy Equipment Technician"
+        },
+        {
+          "company": "The City of Calgary",
+          "title": "Journeyman Heavy Equipment Technician 1"
+        },
+        {
+          "company": "Shell",
+          "title": "Heavy Equipment Technician"
+        },
+        {
+          "company": "Syncrude Canada Ltd.",
+          "title": "Heavy Equipment Technician"
+        }
+      ],
+      "skills": [
+        "Air Compressors",
+        "Attention to Detail",
+        "Budgeting",
+        "Commissioning",
+        "Communication",
+        "Electrical Maintenance",
+        "Electrical Troubleshooting",
+        "Electrical Wiring",
+        "Electricity",
+        "Electronics",
+        "Equipment Maintenance",
+        "Equipment Repair",
+        "Fleet Management",
+        "Heavy Equipment",
+        "Hydraulics",
+        "Hydraulic Systems",
+        "Hydraulic troubleshooting",
+        "Inspection",
+        "Inventory Management",
+        "Maintenance",
+        "Maintenance & Repair",
+        "Manufacturing",
+        "Mechanical Assembly",
+        "Metal Fabrication",
+        "Mining",
+        "Planned Preventative Maintenance",
+        "Predictive Maintenance",
+        "Preventive Maintenance",
+        "Process Control",
+        "Project Control",
+        "Project Coordination",
+        "Project Estimation",
+        "Project Management",
+        "Project Management Body of Knowledge (PMBOK)",
+        "Project Planning",
+        "Supervisory Skills",
+        "Troubleshooting",
+        "Welding",
+        "Workload Prioritization"
+      ],
+      "contactsFetched": null,
+      "openToWork": false
+    },
+    {
+      "uid": "12bd9bdd5a4a11e68155feb79ce8b6d8",
+      "fullName": "Alan Smith",
+      "location": "Red Deer, Alberta, Canada",
+      "experience": [
+        {
+          "company": "Suncor",
+          "title": "Heavy Equipment Technician"
+        },
+        {
+          "company": "SMS Equipment Inc.",
+          "title": "Heavy Equipment Technician"
+        },
+        {
+          "company": "STEP Energy Services",
+          "title": "Field Heavy Equipment Technician"
+        },
+        {
+          "company": "Hertz Equipment Rental",
+          "title": "Heavy Equipment Technician Foreman"
+        },
+        {
+          "company": "SPP PUMPS",
+          "title": "field service enginer"
+        },
+        {
+          "company": "Motivair Compressors Ltd",
+          "title": "Field Service Engineer (compressors)Team Leader"
+        },
+        {
+          "company": "Airchannel Limited",
+          "title": "Field Services Engineer"
+        },
+        {
+          "company": "Griffin Air Systems Ltd",
+          "title": "Compressed Air Engineer/ service manager"
+        },
+        {
+          "company": "STRATHCLYDE REGIONAL COUNCIL EMPLOYEES CREDIT UNION LIMITED",
+          "title": "Engineering maintenance craftsman"
+        },
+        {
+          "company": "UK Ministry of Defence",
+          "title": "Apprentice"
+        }
+      ],
+      "skills": [
+        "Air Compressors",
+        "Blowers",
+        "Boilers",
+        "centrifugal pumps",
+        "Commissioning",
+        "Condition Monitoring",
+        "Diesel",
+        "Diesel Engine",
+        "Diesel Generators",
+        "Engineering",
+        "Equipment Maintenance",
+        "Fire Pumps",
+        "Fire Sprinkler Systems",
+        "Fleet Management",
+        "Fuel Systems",
+        "Generators",
+        "Heavy Equipment",
+        "Hydraulics",
+        "industrial engines",
+        "Interpersonal Skills",
+        "Laser Alignment",
+        "Leadership",
+        "Maintenance ",
+        "Maintenance & Repair",
+        "Maintenance Engineering",
+        "Maintenance Management",
+        "marine engines",
+        "Mechanical Engineering",
+        "Mechanics",
+        "Nitrogen",
+        "Oil & Gas",
+        "Planned Preventative Maintenance",
+        "Plant Maintenance",
+        "Pneumatics",
+        "Predictive Maintenance",
+        "Preventive Maintenance",
+        "Pumps",
+        "Rotating Equipment",
+        "Supervisory Skills",
+        "Team Leadership",
+        "Water Pumps"
+      ],
+      "contactsFetched": null,
+      "openToWork": false
+    }
+  ],
+  "scrollId": "FGluY2x1ZGVfY29udGV4dF91dWlkDnF1ZXJ5VGhlbkZldGNoChZpZVFRYWdZUVI5NkNXU3RmSVhkUlVRAAAAAABA-8YWcnp1YjFoR2VUMmVFdng0MEhhN0hwdxZRdGNwZS1vYVRyT2ZNNHg2dzhwZmJnAAAAAAAZdaMWNjNWMm1GNlNUWjZzS0NxSzBfTHhxZxZkSTRKY3k4a1NFaWRzQ2dzXzVwWk1nAAAAAAAoKvYWdmNlNWJFRkZSRjZMUlE3WlNmYVFUdxZpZVFRYWdZUVI5NkNXU3RmSVhkUlVRAAAAAABA-8cWcnp1YjFoR2VUMmVFdng0MEhhN0hwdxZGMk9NMEozR1FCLXU4M2dUMEppbmh3AAAAAAAZtjUWMGJNcDhCdHNUdlNISS1ycWYwM2VGZxY0bDN0bUxQdFFyQ2NnUFFZQ05VYTlnAAAAAAAJjOYWSjB5cUFKLWNTcVNiYlkxN3RjUFU5URZxZnBxbTdYWFJqdWo2RC1RVDgxcUd3AAAAAAAhmFQWWUNYWlpXVVdUSktVek5PVVlFZmhvZxYweWRMRVRpY1FidWRFakQxWGV2eHlBAAAAAAJwhU8Wdm44Xzc2TG5UNjJTeDNER0FmMFQxQRY4cDJTUEJDaVNMU2RFMVRfNnE4bWR3AAAAAAAmkPkWOEZfRHVEbkdTTS1rMmE5T2tZd1I5QRZGXzBwNWp5VVNmZVdOZkFwSEFhOHpRAAAAAAAioRkWemNmRlNXZ2NReHlsemNpZ1hMaFFyUQ=="
+}
