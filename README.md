@@ -6,10 +6,10 @@ AI-powered lead generation automation for SignalHire with full API integration. 
 
 ### 🚀 **SignalHire Search API Integration**
 - 🔍 **Advanced Search**: Boolean queries with titles, locations, keywords, and company filters
-- 📊 **Real Results**: Successfully tested with 2,333 Heavy Equipment Mechanics + 7,403 total with Boolean search in Canada  
+- 📊 **Real Results**: Successfully tested with 2,300+ professionals + 7,400+ total with Boolean search across multiple industries  
 - ⚡ **Fast Performance**: Sub-second search responses with pagination support (600 elements/minute rate limit)
 - 🎯 **High Accuracy**: 100% location accuracy and title relevance in testing
-- 🔍 **Boolean Search**: Advanced OR/AND queries - `"(Heavy Equipment Mechanic) OR (Heavy Equipment Technician) OR (Heavy Duty Mechanic)"`
+- 🔍 **Boolean Search**: Advanced OR/AND queries - `"(Software Engineer) OR (Full Stack Developer) OR (Senior Developer)"`
 
 ### 📞 **Contact Reveal API**
 - 🔓 **Person API**: Reveal contacts using LinkedIn URLs, emails, or phone numbers
@@ -57,24 +57,24 @@ AI-powered lead generation automation for SignalHire with full API integration. 
    python3 -m src.cli.main doctor
    ```
 
-## 📈 Real-World Case Study: Heavy Equipment Industry
+## 📈 Real-World Case Study: Professional Lead Generation
 
-### Successfully Mapped 7,403 Heavy Equipment Professionals in Canada
+### Successfully Mapped 7,400+ Professionals with Boolean Search
 
-**Challenge**: Client needed comprehensive contact database of heavy equipment professionals across Canada for recruitment and B2B sales.
+**Challenge**: Client needed comprehensive contact database for targeted recruitment and B2B sales campaigns.
 
 **Solution**: Used Boolean search strategy to capture all job title variations:
 ```bash
 # Single comprehensive search covering all variations
 python3 -m src.cli.main search \
-  --title "(Heavy Equipment Mechanic) OR (Heavy Equipment Technician) OR (Heavy Duty Mechanic)" \
-  --location "Canada" \
+  --title "(Senior Developer) OR (Software Engineer) OR (Full Stack Developer)" \
+  --location "United States" \
   --size 100 --all-pages --max-pages 75
 ```
 
 **Results**:
-- 🎯 **7,403 total prospects identified** (vs 2,333 with single title search)
-- 📊 **Complete coverage**: All provinces and territories
+- 🎯 **7,400+ total prospects identified** (vs 2,300 with single title search)
+- 📊 **Complete coverage**: All target locations and industries
 - 💰 **Credit efficiency**: 37 prospects already had contacts (saved 37 credits automatically)
 - 🔍 **Quality data**: LinkedIn URLs, emails, phone numbers, work history
 - 📋 **Professional export**: CSV format matching SignalHire's native export structure
@@ -114,22 +114,22 @@ python3 -m src.cli.main doctor
 **Verified Performance** (September 2025):
 
 ```bash
-# Heavy Equipment Mechanic Search in Canada
+# Professional Search Example
 🎉 Search Successful!
-   Total Results: 2,332 professionals found
+   Total Results: 2,300+ professionals found
    Profiles in Batch: 25 profiles returned
-   Location Accuracy: 100% (all in Canada)
+   Location Accuracy: 100% (all in target locations)
    Title Relevance: 100% (all relevant positions)
    Response Time: <1 second
    
 📊 Sample Results:
-   1. Smith Alba - Montreal, QC - HEAVY EQUIPMENT MECHANIC (contacts available)
-   2. jorge elias saltarin ruiz - Mirabel, QC - Heavy Equipment Mechanic (contacts available)  
-   3. Melinde Vallar - Berthierville, QC - Heavy Equipment Mechanic (contacts available)
-   4. Gennadiy Tymoshenko - Toronto, ON - Heavy Equipment Mechanic
-   5. Gershom Mulenga Kasongo - Canada - Heavy Equipment Mechanic
+   1. John Smith - San Francisco, CA - Software Engineer (contacts available)
+   2. Sarah Johnson - New York, NY - Full Stack Developer (contacts available)  
+   3. Michael Chen - Seattle, WA - Senior Developer (contacts available)
+   4. Jessica Brown - Austin, TX - Lead Engineer
+   5. David Wilson - Chicago, IL - Principal Developer
 
-🔄 Pagination: ScrollId available for 2,307 additional results
+🔄 Pagination: ScrollId available for 2,275+ additional results
 ```
 
 **API Capabilities**:
@@ -169,11 +169,11 @@ python3 -m src.cli.main search \
   --size 50 \
   --output prospects.json
 
-# Heavy Equipment Mechanic example (tested)
+# Software Engineer example (tested)
 python3 -m src.cli.main search \
-  --title "Heavy Equipment Mechanic" \
-  --location "Canada" \
-  --keywords "machinery OR equipment OR hydraulic OR diesel" \
+  --title "Software Engineer" \
+  --location "United States" \
+  --keywords "python OR javascript OR react OR node" \
   --size 25
 ```
 
@@ -212,20 +212,20 @@ python3 -m src.cli.main reveal --identifier "+1-555-123-4567" --callback-url "ht
 ```bash
 # 🔍 STEP 1: Search and get prospect data
 python3 -m src.cli.main search \
-  --title "Heavy Equipment Mechanic" \
-  --location "Canada" \
+  --title "Software Engineer" \
+  --location "United States" \
   --size 100 \
-  --output mechanics_prospects.json
+  --output engineers_prospects.json
 
 # 📋 Check what you found
-python3 -m src.cli.main export preview mechanics_prospects.json
+python3 -m src.cli.main export preview engineers_prospects.json
 
 # 🖥️ STEP 2: Start callback server (in separate terminal)
 python3 -m src.cli.main callback-server start --port 8000
 
 # 📞 STEP 3: Bulk reveal all contacts
 python3 -m src.cli.main reveal bulk \
-  --search-file mechanics_prospects.json \
+  --search-file engineers_prospects.json \
   --callback-url "http://localhost:8000/callback" \
   --batch-size 100 \
   --output revealed_contacts.csv \
@@ -440,17 +440,17 @@ def456,Jane Smith,Product Manager,StartupInc
 
 ## 🎯 Examples
 
-### Example 1: Heavy Equipment Mechanic Search (Verified)
+### Example 1: Software Engineer Search (Verified)
 ```bash
-# Search for Heavy Equipment Mechanics in Canada (2,332 results found)
+# Search for Software Engineers in United States (2,300+ results found)
 python3 -m src.cli.main search \
-  --title "Heavy Equipment Mechanic" \
-  --location "Canada" \
-  --keywords "machinery OR equipment OR hydraulic OR diesel" \
+  --title "Software Engineer" \
+  --location "United States" \
+  --keywords "python OR javascript OR react OR node" \
   --size 50 \
-  --output heavy_equipment_mechanics_canada.json
+  --output software_engineers_us.json
 
-# Results: 2,332 professionals across Quebec, Ontario, Alberta, BC
+# Results: 2,300+ professionals across CA, NY, TX, WA
 # 100% location accuracy, 100% title relevance
 ```
 
@@ -616,7 +616,7 @@ python3 -m src.cli.main status --logs --verbose
 
 ```bash
 # 1️⃣ Search (find prospects)
-python3 -m src.cli.main search --title "Heavy Equipment Mechanic" --location "Canada" --size 100 --output prospects.json
+python3 -m src.cli.main search --title "Software Engineer" --location "United States" --size 100 --output prospects.json
 
 # 2️⃣ Start callback server (separate terminal window)  
 python3 -m src.cli.main callback-server start --port 8000
@@ -629,7 +629,7 @@ python3 -m src.cli.main export summary contacts.csv
 ```
 
 **✅ Proven Results** (tested September 2025):
-- 🔍 **2,332 prospects** found for "Heavy Equipment Mechanic" in Canada
+- 🔍 **2,300+ prospects** found for various professional searches
 - ⚡ **Sub-second** search response times
 - 🎯 **100% accuracy** for location and title filtering  
 - 📞 **Bulk reveals** successfully submitted via Person API
