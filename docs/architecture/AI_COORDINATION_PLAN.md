@@ -15,12 +15,30 @@
 - [ ] T037 @gemini Performance tests for bulk operations
 ```
 
+### ⚠️ IMPORTANT: @Symbol is NOT a Direct Mention System
+**Critical Understanding**: The @symbol in tasks.md is **ONLY a reference identifier** for task assignment - it is NOT a direct mention or notification system.
+
+**How Agents Actually Discover Tasks**:
+- Agents read their instruction files (QWEN.md, DEEPSEEK.md, GEMINI.md, etc.)
+- These .md files tell them to search tasks.md for their @symbol
+- Agents parse tasks.md looking for lines containing their @identifier
+- No direct @mention functionality exists - it's purely a search pattern
+
+**Example Agent Workflow**:
+```bash
+# Agent reads: "Look for @qwen tasks in tasks.md"
+# Agent searches: grep "@qwen" tasks.md
+# Agent finds: "- [ ] T060 @qwen Optimize performance"
+# Agent executes the task
+```
+
 ### Why This is Revolutionary
 1. **Universal Pattern**: Uses familiar @mention syntax from GitHub/social media
 2. **Zero Infrastructure**: Just markdown files - works anywhere
 3. **Self-Documenting**: The system explains itself
 4. **Tool Agnostic**: Works with any agent or human
 5. **Instantly Scalable**: Add new agents by just using @newagent
+6. **Search-Based**: Simple grep patterns for task discovery
 
 ## 🤖 Current Agent Ecosystem
 
