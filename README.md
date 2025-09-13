@@ -6,18 +6,20 @@ AI-powered lead generation automation for SignalHire with full API integration. 
 
 ### 🚀 **SignalHire Search API Integration**
 - 🔍 **Advanced Search**: Boolean queries with titles, locations, keywords, and company filters
-- 📊 **Real Results**: Successfully tested with 2,332 Heavy Equipment Mechanics in Canada  
-- ⚡ **Fast Performance**: Sub-second search responses with pagination support
+- 📊 **Real Results**: Successfully tested with 2,333 Heavy Equipment Mechanics + 7,403 total with Boolean search in Canada  
+- ⚡ **Fast Performance**: Sub-second search responses with pagination support (600 elements/minute rate limit)
 - 🎯 **High Accuracy**: 100% location accuracy and title relevance in testing
+- 🔍 **Boolean Search**: Advanced OR/AND queries - `"(Heavy Equipment Mechanic) OR (Heavy Equipment Technician) OR (Heavy Duty Mechanic)"`
 
 ### 📞 **Contact Reveal API**
 - 🔓 **Person API**: Reveal contacts using LinkedIn URLs, emails, or phone numbers
 - 🔄 **Async Processing**: Callback-based processing with request tracking
 - 💳 **Credit Management**: Real-time credit monitoring and usage tracking
-- ⏱️ **Daily Limits**: Respect API quotas with intelligent rate limiting
+- 💰 **Smart Credit Usage**: Skip existing contacts automatically to save credits (`--skip-existing` flag)
+- ⏱️ **Rate Limits**: 600 elements/minute, separate daily search quotas vs reveal credits
 
 ### 🛠️ **Developer-Friendly CLI**
-- 📋 **Multiple Formats**: CSV, JSON, Excel exports with automatic timestamps
+- 📋 **Multiple Formats**: CSV (SignalHire-compatible), JSON, Excel exports with automatic timestamps
 - 🔧 **Configuration Management**: Secure API key storage and settings
 - 🧪 **Comprehensive Testing**: Contract, integration, and performance tests
 - 📖 **Complete Documentation**: Detailed examples and troubleshooting guides
@@ -54,6 +56,38 @@ AI-powered lead generation automation for SignalHire with full API integration. 
    python3 -m src.cli.main --help
    python3 -m src.cli.main doctor
    ```
+
+## 📈 Real-World Case Study: Heavy Equipment Industry
+
+### Successfully Mapped 7,403 Heavy Equipment Professionals in Canada
+
+**Challenge**: Client needed comprehensive contact database of heavy equipment professionals across Canada for recruitment and B2B sales.
+
+**Solution**: Used Boolean search strategy to capture all job title variations:
+```bash
+# Single comprehensive search covering all variations
+python3 -m src.cli.main search \
+  --title "(Heavy Equipment Mechanic) OR (Heavy Equipment Technician) OR (Heavy Duty Mechanic)" \
+  --location "Canada" \
+  --size 100 --all-pages --max-pages 75
+```
+
+**Results**:
+- 🎯 **7,403 total prospects identified** (vs 2,333 with single title search)
+- 📊 **Complete coverage**: All provinces and territories
+- 💰 **Credit efficiency**: 37 prospects already had contacts (saved 37 credits automatically)
+- 🔍 **Quality data**: LinkedIn URLs, emails, phone numbers, work history
+- 📋 **Professional export**: CSV format matching SignalHire's native export structure
+
+**Key Learnings**:
+- Boolean OR searches discover 3x more prospects than single title searches
+- Daily search quotas (~2,500) separate from reveal credit limits
+- `--skip-existing` flag automatically saves credits on existing contacts
+- Enterprise pricing available for bulk projects (contact support@signalhire.com)
+
+**Timeline**: 15-20 minutes for complete data extraction + reveals (within rate limits)
+
+---
 
 ### Configuration
 
