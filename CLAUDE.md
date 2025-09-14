@@ -4,11 +4,13 @@ Auto-generated from all feature plans. Last updated: 2025-09-11
 
 ## Active Technologies
 - Python 3.11 + asyncio (signalhireagent)
-- Stagehand (AI browser automation with Playwright)
-- FastAPI (callback server for webhooks/status)
-- httpx (async HTTP client for API monitoring only)  
+- FastAPI (MCP server + autonomous workflows)
+- Supabase (PostgreSQL database with real-time features)
+- APScheduler (autonomous workflow scheduling)
+- Railway (deployment platform with persistent processes)
+- httpx (async HTTP client for SignalHire API)
 - pandas (CSV data processing and export)
-- pydantic (data validation and models)
+- pydantic (data validation and MCP tool models)
 ## Project Structure
 ```
 src/
@@ -50,11 +52,12 @@ TypeScript: ESLint + Prettier for Stagehand automation scripts
 ## Task Assignment & Coordination
 
 ### My Responsibilities (@claude - Worker Claude)
-**Check `specs/001-looking-to-build/tasks.md` for @claude assignments:**
-- Architecture and integration tasks (FastAPI server, logging, config)
-- Multi-file changes and complex refactoring
-- Cross-service integration and browser automation
-- System design and complex debugging
+**Check current spec's tasks.md for @claude assignments:**
+- Agent abstraction layer and workflow orchestration
+- Supabase database integration and session state management
+- Railway deployment configuration and infrastructure
+- Cross-service integration and MCP tool coordination
+- System architecture and autonomous workflow design
 
 ### Task Workflow & Completion Requirements
 1. **Check for assignments**: Look for `@claude` in tasks.md
@@ -118,13 +121,15 @@ Codex completed: T004 Enhanced API client contract test
 ### Current @claude Tasks
 ```bash
 # Check my current assignments:
-grep "@claude" specs/001-looking-to-build/tasks.md
+grep "@claude" [current-spec]/tasks.md
 ```
 
+
 ### Key Focus Areas
-- **Integration**: FastAPI callback servers, Stagehand browser automation
-- **Architecture**: Cross-cutting concerns, logging, configuration management
-- **Quality**: Code refactoring and removing duplication across components
+- **Supabase Integration**: Database models, session state, real-time features
+- **Agent Orchestration**: Multi-agent workflow coordination and tool calling
+- **Deployment**: Railway configuration, environment management, production setup
+- **Architecture**: MCP server design, autonomous workflow patterns
 
 ### Example Task Pattern
 ```
@@ -136,13 +141,16 @@ grep "@claude" specs/001-looking-to-build/tasks.md
 ```
 
 ## Recent Changes
-- 001-looking-to-build: Added SignalHire lead generation agent with web-based contact reveal + native CSV export
+- 003-autonomous-lead-generation: Building autonomous lead generation system with agentic MCP server
+- Single FastAPI service architecture with 8 essential MCP tools
+- Supabase for persistent state management and Railway for deployment
+- Agent abstraction layer supporting multiple AI backends (Claude, Gemini)
 
 ## Prerequisites
-- SignalHire account with new UI enabled (click the UI toggle icon on right side of page)
-- Valid SignalHire credentials in environment variables (SIGNALHIRE_EMAIL, SIGNALHIRE_PASSWORD)
-- Chrome/Chromium browser for Stagehand automation
-- New UI provides cleaner interface that's easier for AI agents to navigate
+- SignalHire API key (for MCP tool integration)
+- Supabase account and project (for database and session state)
+- Railway account (for deployment with persistent processes)
+- Environment variables: SIGNALHIRE_API_KEY, SUPABASE_URL, SUPABASE_KEY, ANTHROPIC_API_KEY
 
 <!-- MANUAL ADDITIONS START -->
 

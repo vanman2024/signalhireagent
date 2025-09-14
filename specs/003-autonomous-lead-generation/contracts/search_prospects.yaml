@@ -1,0 +1,53 @@
+openapi: 3.0.0
+info:
+  title: MCP Tool - search_prospects
+  version: 1.0.0
+paths:
+  /mcp/search_prospects:
+    post:
+      summary: Search for prospects
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                location:
+                  type: string
+                keywords:
+                  type: string
+              required:
+                - title
+      responses:
+        '200':
+          description: List of prospects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Prospect'
+components:
+  schemas:
+    Prospect:
+      type: object
+      properties:
+        uid:
+          type: string
+        name:
+          type: string
+        title:
+          type: string
+        company:
+          type: string
+        location:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        linkedin:
+          type: string

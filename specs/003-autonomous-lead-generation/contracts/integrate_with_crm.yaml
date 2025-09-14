@@ -1,0 +1,37 @@
+openapi: 3.0.0
+info:
+  title: MCP Tool - integrate_with_crm
+  version: 1.0.0
+paths:
+  /mcp/integrate_with_crm:
+    post:
+      summary: Integrate results with CRM
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                crm_type:
+                  type: string
+                  enum: [salesforce, hubspot, pipedrive, other]
+                data:
+                  type: array
+                  items:
+                    type: object
+              required:
+                - crm_type
+                - data
+      responses:
+        '200':
+          description: CRM integration result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string

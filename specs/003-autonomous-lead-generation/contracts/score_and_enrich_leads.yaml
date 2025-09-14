@@ -1,0 +1,54 @@
+openapi: 3.0.0
+info:
+  title: MCP Tool - score_and_enrich_leads
+  version: 1.0.0
+paths:
+  /mcp/score_and_enrich_leads:
+    post:
+      summary: Score and enrich a list of leads
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                leads:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Prospect'
+              required:
+                - leads
+      responses:
+        '200':
+          description: List of scored/enriched leads
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ScoredLead'
+components:
+  schemas:
+    Prospect:
+      type: object
+      properties:
+        uid:
+          type: string
+        name:
+          type: string
+        title:
+          type: string
+        company:
+          type: string
+        location:
+          type: string
+    ScoredLead:
+      type: object
+      properties:
+        uid:
+          type: string
+        score:
+          type: number
+        enrichment:
+          type: object

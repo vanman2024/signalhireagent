@@ -102,11 +102,12 @@ Codex completed: T004 Enhanced API client contract test
 ## Task Assignment & Coordination
 
 ### My Responsibilities (@codex)
-**Check `specs/001-looking-to-build/tasks.md` for @codex assignments:**
-- Interactive development and test-driven development
-- Debugging complex async/await issues and browser automation
-- Writing failing tests (contract, integration)
-- Interactive exploration and rapid prototyping
+**Check current spec's tasks.md for @codex assignments:**
+- Contract tests and test-driven development (write failing tests first)
+- Integration tests with httpx mocking to avoid burning credits
+- Unit tests for shared libraries and cost control systems
+- Live E2E smoke testing with minimal resource usage
+- Frontend tasks and user interface development
 
 ### Task Workflow & Completion Requirements
 1. **Check for assignments**: Look for `@codex` in tasks.md
@@ -125,7 +126,7 @@ Codex completed: T004 Enhanced API client contract test
 ### Current @codex Tasks
 ```bash
 # Check my current assignments:
-grep "@codex" specs/001-looking-to-build/tasks.md
+grep "@codex" [current-spec]/tasks.md
 ```
 
 ### Example Task Pattern
@@ -145,11 +146,12 @@ grep "@codex" specs/001-looking-to-build/tasks.md
 
 ## Active Technologies
 - Python 3.11 + asyncio (signalhireagent)
-- Stagehand (AI browser automation with Playwright)
-- FastAPI (callback server for webhooks/status)
-- httpx (async HTTP client for API monitoring only)  
+- FastAPI (MCP server + autonomous workflows)
+- httpx (async HTTP client for SignalHire API + test mocking)
+- pytest (testing framework with contract/integration/unit tests)
 - pandas (CSV data processing and export)
-- pydantic (data validation and models)
+- pydantic (data validation and MCP tool models)
+- Frontend technologies (for UI development tasks)
 ## Custom Instructions
 - Always use absolute paths when reading files
 

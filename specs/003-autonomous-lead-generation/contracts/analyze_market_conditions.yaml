@@ -1,0 +1,30 @@
+openapi: 3.0.0
+info:
+  title: MCP Tool - analyze_market_conditions
+  version: 1.0.0
+paths:
+  /mcp/analyze_market_conditions:
+    get:
+      summary: Analyze market conditions
+      responses:
+        '200':
+          description: Market insights
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketInsights'
+components:
+  schemas:
+    MarketInsights:
+      type: object
+      properties:
+        trend:
+          type: string
+        metric:
+          type: string
+        value:
+          type: number
+        period:
+          type: string
+        details:
+          type: string

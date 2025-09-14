@@ -1,0 +1,31 @@
+openapi: 3.0.0
+info:
+  title: MCP Tool - monitor_pipeline_health
+  version: 1.0.0
+paths:
+  /mcp/monitor_pipeline_health:
+    get:
+      summary: Get pipeline health metrics
+      responses:
+        '200':
+          description: Pipeline health metrics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PipelineHealth'
+components:
+  schemas:
+    PipelineHealth:
+      type: object
+      properties:
+        total_leads:
+          type: integer
+        active_workflows:
+          type: integer
+        conversion_rate:
+          type: number
+        leads_needed:
+          type: integer
+        last_updated:
+          type: string
+          format: date-time

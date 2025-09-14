@@ -1,0 +1,33 @@
+openapi: 3.0.0
+info:
+  title: MCP Tool - export_results
+  version: 1.0.0
+paths:
+  /mcp/export_results:
+    post:
+      summary: Export results to a file
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    type: object
+                format:
+                  type: string
+                  enum: [csv, xlsx, json]
+              required:
+                - data
+                - format
+      responses:
+        '200':
+          description: Exported file
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
