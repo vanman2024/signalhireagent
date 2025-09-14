@@ -65,3 +65,6 @@ docker-compose.override.yml
 docker-volumes/
 docker-data/
 .docker/
+
+.gemini/
+gha-creds-*.json
