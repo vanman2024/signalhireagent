@@ -1,268 +1,424 @@
-# SignalHire UI Design Proposal
+# SignalHire AI Interface - Enterprise Bulk Processing
 
 ## 🎯 Overview
 
-The current SignalHire CLI is powerful but not user-friendly for non-technical users. This document outlines options for creating a chat-like interface that uses Claude Code SDK integration to execute CLI commands in the background, providing a natural language interface for lead generation.
+The SignalHire CLI enables **10x faster bulk processing** compared to manual UI clicking, but needs a user-friendly interface for non-technical users. This document outlines a simplified natural language chat interface that leverages our existing CLI's bulk processing capabilities.
 
-## 🚀 Recommended Approaches
+**Core Value Proposition:**
+- 🚀 **Volume Processing**: 1000+ contacts in 10-15 minutes vs 30-60 minutes manual clicking
+- 🗣️ **Natural Language**: "Find 500 marketing managers in SaaS companies" → automated Boolean search
+- 🔐 **No SignalHire Login**: Users work through our interface, we handle API complexity
+- 🎯 **Enterprise Focus**: Target high-volume users already spending $500+/month on SignalHire
 
-### **Option 1: Claude Code SDK + Web Chat Interface**
+## 🏗️ Simplified Architecture
 
-**Architecture:**
-```typescript
-// Frontend sends natural language requests
-"Find 100 software engineers in San Francisco with Python experience"
+### **Single Recommended Approach: Web Chat + Direct CLI**
 
-// Claude Code SDK processes and executes CLI
-await claudeCode.execute(`
-python3 -m src.cli.main search 
-  --title "Software Engineer" 
-  --location "San Francisco" 
-  --keywords "python" 
-  --size 100
-`)
+**Simple Architecture:**
+```
+User Chat Input → FastAPI Backend → CLI Command → SignalHire API → Results
 ```
 
-**Benefits:**
-- ✅ Natural language → CLI commands
-- ✅ Real-time progress updates  
-- ✅ Claude handles complex Boolean queries
-- ✅ Chat history and saved searches
-- ✅ Best user experience for non-technical users
-
-### **Option 2: Streamlit Dashboard**
-
+**Implementation:**
 ```python
-# streamlit_app.py
-import streamlit as st
-import subprocess
-
-st.title("SignalHire Lead Generation")
-
-# Simple form inputs
-title = st.text_input("Job Title", "Software Engineer")
-location = st.text_input("Location", "San Francisco")
-keywords = st.text_input("Skills/Keywords", "python, react")
-
-if st.button("Search Prospects"):
-    # Execute CLI in background
-    result = subprocess.run([
-        "python3", "-m", "src.cli.main", "search",
-        "--title", title,
-        "--location", location, 
-        "--keywords", keywords
-    ])
-    st.success(f"Found {result} prospects!")
-```
-
-**Benefits:**
-- ✅ Quick to implement (2-3 hours)
-- ✅ Good for internal/power users
-- ✅ Form-based interface familiar to users
-- ✅ Built-in data visualization
-
-### **Option 3: FastAPI + React Chat UI**
-
-```javascript
-// Chat component
-const ChatInterface = () => {
-  const [messages, setMessages] = useState([]);
-  
-  const handleSearch = async (userMessage) => {
-    // Send to FastAPI backend
-    const response = await fetch('/api/chat', {
-      method: 'POST',
-      body: JSON.stringify({ message: userMessage })
-    });
-    
-    // FastAPI processes with Claude and executes CLI
-    const result = await response.json();
-    setMessages([...messages, result]);
-  };
-  
-  return (
-    <div className="chat-interface">
-      {messages.map(msg => <ChatBubble {...msg} />)}
-    </div>
-  );
-};
-```
-
-**Benefits:**
-- ✅ Most flexible and customizable
-- ✅ Professional appearance
-- ✅ Scalable architecture
-- ✅ Can integrate advanced features
-
-## 🏗️ Implementation Plan
-
-### **Phase 1: Project Structure**
-```bash
-# Add to existing project
-pip install fastapi streamlit websockets claude-code-sdk
-
-# New structure:
-src/
-├── cli/              # Existing CLI (unchanged)
-├── ui/
-│   ├── chat_api.py   # FastAPI backend
-│   ├── streamlit_app.py # Simple UI option
-│   ├── static/       # React components
-│   └── templates/    # HTML templates
-docs/
-├── ui/
-│   ├── user_guide.md
-│   └── screenshots/
-```
-
-### **Phase 2: Claude Code SDK Integration**
-
-```python
-# src/ui/chat_api.py
-from claude_code_sdk import ClaudeCode
-from fastapi import FastAPI, WebSocket
-import subprocess
-import json
-
-class SignalHireChatBot:
-    def __init__(self):
-        self.claude = ClaudeCode()
-        
-    async def process_request(self, user_message: str):
-        # Claude interprets natural language
-        plan = await self.claude.plan(f"""
-        User request: {user_message}
-        
-        Available SignalHire CLI commands:
-        - search: Find prospects by title, location, keywords
-        - reveal: Get contact information for prospects  
-        - export: Save results in various formats
-        - status: Check credits and operation status
-        
-        Convert this request into the appropriate CLI command.
-        Explain what you're doing and suggest next steps.
-        """)
-        
-        # Execute CLI command
-        result = await self.claude.execute(plan.command)
-        
-        return {
-            "user_message": user_message,
-            "claude_response": plan.explanation,
-            "command_executed": plan.command,
-            "results": result,
-            "next_steps": plan.suggestions,
-            "timestamp": datetime.now().isoformat()
-        }
-
-app = FastAPI()
-
+# FastAPI backend processes natural language
 @app.post("/api/chat")
-async def chat_endpoint(request: ChatRequest):
-    bot = SignalHireChatBot()
-    response = await bot.process_request(request.message)
-    return response
-
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
-    # Real-time progress updates during long operations
+async def process_request(message: str):
+    # Use Claude API (not SDK) to interpret request
+    claude_response = await anthropic_client.messages.create(
+        model="claude-3-sonnet-20240229",
+        messages=[{
+            "role": "user", 
+            "content": f"Convert to SignalHire CLI command: {message}"
+        }]
+    )
+    
+    # Execute CLI command directly
+    result = subprocess.run(["python3", "-m", "src.cli.main"] + parsed_args)
+    return {"results": result.stdout, "explanation": claude_response.content}
 ```
 
-### **Phase 3: User Experience Features**
+**Benefits:**
+- ✅ **Simple**: No complex SDK dependencies
+- ✅ **Fast**: Direct CLI execution leverages existing bulk processing  
+- ✅ **Scalable**: Handle multiple users with existing rate limiting
+- ✅ **Cost-effective**: Only pay for actual Claude API calls
+- ✅ **Proven**: Uses battle-tested CLI that already processes 1000+ contacts efficiently
 
-#### **Natural Language Processing Examples**
+## 💰 Business Model & Market Reality
+
+### **Target Market: High-Volume Processors**
+
+**Who Needs This:**
+- 🏢 **Recruitment Agencies**: Processing 500-2000 candidates/week
+- 📈 **Sales Development Teams**: 200-1000 prospects/week
+- 🎯 **Marketing Agencies**: Bulk lead gen for multiple clients  
+- 🏭 **Enterprise Sales**: Territory expansion campaigns
+
+**Current Pain Points:**
 ```
-User Input → Claude Processing → CLI Command
+Manual SignalHire Process:
+• 30-60 minutes clicking per search session
+• Human errors in Boolean queries
+• Can't run overnight or unattended
+• 50-100 contacts/hour maximum throughput
 
-"Find marketing managers in New York who know Salesforce"
-↓
-Claude: "I'll search for Marketing Managers in New York with Salesforce experience"
-↓
-CLI: python3 -m src.cli.main search --title "Marketing Manager" --location "New York" --keywords "salesforce"
-
-"Get contacts for the first 50 results"  
-↓
-Claude: "I'll reveal contact information for the first 50 prospects from your search"
-↓
-CLI: python3 -m src.cli.main reveal bulk --search-file results.json --size 50
-
-"Export to Excel with company names and emails"
-↓
-Claude: "I'll export your results to Excel format with names, emails, and companies"
-↓  
-CLI: python3 -m src.cli.main export --format xlsx --columns "full_name,email_work,current_company"
-```
-
-#### **Chat Interface Features**
-- **Conversation History**: Save and resume search sessions
-- **Smart Suggestions**: "Would you like to reveal contacts for these results?"
-- **Progress Indicators**: Real-time updates during bulk operations
-- **Error Handling**: Friendly explanations when something goes wrong
-- **Export Preview**: Show data before downloading
-- **Credit Monitoring**: Display remaining credits and usage warnings
-
-## 🎯 Recommended Implementation Path
-
-### **Option A: Quick MVP (1-2 days)**
-1. **Streamlit Dashboard** for immediate usability
-2. Form-based interface with progress bars
-3. File upload/download for results
-4. Basic error handling and validation
-
-### **Option B: Production Solution (1-2 weeks)**
-1. **FastAPI + Claude Code SDK** backend
-2. **React Chat Interface** frontend
-3. WebSocket for real-time updates
-4. User authentication and session management
-5. Advanced features (saved searches, templates, team sharing)
-
-## 💡 User Experience Flow
-
-### **Typical User Journey**
-```
-1. User: "I need to find 100 software engineers in California"
-   
-2. Claude: "I'll search for Software Engineers in California. This might take a moment..."
-   
-3. [Progress bar showing search progress]
-   
-4. Claude: "Found 247 Software Engineers in California! Here are the first 25 results:
-   - John Smith - Senior Software Engineer at Google
-   - Sarah Johnson - Full Stack Developer at Meta
-   - [preview of results]
-   
-   Would you like me to:
-   • Get contact information for these prospects
-   • Search with more specific criteria  
-   • Export the current results"
-
-5. User: "Get contacts for the top 50"
-
-6. Claude: "I'll reveal contact information for the top 50 prospects. This will use 50 of your credits.
-   Current credits: 150/200 remaining
-   
-   Proceeding with contact reveal..."
-
-7. [Real-time progress: "Processing contacts... 23/50 complete"]
-
-8. Claude: "✅ Successfully revealed 47 contacts (3 had no available contact info)
-   
-   Results include:
-   • Email addresses: 42 found
-   • Phone numbers: 31 found  
-   • LinkedIn profiles: 47 found
-   
-   Would you like me to export these to CSV or Excel?"
+Our CLI Solution:
+• 1000+ contacts in 10-15 minutes
+• Automated Boolean optimization
+• Overnight batch processing
+• Clean, CRM-ready exports
 ```
 
-### **Advanced Features for Later**
-- **Search Templates**: Save common search patterns
-- **Bulk Operations**: Handle large datasets efficiently  
-- **Team Collaboration**: Share searches and results
-- **Integration APIs**: Connect with CRM systems
-- **Analytics Dashboard**: Track search performance
-- **Scheduled Searches**: Automated lead generation
+### **Realistic Pricing Strategy**
+
+**Enterprise Volume Pricing:**
+- 🆓 **Free Trial**: 50 AI-powered searches
+- 💼 **Professional**: $49/month - 500 searches + templates
+- 🏢 **Enterprise**: $199/month - Unlimited + priority support + white-label
+- 🤝 **Revenue Share**: Partner with SignalHire for % of increased credit usage
+
+**Value Proposition:**
+```
+Current Cost: $1600/week (40 hours × $40/hour for manual processing)
+Our Solution: $160/week (4 hours automated processing + $199/month)
+Savings: $1440/week = $75,000/year in operational costs
+```
+
+## 🤝 SignalHire Partnership Strategy
+
+### **Why SignalHire Benefits from Our Tool:**
+
+**Increased API Usage:**
+- 📈 **10x More Credit Consumption**: Bulk processing drives higher credit usage
+- 🎯 **Enterprise Customer Retention**: Advanced users stay on higher-tier plans
+- 🎆 **Market Expansion**: Makes SignalHire viable for large-scale operations
+- 🔗 **No Competition**: We complement their platform, don't replace it
+
+### **Partnership Revenue Models:**
+
+1. **Revenue Share Agreement**
+   ```
+   • SignalHire tracks credit usage from our API integration
+   • We get 10-15% of additional credit revenue generated
+   • Both parties benefit from increased usage
+   ```
+
+2. **Referral Program**
+   ```  
+   • $500-1000 commission for new enterprise SignalHire accounts
+   • Focus on customers needing 1000+ credits/month
+   • White-label "SignalHire Automation" offering
+   ```
+
+3. **Technical Partnership**
+   ```
+   • Official "SignalHire Bulk Processing" integration
+   • Listed in their marketplace/integrations
+   • Co-marketing to enterprise customers
+   ```
+
+## 🚀 Simplified Technical Implementation
+
+### **Minimal Viable Product Approach:**
+
+```python
+# src/ui/simple_api.py - No complex SDKs needed
+from fastapi import FastAPI, BackgroundTasks
+import subprocess
+import asyncio
+from anthropic import AsyncAnthropic
+
+app = FastAPI(title="SignalHire AI Interface")
+anthropic = AsyncAnthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+
+@app.post("/api/process")
+async def process_natural_language(request: str):
+    # Step 1: Claude interprets natural language
+    claude_response = await anthropic.messages.create(
+        model="claude-3-sonnet-20240229",
+        max_tokens=1000,
+        messages=[{
+            "role": "user",
+            "content": f"""
+            Convert this request to SignalHire CLI commands:
+            "{request}"
+            
+            Available commands:
+            - search --title "X" --location "Y" --keywords "Z" --size N
+            - reveal bulk --search-file results.json --output contacts.csv
+            - export --format csv --columns "name,email,company"
+            
+            Return just the CLI command, nothing else.
+            """
+        }]
+    )
+    
+    # Step 2: Execute CLI command directly
+    cmd_args = claude_response.content[0].text.split()
+    result = await asyncio.create_subprocess_exec(
+        "python3", "-m", "src.cli.main", *cmd_args,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE
+    )
+    
+    stdout, stderr = await result.communicate()
+    
+    return {
+        "original_request": request,
+        "cli_command": " ".join(cmd_args), 
+        "results": stdout.decode(),
+        "status": "success" if result.returncode == 0 else "error"
+    }
+```
+
+**Why This Approach Works:**
+- ✅ **Leverages existing CLI**: No need to rewrite bulk processing logic
+- ✅ **Simple deployment**: Just FastAPI + Claude API calls
+- ✅ **Cost effective**: Pay per actual usage, not SDK licensing
+- ✅ **Proven scalability**: CLI already handles 1000+ contacts efficiently
+
+### **Natural Language → Bulk Processing Examples:**
+
+#### **High-Volume Use Cases:**
+```
+User: "Find 1000 software engineers at Series A startups in California"
+↓
+CLI: search --title "Software Engineer" --location "California" 
+     --company "startup OR Series A" --size 1000 --all-pages
+Result: 1000+ prospects in 2-3 minutes vs 3-4 hours manually
+
+User: "Get contacts for all results and export to our CRM format"
+↓
+CLI: reveal bulk --search-file results.json --output crm_import.csv
+     --columns "full_name,email_work,phone_work,current_company,linkedin_url"
+Result: Bulk contact reveal + CRM-ready format in 10-15 minutes
+
+User: "Set up weekly search for marketing managers in SaaS companies"
+↓
+Scheduled CLI: Every Monday run search + reveal + deliver results via webhook
+Result: Automated lead generation without manual intervention
+```
+
+#### **The 10x Speed Advantage:**
+```
+Manual SignalHire UI Process:
+• Build Boolean query (5-10 minutes)
+• Click through paginated results (20-30 minutes) 
+• Export in batches (10-15 minutes)
+• Clean and format data (10-20 minutes)
+• Total: 45-75 minutes for 200-300 contacts
+
+Our Automated Process:
+• Natural language input (30 seconds)
+• AI optimizes Boolean query (automatic)
+• Bulk processing runs unattended (5-15 minutes)
+• Clean, formatted output delivered (automatic)
+• Total: 5-15 minutes for 1000+ contacts
+```
+
+#### **Enterprise Features:**
+- 📋 **Search Templates**: Save and reuse successful search patterns
+- 🔄 **Automated Workflows**: Schedule recurring searches and exports  
+- 📈 **Usage Analytics**: Track processing volume and credit efficiency
+- 🔗 **Webhook Integration**: Auto-deliver results to CRM/ATS systems
+- 👥 **Team Management**: Share templates and results across sales teams
+- 🔒 **OAuth Integration**: Secure SignalHire API key management per user
+
+## 🚀 Implementation Roadmap
+
+### **Phase 1: MVP (3-5 days)**
+1. **FastAPI Backend**: Simple natural language → CLI processing
+2. **Basic Web UI**: Chat interface for input/output
+3. **Claude API Integration**: Convert requests to CLI commands
+4. **Direct CLI Execution**: Leverage existing bulk processing
+5. **File Export**: Download results in CSV/Excel formats
+
+### **Phase 2: Enterprise Features (1-2 weeks)**
+1. **User Authentication**: OAuth for SignalHire API keys
+2. **Search Templates**: Save and reuse successful patterns
+3. **Progress Tracking**: Real-time updates for bulk operations  
+4. **Webhook Integration**: Auto-deliver to CRM systems
+5. **Usage Analytics**: Track processing efficiency
+
+### **Phase 3: Partnership & Scale (2-4 weeks)**
+1. **SignalHire Integration**: Official partnership discussions
+2. **Enterprise Dashboard**: Team management and billing
+3. **API Endpoints**: Programmatic access for enterprise customers
+4. **White-label Option**: Custom branding for agencies
+5. **Revenue Tracking**: Monitor partnership revenue sharing
+
+## 🏆 Success Metrics & Validation
+
+### **Enterprise User Journey:**
+```
+1. User: "Find 500 marketing managers at SaaS companies, 3-8 years experience"
+   
+2. System: "Processing bulk search for Marketing Managers...
+   • Optimizing Boolean query for SaaS companies
+   • Filtering by 3-8 years experience
+   • Target: 500 prospects"
+   
+3. [2-3 minutes later]
+   
+4. System: "Found 847 Marketing Managers matching criteria!
+   • Top companies: Slack, Zoom, Salesforce, HubSpot...
+   • Geographic distribution: 40% CA, 25% NY, 15% TX, 20% other
+   • Average experience: 5.2 years
+   
+   Ready to reveal contacts for all 847 prospects?
+   Estimated cost: 847 SignalHire credits (~$170-420 depending on your plan)"
+
+5. User: "Yes, reveal all and export to our Salesforce format"
+
+6. System: "Bulk contact reveal in progress...
+   • Processing 847 prospects in batches of 100
+   • Progress: 400/847 complete (47%)
+   • ETA: 8 minutes remaining"
+
+7. [10-15 minutes total]
+
+8. System: "✅ Bulk processing complete!
+   • Successfully revealed: 784 contacts (92% success rate)
+   • Email addresses: 721 found
+   • Phone numbers: 645 found
+   • Salesforce-ready CSV exported
+   • Total processing time: 12 minutes
+   
+   Manual equivalent would have taken: 4-6 hours
+   Time saved: 5+ hours"
+
+### **Key Performance Indicators:**
+
+**User Experience Metrics:**
+- ✅ **Processing Speed**: 1000+ contacts in <15 minutes (vs 60+ minutes manual)
+- ✅ **Success Rate**: >90% accurate natural language interpretation  
+- ✅ **User Retention**: >70% of trial users convert to paid plans
+- ✅ **Time Savings**: Average 4-6 hours saved per bulk processing session
+
+**Business Metrics:**
+- 💰 **Revenue Per User**: Target $200+ monthly for enterprise customers
+- 📈 **SignalHire Partnership**: 20%+ increase in API credit consumption
+- 🎯 **Customer Acquisition**: 50+ enterprise customers within 6 months
+- 🚀 **Market Expansion**: Enable SignalHire for 10,000+ contact campaigns
+
+## 🛠️ Technical Architecture
+
+### **Simplified Tech Stack:**
+```
+Frontend: React/Next.js (simple chat interface)
+Backend: FastAPI (Python)
+AI: Claude API (direct calls, no SDK)
+CLI: Existing SignalHire CLI (subprocess execution)
+Database: PostgreSQL (user sessions, search history)
+Deployment: Docker + AWS/Railway for easy scaling
+```
+
+### **Why This Stack Works:**
+- ✅ **FastAPI**: Async support for concurrent bulk operations
+- ✅ **Claude API**: Direct integration, pay-per-use pricing
+- ✅ **Existing CLI**: Proven bulk processing, no rewrite needed
+- ✅ **Simple Deployment**: Standard web app, easy to scale
+
+### **Security & Performance:**
+- 🔐 **OAuth Integration**: Users authenticate with their SignalHire accounts
+- 🚀 **Async Processing**: Handle multiple 1000+ contact searches simultaneously 
+- 📊 **Rate Limiting**: Respect SignalHire API limits per user
+- 📁 **Result Caching**: Store search results to avoid re-running expensive operations
+
+## 🏁 Go-to-Market Strategy
+
+### **Target Customer Profile:**
+```
+Ideal Customer:
+• Already spending $500+/month on SignalHire
+• Processing 1000+ contacts/month manually
+• Has dedicated sales/recruitment team
+• Values time savings over cost savings
+• Needs CRM-ready data exports
+
+Examples:
+• Series A-C startups scaling sales teams
+• Recruitment agencies with volume requirements  
+• Marketing agencies serving B2B clients
+• Enterprise sales teams in territory expansion
+```
+
+### **Sales & Marketing Approach:**
+
+1. **Content Marketing**
+   - Blog posts: "How to Process 1000+ Leads in 15 Minutes"
+   - Case studies: "Agency Saves 30 Hours/Week with Automated Lead Gen"
+   - Video demos: Side-by-side manual vs automated processing
+
+2. **Direct Outreach**
+   - Target SignalHire power users (via LinkedIn/sales nav)
+   - Focus on companies posting sales/recruiting jobs
+   - Partner with SignalHire on co-marketing
+
+3. **Product-Led Growth**
+   - Free trial: 50 AI searches (prove the time savings)
+   - Usage-based pricing: Only pay for what you use
+   - Referral program: Existing customers get credits for referrals
+
+## 📈 Market Opportunity & Competition
+
+### **Market Size:**
+```
+Total Addressable Market (TAM):
+• ~50,000 companies using SignalHire globally
+• ~5,000 power users spending $500+/month  
+• Average potential revenue: $200-500/month per enterprise user
+• Market opportunity: $1M-2.5M ARR
+
+Serviceable Available Market (SAM):
+• ~500 companies needing bulk processing (1000+ contacts/month)
+• Realistic capture: 10-20% market share
+• Target revenue: $200K-500K ARR within 18 months
+```
+
+### **Competitive Landscape:**
+
+**Direct Competitors:** None (unique positioning)
+
+**Indirect Competitors:**
+1. **Manual SignalHire Usage** - Our primary competition
+2. **Virtual Assistants** - $3-15/hour for manual clicking
+3. **Other Lead Gen Tools** - ZoomInfo, Apollo (more expensive, different data)
+
+**Competitive Advantages:**
+- ✅ **Speed**: 10x faster than manual processing
+- ✅ **Integration**: Works with existing SignalHire subscriptions  
+- ✅ **No Switching Costs**: Users keep their current SignalHire plans
+- ✅ **AI-Powered**: Natural language queries vs Boolean learning curve
+
+## 🚀 Next Steps & Action Plan
+
+### **Immediate Actions (This Week):**
+1. **SignalHire Partnership Outreach**: Contact SignalHire team to discuss partnership opportunity
+2. **Customer Discovery**: Interview 5-10 potential enterprise customers about pain points
+3. **Technical Prototype**: Build basic FastAPI + Claude integration (2-3 days)
+4. **Landing Page**: Create simple page explaining the value proposition
+
+### **30-Day Milestone:**
+1. **MVP Launch**: Working chat interface with bulk processing
+2. **First 10 Beta Users**: Onboard early customers for feedback
+3. **Partnership Agreement**: Formalize revenue-sharing with SignalHire
+4. **Metrics Tracking**: Measure time savings and user satisfaction
+
+### **90-Day Goals:**
+1. **50+ Active Users**: Demonstrate market demand
+2. **$10K+ MRR**: Prove revenue model viability  
+3. **Feature Expansion**: Search templates, webhooks, team management
+4. **Case Studies**: Document quantified ROI for enterprise customers
+
+---
+
+## 💡 Key Insight: Partnership Over Competition
+
+This isn't about replacing SignalHire - it's about **making their platform 10x more valuable** for enterprise customers. By driving increased API usage and enabling bulk processing capabilities, we create a win-win partnership that benefits both companies and delivers massive time savings to users.
+
+The focus should be on **time savings** and **bulk processing efficiency** rather than competing on price or features. Our success directly correlates with SignalHire's increased revenue from higher API usage.
 
 ## 🛠️ Technical Considerations
 
