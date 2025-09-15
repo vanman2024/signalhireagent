@@ -179,13 +179,13 @@ def main(ctx: Context, email, password, api_key, api_base_url, api_prefix, api_o
       export SIGNALHIRE_PASSWORD="your_password"
       # OR
       export SIGNALHIRE_API_KEY="your_api_key"
-      
+
       # Search for prospects
       signalhire search --title "Software Engineer" --location "San Francisco"
-      
+
       # Reveal contacts (API-first by default)
       signalhire reveal --input prospects.csv --output contacts.csv
-      
+
       # Force browser mode for bulk operations
       signalhire reveal --input large_list.csv --browser --bulk-size 1000
     
@@ -198,14 +198,14 @@ def main(ctx: Context, email, password, api_key, api_base_url, api_prefix, api_o
       # Basic search and reveal (API-first)
       signalhire search --title "VP Engineering" --company "Tech Startup"
       signalhire reveal --search-id abc123 --output vps.csv
-      
+
       # Large-scale operation (browser mode)
       signalhire reveal --input 5000_prospects.csv --browser --bulk-size 2000
-      
+
       # Check credits and status
       signalhire credits --check
       signalhire status --detailed
-      
+
       # Workflow with progress tracking
       signalhire workflow --title "CTO" --location "Silicon Valley" --limit 50
     """
@@ -272,7 +272,7 @@ def doctor(ctx, ping):
     # Map package names to import names
     required_packages = {
         'click': 'click',
-        'httpx': 'httpx', 
+        'httpx': 'httpx',
         'pandas': 'pandas',
         'pydantic': 'pydantic',
         'fastapi': 'fastapi',
@@ -367,6 +367,9 @@ from .reveal_commands import reveal  # noqa: E402
 from .search_commands import search  # noqa: E402
 from .status_commands import status  # noqa: E402
 from .workflow_commands import workflow  # noqa: E402
+from .dedupe_commands import dedupe  # noqa: E402
+from .analyze_commands import analyze  # noqa: E402
+from .filter_commands import filter as filter_contacts  # noqa: E402
 
 main.add_command(search)
 main.add_command(reveal)
@@ -374,6 +377,9 @@ main.add_command(workflow)
 main.add_command(status)
 main.add_command(config)
 main.add_command(export)
+main.add_command(dedupe)
+main.add_command(analyze)
+main.add_command(filter_contacts)
 
 
 if __name__ == '__main__':

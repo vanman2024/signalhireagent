@@ -121,3 +121,108 @@ signalhire export [OPTIONS] COMMAND [ARGS]...
     ```bash
     signalhire export search --search-id abc123 --format xlsx --columns "name,email,company"
     ```
+
+## `signalhire dedupe`
+
+Merge and deduplicate contacts from multiple JSON files.
+
+**Usage:**
+
+```bash
+signalhire dedupe merge [OPTIONS]
+```
+
+**Options:**
+
+*   `--input TEXT`      Input JSON file(s) or directory (comma-separated or dir) [required]
+*   `--output TEXT`     Output deduplicated JSON file [required]
+
+**Examples:**
+
+*   **Merge multiple JSON files:**
+    ```bash
+    signalhire dedupe merge --input contacts1.json,contacts2.json --output deduped.json
+    ```
+
+*   **Merge all JSON files in a directory:**
+    ```bash
+    signalhire dedupe merge --input /path/to/search/results --output deduped.json
+    ```
+
+## `signalhire analyze`
+
+Analyze contact quality and job title distribution.
+
+**Usage:**
+
+```bash
+signalhire analyze job-titles [OPTIONS]
+```
+
+**Options:**
+
+*   `--input TEXT`      Input JSON file [required]
+
+**Examples:**
+
+*   **Analyze job title distribution:**
+    ```bash
+    signalhire analyze job-titles --input contacts.json
+    ```
+
+## `signalhire filter`
+
+Filter contacts by job title, company, or other criteria.
+
+**Usage:**
+
+```bash
+signalhire filter job-title [OPTIONS]
+```
+
+**Options:**
+
+*   `--input TEXT`                  Input JSON file [required]
+*   `--output TEXT`                 Output filtered JSON file [required]
+*   `--exclude-job-titles TEXT`     Comma-separated list of job titles to exclude
+
+**Examples:**
+
+*   **Filter out operators and drivers:**
+    ```bash
+    signalhire filter job-title --input contacts.json --output filtered.json --exclude-job-titles "operator,driver,foreman"
+    ```
+
+## Workflow Examples
+
+### Complete Deduplication and Filtering Workflow
+
+1. **Search for contacts:**
+   ```bash
+   signalhire search --title "Heavy Equipment Mechanic" --location "Texas" --limit 1000
+   ```
+
+2. **Merge and deduplicate multiple search results:**
+   ```bash
+   signalhire dedupe merge --input search_results/ --output deduped_contacts.json
+   ```
+
+3. **Analyze job title distribution:**
+   ```bash
+   signalhire analyze job-titles --input deduped_contacts.json
+   ```
+
+4. **Filter unwanted job titles:**
+   ```bash
+   signalhire filter job-title --input deduped_contacts.json --output filtered_contacts.json --exclude-job-titles "operator,driver,foreman"
+   ```
+
+5. **Export to CSV for reveal:**
+   ```bash
+   signalhire export search --search-id abc123 --format csv --output ready_for_reveal.csv
+   ```
+
+6. **Reveal contacts:**
+   ```bash
+   signalhire reveal --input ready_for_reveal.csv --output revealed_contacts.csv
+   ```

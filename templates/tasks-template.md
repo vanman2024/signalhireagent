@@ -32,9 +32,30 @@
 9. Return: SUCCESS (tasks ready for execution)
 ```
 
+
 ## Format: `[ID] [P?] Description`
 - **[P]**: Can run in parallel (different files, no dependencies)
 - Include exact file paths in descriptions
+
+---
+
+### Example Tasks
+
+- [ ] T001 Setup Python environment and install dependencies (Click, pandas, pytest) [P]
+- [ ] T002 Add linting and type checking (ruff, mypy) [P]
+- [ ] T003 Create CLI command skeleton for `signalhire dedupe`, `analyze`, and `filter` in `src/cli/` [P]
+- [ ] T004 Write integration test for deduplication (merging JSON files, removing duplicates by uid/LinkedIn URL) in `tests/integration/test_deduplication.py` [P]
+- [ ] T005 Implement deduplication logic in `src/services/deduplication_service.py`
+- [ ] T006 Write integration test for job title filtering in `tests/integration/test_filtering.py` [P]
+- [ ] T007 Implement filtering logic in `src/services/filter_service.py`
+- [ ] T008 Write integration test for resume/reveal progress in `tests/integration/test_resume.py` [P]
+- [ ] T009 Implement progress tracking and resume logic in `src/services/progress_service.py`
+- [ ] T010 Add logging and error handling in `src/lib/logging.py` [P]
+- [ ] T011 Implement CSV export with deduplication metadata in `src/lib/csv_exporter.py` [P]
+- [ ] T012 Write unit tests for deduplication, filtering, and progress tracking in `tests/unit/` [P]
+- [ ] T013 Add CLI help text, usage examples, and polish docs in `docs/cli-commands.md` [P]
+- [ ] T014 Performance test: process 7,000+ contacts in under 5 minutes in `tests/performance/test_large_file.py` [P]
+- [ ] T015 Final review: validate requirements coverage and update documentation [P]
 
 ## Path Conventions
 - **Single project**: `src/`, `tests/` at repository root
@@ -103,11 +124,11 @@ Task: "Integration test auth in tests/integration/test_auth.py"
 1. **From Contracts**:
    - Each contract file → contract test task [P]
    - Each endpoint → implementation task
-   
+
 2. **From Data Model**:
    - Each entity → model creation task [P]
    - Relationships → service layer tasks
-   
+
 3. **From User Stories**:
    - Each story → integration test [P]
    - Quickstart scenarios → validation tasks

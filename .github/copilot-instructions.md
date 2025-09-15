@@ -62,10 +62,12 @@ signalhire credits --check
 - Environment variables: SIGNALHIRE_EMAIL, SIGNALHIRE_PASSWORD
 - **Dependency Installation**: Automatically handle missing dependencies with `run.py` script - will use sudo when needed and prompt for password
 - **Task Management & Completion Protocol**: 
-  - ✅ **ALWAYS commit code changes** when completing tasks
-  - ✅ **ALWAYS mark tasks as complete** with `[x]` symbol in tasks.md immediately after finishing
-  - ✅ **Use completion symbols** to show you have committed your work  
+  - ✅ **IMMEDIATELY commit code changes after EACH INDIVIDUAL TASK** - Do not batch multiple tasks
+  - ✅ **IMMEDIATELY mark tasks as complete** with `[x]` symbol in tasks.md after finishing each task
+  - ✅ **Use completion symbols** to show you have committed your work after each task
+  - ✅ **COMMIT CONTINUOUSLY** - After completing T007, commit immediately before starting T008
   - ❌ **NEVER leave uncommitted work** when marking tasks complete
+  - ❌ **NEVER batch multiple task completions** before committing
 
 ## Recent Features
 - 001-looking-to-build: Added SignalHire lead generation agent with web-based contact reveal + native CSV export
