@@ -282,8 +282,41 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Install dependencies
-pip3 install -r requirements.txt
+# Check if python3-venv is available by testing venv creation
+python3 -m venv test_venv_check > /dev/null 2>&1
+venv_available=$?
+rm -rf test_venv_check > /dev/null 2>&1
+
+if [ $venv_available -ne 0 ]; then
+    echo "Error: python3-venv not available"
+    echo "Please install it with: sudo apt install python3.12-venv"
+    echo ""
+    echo "Alternative: Use --break-system-packages flag"
+    echo "Would you like to install dependencies system-wide? (y/N)"
+    read -r response
+    if [[ "$response" =~ ^[Yy]$ ]]; then
+        echo "Installing dependencies system-wide..."
+        pip3 install -r requirements.txt --break-system-packages
+    else
+        echo "Installation cancelled. Please install python3-venv first."
+        exit 1
+    fi
+else
+    # Create virtual environment if it doesn't exist
+    if [ ! -d "venv" ]; then
+        echo "Creating virtual environment..."
+        python3 -m venv venv
+        if [ $? -ne 0 ]; then
+            echo "Failed to create virtual environment"
+            exit 1
+        fi
+    fi
+
+    # Activate virtual environment and install dependencies
+    echo "Installing dependencies in virtual environment..."
+    source venv/bin/activate
+    pip install -r requirements.txt
+fi
 
 # Make CLI executable (if using direct execution)
 chmod +x src/cli/main.py
@@ -292,7 +325,16 @@ echo "Installation complete!"
 echo ""
 echo "Next steps:"
 echo "1. Environment is already configured (.env created from your development settings)"
-echo "2. Run: python3 -m src.cli.main --help"
+if [ -d "venv" ]; then
+    echo "2. Activate virtual environment: source venv/bin/activate"
+    echo "3. Run: python3 -m src.cli.main --help"
+    echo ""
+    echo "Or use the CLI wrapper (automatically handles venv): ./signalhire-agent --help"
+else
+    echo "2. Run: python3 -m src.cli.main --help"
+    echo ""
+    echo "Or use the CLI wrapper: ./signalhire-agent --help"
+fi
 
 EOF
 
@@ -307,6 +349,12 @@ cat > "$TARGET_DIR/signalhire-agent" << 'EOF'
 # SignalHire Agent CLI Wrapper
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Check if virtual environment exists and use it
+if [ -d "$SCRIPT_DIR/venv" ]; then
+    source "$SCRIPT_DIR/venv/bin/activate"
+fi
+
 export PYTHONPATH="$SCRIPT_DIR:$PYTHONPATH"
 
 # Load .env if it exists
