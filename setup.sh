@@ -2,6 +2,38 @@
 
 echo "🚀 Setting up SignalHire Agent..."
 
+# Show help if requested
+if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+    echo "Usage: ./setup.sh [version]"
+    echo ""
+    echo "Version options:"
+    echo "  --stable        Use latest stable release (recommended)"
+    echo "  --latest-tag    Same as --stable"
+    echo "  v0.1.0          Use specific version tag"
+    echo "  main            Use latest development code (default)"
+    echo ""
+    echo "Examples:"
+    echo "  ./setup.sh --stable     # Use latest stable version"
+    echo "  ./setup.sh v0.1.0       # Use specific version"
+    echo "  ./setup.sh              # Use current branch"
+    exit 0
+fi
+
+# Check if we should use a stable version
+if [ "$1" = "--stable" ] || [ "$1" = "--latest-tag" ]; then
+    echo "📌 Switching to latest stable version..."
+    LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null)
+    if [ -n "$LATEST_TAG" ]; then
+        git checkout "$LATEST_TAG"
+        echo "✅ Using stable version: $LATEST_TAG"
+    else
+        echo "⚠️  No tags found, using current branch"
+    fi
+elif [ -n "$1" ]; then
+    echo "📌 Switching to specified version: $1"
+    git checkout "$1"
+fi
+
 # Make the launcher script globally available
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LAUNCHER_PATH="$SCRIPT_DIR/signalhire-agent"

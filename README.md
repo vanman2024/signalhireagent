@@ -28,8 +28,21 @@ AI-powered lead generation automation for SignalHire with full API integration. 
 
 ### Installation (2 Commands Only!)
 
+**Stable Version (Recommended for Production):**
 ```bash
-# 1. Clone and setup
+# 1. Clone and setup stable version
+git clone https://github.com/vanman2024/signalhireagent.git
+cd signalhireagent && ./setup.sh --stable
+
+# 2. Add your API key and start using
+nano .env  # Add your SignalHire API key
+signalhire-agent doctor  # Test setup
+signalhire-agent search --title "Software Engineer" --location "San Francisco"
+```
+
+**Latest Development Version:**
+```bash
+# 1. Clone and setup latest code
 git clone https://github.com/vanman2024/signalhireagent.git
 cd signalhireagent && ./setup.sh
 
