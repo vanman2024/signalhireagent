@@ -104,6 +104,9 @@ Documentation = "https://docs.signalhire-agent.com"
 [project.scripts]
 signalhire-agent = "cli.main:main"
 
+[project.entry-points."pip_install_hooks"]
+post_install = "cli.setup:post_install"
+
 [tool.setuptools.packages.find]
 where = ["src"]
 

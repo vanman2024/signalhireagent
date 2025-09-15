@@ -26,41 +26,26 @@ AI-powered lead generation automation for SignalHire with full API integration. 
 
 ## 🚀 Quick Start
 
-### Installation
+### Installation (2 Commands Only!)
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/vanman2024/signalhireagent.git
-   cd signalhireagent
-   
-   # Use the latest stable version
-   git checkout v0.1.0
-   ```
-   
-   **Current Version**: `v0.1.0` - [View Release](https://github.com/vanman2024/signalhireagent/releases/tag/v0.1.0)
+```bash
+# 1. Clone and setup
+git clone https://github.com/vanman2024/signalhireagent.git
+cd signalhireagent && ./setup.sh
 
-2. **Set up environment:**
-   ```bash
-   # Copy environment template
-   cp .env.example .env
-   # Edit .env with your actual credentials
-   nano .env
-   ```
+# 2. Add your API key and start using
+nano .env  # Add your SignalHire API key
+./signalhire-agent doctor  # Test setup
+./signalhire-agent search --title "Software Engineer" --location "San Francisco"
+```
 
-3. **Install dependencies:**
-   ```bash
-   # Install system packages (Ubuntu/Debian)
-   sudo apt install python3-pydantic python3-click python3-httpx python3-pandas python3-structlog python3-dotenv python3-email-validator
+**That's it!** No pip install, no dependencies, no virtual environments:
+- ✅ Universal launcher works on all systems (Windows/WSL/Linux/Mac)
+- ✅ Automatically handles dependencies via `run.py`
+- ✅ Creates `.env` configuration file  
+- ✅ Just clone and run `./signalhire-agent` - that's it!
 
-   # Or use pip (in virtual environment)
-   pip install -r requirements.txt
-   ```
-
-4. **Test installation:**
-   ```bash
-   python3 -m src.cli.main --help
-   python3 -m src.cli.main doctor
-   ```
+**Current Version**: `v0.1.0` - [View Release](https://github.com/vanman2024/signalhireagent/releases/tag/v0.1.0)
 
 ## 📈 Real-World Case Study: Professional Lead Generation
 
@@ -92,21 +77,19 @@ python3 -m src.cli.main search \
 
 **Timeline**: 15-20 minutes for complete data extraction + reveals (within rate limits)
 
----
-
 ### Configuration
 
-Set up your SignalHire API credentials:
+Your API key goes in the `.env` file (created automatically by setup):
 
 ```bash
-# Get your API key from SignalHire
-export SIGNALHIRE_API_KEY="your_api_key"
+# Edit the .env file created by setup.sh
+nano .env
 
-# Or create .env file (works in WSL too)
-echo 'SIGNALHIRE_API_KEY="your_api_key"' > .env
+# Add your SignalHire API key:
+SIGNALHIRE_API_KEY=your_actual_api_key_here
 
 # Test your credentials
-python3 -m src.cli.main doctor
+./signalhire-agent doctor
 ```
 
 **Getting API Access**: 
