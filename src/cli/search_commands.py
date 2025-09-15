@@ -233,8 +233,8 @@ async def execute_search(search_criteria: SearchCriteria, config, logger) -> dic
     help='Show what would be searched without executing'
 )
 @click.pass_context
-def search(ctx, title, location, company, industry, keywords, name, 
-          experience_from, experience_to, open_to_work, size, output, 
+def search(ctx, title, location, company, industry, keywords, name,
+          experience_from, experience_to, open_to_work, size, output,
           continue_search, scroll_id, request_id, dry_run, all_pages, max_pages):
     """
     Search SignalHire database for prospects (API-powered).
@@ -339,7 +339,7 @@ def search(ctx, title, location, company, industry, keywords, name,
                     scroll_id = previous_state['scroll_id']
                     search_criteria.scroll_id = scroll_id
                     echo(f"📄 Loaded scroll ID from previous search: {scroll_id[:20]}...")
-        except (json.JSONDecodeError, IOError) as e:
+        except (OSError, json.JSONDecodeError) as e:
             logger.warning("Could not load previous search state", error=str(e))
 
     # Execute search

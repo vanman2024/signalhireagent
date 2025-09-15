@@ -1,12 +1,18 @@
-import os
 import glob
+import os
+
 import click
-from src.services.deduplication_service import load_contacts_from_files, deduplicate_contacts, save_contacts_to_file
+
+from src.services.deduplication_service import (
+    deduplicate_contacts,
+    load_contacts_from_files,
+    save_contacts_to_file,
+)
+
 
 @click.group()
 def dedupe():
     """Deduplication operations for SignalHire contacts."""
-    pass
 
 @dedupe.command()
 @click.option('--input', required=True, help='Input JSON file(s) or directory (comma-separated or dir)')

@@ -1,7 +1,8 @@
 import logging
 import sys
-from typing import Any, Callable
+from collections.abc import Callable
 from functools import wraps
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +40,6 @@ def safe_file_write(file_path: str, data: str):
     try:
         with open(file_path, 'w') as f:
             f.write(data)
-    except IOError as e:
+    except OSError as e:
         logger.error(f"Failed to write to {file_path}: {e}")
         raise

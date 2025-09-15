@@ -82,7 +82,7 @@ class CliConfig:
                 self.headless = saved_config.get('headless', self.headless)
                 self.output_format = saved_config.get('output_format', self.output_format)
 
-            except (json.JSONDecodeError, IOError) as e:
+            except (OSError, json.JSONDecodeError) as e:
                 logger.warning("Could not load saved configuration", error=str(e))
 
     def save_config(self):
@@ -100,7 +100,7 @@ class CliConfig:
         try:
             with open(self.config_file, 'w') as f:
                 json.dump(config_data, f, indent=2)
-        except IOError as e:
+        except OSError as e:
             logger.warning("Could not save configuration", error=str(e))
 
     def auto_detect_mode(self):
@@ -361,15 +361,15 @@ def doctor(ctx, ping):
 
 
 # Import and register commands after main is defined
+from .analyze_commands import analyze  # noqa: E402
 from .config_commands import config  # noqa: E402
+from .dedupe_commands import dedupe  # noqa: E402
 from .export_commands import export  # noqa: E402
+from .filter_commands import filter as filter_contacts  # noqa: E402
 from .reveal_commands import reveal  # noqa: E402
 from .search_commands import search  # noqa: E402
 from .status_commands import status  # noqa: E402
 from .workflow_commands import workflow  # noqa: E402
-from .dedupe_commands import dedupe  # noqa: E402
-from .analyze_commands import analyze  # noqa: E402
-from .filter_commands import filter as filter_contacts  # noqa: E402
 
 main.add_command(search)
 main.add_command(reveal)

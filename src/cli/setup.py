@@ -2,8 +2,6 @@
 Post-installation setup for SignalHire Agent
 """
 
-import os
-import sys
 from pathlib import Path
 
 
@@ -27,13 +25,13 @@ SIGNALHIRE_API_KEY=your_api_key_here
 """
             env_file.write_text(env_content)
             print("✅ Created .env configuration file")
-        
+
         print("🎉 SignalHire Agent setup complete!")
         print("\nNext steps:")
         print("1. Edit .env file with your SignalHire API key")
         print("2. Run: signalhire-agent doctor")
         print("3. Start searching: signalhire-agent search --help")
-        
+
     except Exception as e:
         print(f"⚠️  Setup warning: {e}")
 

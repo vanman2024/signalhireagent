@@ -1,9 +1,9 @@
 import click
 
+
 @click.group()
 def analyze():
     """Analyze contact quality and job title distribution."""
-    pass
 
 @analyze.command()
 @click.option('--input', required=True, help='Input JSON file')

@@ -359,7 +359,7 @@ class ExportService:
             prospects = data.get('prospects', [])
             return await self.export_to_csv(prospects=prospects, output_file=output_file)
 
-        except (IOError, json.JSONDecodeError) as e:
+        except (OSError, json.JSONDecodeError) as e:
             raise ExportServiceError(f"Failed to process input file {input_file}: {e}") from e
 
     async def _convert_to_dicts(self, items: list[dict[str, Any] | Any]) -> list[dict[str, Any]]:

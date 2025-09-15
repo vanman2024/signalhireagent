@@ -257,7 +257,7 @@ async def check_operation_status(operation_id: str, config) -> dict[str, Any]:
         try:
             with open(operation_file) as f:
                 return json.load(f)
-        except (json.JSONDecodeError, IOError):
+        except (OSError, json.JSONDecodeError):
             pass
 
     # Fallback to API if available
@@ -285,7 +285,7 @@ async def list_recent_operations(limit: int = 20) -> list[dict[str, Any]]:
             try:
                 with open(op_file) as f:
                     operations.append(json.load(f))
-            except (json.JSONDecodeError, IOError):
+            except (OSError, json.JSONDecodeError):
                 continue
 
     return operations
@@ -600,7 +600,7 @@ def status(ctx, operation_id, show_credits, operations, daily_usage, logs, syste
 
                         if len(lines) > 20:
                             echo(f"\n... ({len(lines) - 20} more lines in {log_file})")
-                except IOError as e:
+                except OSError as e:
                     echo(style(f"Error reading log file: {e}", fg='red'))
             else:
                 echo("No log file found")

@@ -186,7 +186,7 @@ class CSVExporter:
                 return self._export_prospects_pandas(prospects, contacts, experiences, education, start_time)
             return self._export_prospects_native(prospects, contacts, experiences, education, start_time)
 
-        except (IOError, csv.Error) as e:
+        except (OSError, csv.Error) as e:
             duration = (datetime.now() - start_time).total_seconds()
             return ExportResult(
                 file_path=self.config.output_path,
@@ -213,7 +213,7 @@ class CSVExporter:
                 return self._export_operations_pandas(operations, start_time)
             return self._export_operations_native(operations, start_time)
 
-        except (IOError, csv.Error) as e:
+        except (OSError, csv.Error) as e:
             duration = (datetime.now() - start_time).total_seconds()
             return ExportResult(
                 file_path=self.config.output_path,
@@ -242,7 +242,7 @@ class CSVExporter:
                 return self._export_signalhire_csv_pandas(signalhire_csv_path, enhanced_data, start_time)
             return self._export_signalhire_csv_native(signalhire_csv_path, enhanced_data, start_time)
 
-        except (IOError, csv.Error) as e:
+        except (OSError, csv.Error) as e:
             duration = (datetime.now() - start_time).total_seconds()
             return ExportResult(
                 file_path=self.config.output_path,

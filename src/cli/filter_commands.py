@@ -1,10 +1,15 @@
 import click
-from src.services.filter_service import load_contacts_from_file, filter_contacts_by_job_title, save_contacts_to_file
+
+from src.services.filter_service import (
+    filter_contacts_by_job_title,
+    load_contacts_from_file,
+    save_contacts_to_file,
+)
+
 
 @click.group()
 def filter():
     """Filter contacts by job title, company, or other criteria."""
-    pass
 
 @filter.command()
 @click.option('--input', required=True, help='Input JSON file')

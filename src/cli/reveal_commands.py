@@ -213,23 +213,23 @@ def load_prospects_from_file(file_path: str, skip_existing_contacts: bool = True
                 profiles = data['profiles']
                 uids = []
                 skipped_count = 0
-                
+
                 for p in profiles:
                     uid = p.get('uid') or p.get('id')
                     if not uid:
                         continue
-                    
+
                     # Check if contacts already exist
                     if skip_existing_contacts and p.get('contactsFetched'):
                         skipped_count += 1
                         continue
-                    
+
                     uids.append(uid)
-                
+
                 if skip_existing_contacts and skipped_count > 0:
                     click.echo(f"ℹ️  Skipped {skipped_count} prospects that already have contacts")
                     click.echo(f"🔍 Will reveal {len(uids)} prospects that need contacts")
-                
+
                 return uids
             if 'prospects' in data:
                 prospects = data['prospects']
@@ -241,7 +241,7 @@ def load_prospects_from_file(file_path: str, skip_existing_contacts: bool = True
 
     except json.JSONDecodeError as e:
         raise click.ClickException(f"Invalid JSON in {file_path}: {e}") from e
-    except IOError as e:
+    except OSError as e:
         raise click.ClickException(f"Error reading {file_path}: {e}") from e
 
 
@@ -612,7 +612,7 @@ def reveal(ctx, prospect_uids, search_file, bulk_size, use_native_export,
             if config.verbose:
                 echo(f"📂 Loaded {len(file_uids)} prospect UIDs from {search_file}")
 
-        except (IOError, json.JSONDecodeError) as e:
+        except (OSError, json.JSONDecodeError) as e:
             echo(style(f"Error loading prospects from file: {e}", fg='red'), err=True)
             ctx.exit(1)
 

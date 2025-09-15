@@ -154,7 +154,7 @@ class ConfigManager:
 
             # Secure file permissions
             os.chmod(self.config_file, 0o600)
-        except IOError as e:
+        except OSError as e:
             raise ConfigurationError(f"Failed to save config: {e}") from e
 
     def get_value(self, key: str) -> Any:

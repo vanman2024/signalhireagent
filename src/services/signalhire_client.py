@@ -77,7 +77,7 @@ class RateLimiter:
                         continue
 
                 return usage_data
-        except (IOError, ImportError):
+        except (OSError, ImportError):
             pass
 
         return {"credits_used": 0, "reveals": 0}
@@ -750,13 +750,13 @@ class SignalHireClient:
         """
         # Validate size parameter
         size = max(1, min(size, 100))
-        
+
         # Prepare search data
         search_data = {
             "size": size,
             **search_criteria
         }
-        
+
         # Enforce single-concurrency per client for Search API
         async with self._search_semaphore:
             return await self._make_request("POST", "/candidate/searchByQuery", json=search_data)
@@ -2035,13 +2035,13 @@ class SignalHireClient:
         """
         # Validate size parameter
         size = max(1, min(size, 100))
-        
+
         # Prepare search data
         search_data = {
             "size": size,
             **search_criteria
         }
-        
+
         # Enforce single-concurrency per client for Search API
         async with self._search_semaphore:
             return await self._make_request("POST", "/candidate/searchByQuery", json=search_data)
