@@ -13,7 +13,8 @@ ENV/
 archive/
 *.egg-info/
 dist/
-build/
+# Python build directory (not scripts/build/)
+/build/
 
 # IDE
 .vscode/settings.json
