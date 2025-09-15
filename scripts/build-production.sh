@@ -138,6 +138,16 @@ cp README.md "$TARGET_DIR/" 2>/dev/null || true
 cp QUICKSTART.md "$TARGET_DIR/" 2>/dev/null || true
 cp LICENSE "$TARGET_DIR/" 2>/dev/null || true
 
+# AI Agent instruction files (essential for agents to work with CLI)
+cp CLAUDE.md "$TARGET_DIR/" 2>/dev/null || true
+cp AGENTS.md "$TARGET_DIR/" 2>/dev/null || true
+mkdir -p "$TARGET_DIR/.github"
+cp -r .github/copilot-instructions.md "$TARGET_DIR/.github/" 2>/dev/null || true
+
+# CLI commands reference (referenced by agent files)
+mkdir -p "$TARGET_DIR/docs"
+cp docs/cli-commands.md "$TARGET_DIR/docs/" 2>/dev/null || true
+
 # Create production requirements.txt (without dev dependencies)
 print_status "Creating production requirements.txt..."
 cat > "$TARGET_DIR/requirements.txt" << EOF
@@ -297,13 +307,18 @@ cat > "$TARGET_DIR/BUILD_INFO.md" << EOF
 - \`install.sh\` - Installation script
 - \`signalhire-agent\` - CLI wrapper script
 - \`.env.example\` - Configuration template
+- \`CLAUDE.md\` - Claude Code agent instructions
+- \`AGENTS.md\` - All AI agents instructions (Codex, Gemini, etc.)
+- \`.github/copilot-instructions.md\` - GitHub Copilot instructions
+- \`docs/cli-commands.md\` - Complete CLI command reference for agents
 
 ## Files Excluded (Development Only)
 - \`tests/\` - Test suite
 - \`specs/\` - Development specifications  
 - \`.pytest_cache/\` - Test cache
 - \`pyproject.toml\` - Development configuration
-- Development documentation and scripts
+- \`TESTING_AND_RELEASE.md\` - Development workflow guide
+- Development scripts and tools
 
 ## Installation
 1. Run \`./install.sh\`
