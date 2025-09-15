@@ -136,33 +136,81 @@ Follow semantic versioning format: `v0.0.1`, `v0.0.2`, `v0.0.3`, etc.
 - **Next Release**: `v0.2.1` (for next bug fix/improvement)
 - **Next Minor**: `v0.3.0` (for next major feature)
 
-### Creating Release Tags
+### Changes Since v0.2.0 (Pending for v0.2.1)
+**📝 Documentation Improvements (No Release Required):**
+- ✅ Updated CLI commands reference with AI agent guidance  
+- ✅ Enhanced testing and release guide with semantic versioning
+- ✅ Added comprehensive command mapping for natural language requests
+- ✅ Improved Boolean search operator documentation
+
+**🔧 Code Changes (Will Trigger v0.2.1 When Accumulated):**
+- *None yet - waiting for next bug fix or feature*
+
+**Release Readiness:** Not ready - only documentation changes so far
+
+### When to Create Releases vs Regular Commits
+
+**🚫 NO RELEASE NEEDED (Regular Commit Only):**
+- Documentation updates (README, CLI docs, guides)
+- Comment additions or improvements
+- Code formatting/linting fixes
+- Test improvements (without functionality changes)
+- Configuration file updates
+- Minor refactoring without user-facing changes
+
+**✅ CREATE RELEASE (Version Tag Required):**
+- New CLI commands or features
+- Bug fixes in actual functionality
+- API endpoint changes
+- Performance improvements
+- Security fixes
+- Breaking changes
+
+### Standard Workflow Examples
+
+**Documentation/Minor Changes (No Release):**
 ```bash
-# 1. Update version in documentation first
+# 1. Make changes and commit
+git add .
+git commit -m "docs: update CLI reference with AI agent guidance
+
+🤖 Generated with Claude Code
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
+
+# 2. Push to main (no tag needed)
+git push origin main
+
+# Status: Still on v0.2.0 + improvements
+```
+
+**Feature/Bug Fix Changes (Create Release):**
+```bash
+# 1. Update version in documentation first (if user-facing)
 # Update README.md, QUICKSTART.md version references
 
 # 2. Commit all changes
 git add .
-git commit -m "feat: description of changes
+git commit -m "feat: add new search filter options
 
 🤖 Generated with Claude Code
 
 Co-Authored-By: Claude <noreply@anthropic.com>"
 
 # 3. Create annotated tag with proper increment
-git tag -a v0.2.1 -m "Release v0.2.1: Brief description
+git tag -a v0.2.1 -m "Release v0.2.1: Enhanced Search Filters
 
 ## ✨ New Features
-- Feature 1
-- Feature 2
+- Added company size filter
+- Added remote work filter
 
 ## 🐛 Bug Fixes  
-- Fix 1
-- Fix 2
+- Fixed pagination issue in large searches
+- Improved error handling for invalid locations
 
 ## 🛠 Technical Improvements
-- Improvement 1
-- Improvement 2
+- Enhanced search parameter validation
+- Improved logging for debug mode
 
 🤖 Generated with Claude Code"
 
@@ -188,7 +236,31 @@ v0.9.10 → v1.0.0 → v1.0.1 → v1.0.2
 2. Test commands in documentation actually work
 3. Verify both directories have identical documentation
 
-### Pre-Release Checklist
+### Release Decision Tree
+
+**Ask yourself: "Did I change any actual code functionality?"**
+
+```
+┌─ Documentation only? ──────────────────┐
+│  (README, guides, comments, help text) │
+└─────────────────────────┬──────────────┘
+                          │
+                          ▼
+                    ✅ Just commit & push
+                    📝 No release needed
+                    🏷️  Stay on current version
+
+┌─ Code changes? ────────────────────────┐
+│  (CLI commands, bug fixes, features)   │  
+└─────────────────────────┬──────────────┘
+                          │
+                          ▼
+                   ✅ Commit, tag & push  
+                   🏷️  Create new version
+                   📋 Update release notes
+```
+
+### Pre-Release Checklist (Only for Code Changes)
 - [ ] Both directories on `main` branch
 - [ ] Both directories have identical `git log --oneline -1`
 - [ ] Performance tests pass in both directories  
