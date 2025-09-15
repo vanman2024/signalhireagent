@@ -19,10 +19,15 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration file for sync targets
-CONFIG_FILE=".auto-sync-targets"
+CONFIG_FILE=".automation/config/auto-sync-targets"
+STATE_FILE=".automation/state/last-auto-sync"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 CONFIG_PATH="$REPO_ROOT/$CONFIG_FILE"
+STATE_PATH="$REPO_ROOT/$STATE_FILE"
+
+# Ensure automation directories exist
+mkdir -p "$REPO_ROOT/.automation/config" "$REPO_ROOT/.automation/state"
 
 print_status() {
     echo -e "${BLUE}[AUTO-SYNC]${NC} $1"
@@ -171,7 +176,7 @@ check_auto_sync() {
     fi
     
     # Check if there are uncommitted changes or new commits since last sync
-    local last_sync_file="$REPO_ROOT/.last-auto-sync"
+    local last_sync_file="$STATE_PATH"
     local current_commit=$(git rev-parse HEAD 2>/dev/null || echo "no-git")
     
     if [[ -f "$last_sync_file" ]]; then
@@ -248,7 +253,7 @@ show_status() {
     fi
     
     # Show last sync info
-    local last_sync_file="$REPO_ROOT/.last-auto-sync"
+    local last_sync_file="$STATE_PATH"
     if [[ -f "$last_sync_file" ]]; then
         local last_commit=$(cat "$last_sync_file")
         local current_commit=$(git rev-parse HEAD 2>/dev/null || echo "no-git")

@@ -85,14 +85,14 @@ cd ~/deployments/signalhire-staging
 
 ## 🎮 Convenience Commands
 
-After setup, these commands are available in the repo root:
+After setup, these commands are available in the scripts directory:
 
 ```bash
 # Quick deploy to any directory
-./deploy ~/custom-deployment
+./scripts/deploy ~/custom-deployment
 
 # Setup new deployment target with full automation
-./setup-cd ~/new-target
+./scripts/setup-cd ~/new-target
 ```
 
 ## 🏷️ Automatic Releases

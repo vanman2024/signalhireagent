@@ -69,3 +69,8 @@ docker-data/
 
 .gemini/
 gha-creds-*.json
+
+# Automation system files (state and user-specific configs)
+.automation/state/
+.automation/config/auto-sync-targets
+.automation/config/continuous-deployment

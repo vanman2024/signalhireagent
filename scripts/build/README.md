@@ -100,24 +100,24 @@ Complete automation orchestrating all systems together.
 
 ## 🛠️ Developer Convenience
 
-After running the setup, these convenience scripts are created in the repo root:
+After running the setup, these convenience scripts are created in the scripts directory:
 
 ```bash
 # Quick deployment to any directory
-./deploy ~/target-directory
+./scripts/deploy ~/target-directory
 
 # Setup continuous deployment for new target
-./setup-cd ~/new-deployment-target
+./scripts/setup-cd ~/new-deployment-target
 ```
 
 ## 📋 Configuration Files
 
 The automation system creates these configuration files:
 
-- `.auto-sync-targets` - List of directories to sync automatically
-- `.continuous-deployment` - Main CD configuration  
-- `.last-auto-sync` - Tracks last sync commit
-- `.last-release-check` - Tracks release checking state
+- `.automation/config/auto-sync-targets` - List of directories to sync automatically
+- `.automation/config/continuous-deployment` - Main CD configuration  
+- `.automation/state/last-auto-sync` - Tracks last sync commit
+- `.automation/state/last-release-check` - Tracks release checking state
 - `.git/hooks/post-commit` - Automatic git hooks
 
 ## 🔍 Status & Monitoring

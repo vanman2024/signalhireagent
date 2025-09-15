@@ -97,8 +97,11 @@ setup_continuous_deployment() {
         "$SCRIPT_DIR/auto-sync-config.sh" add "$TARGET_DIR"
     fi
     
+    # Ensure automation directories exist
+    mkdir -p "$REPO_ROOT/.automation/config" "$REPO_ROOT/.automation/state"
+    
     # Create continuous deployment configuration
-    local config_file="$REPO_ROOT/.continuous-deployment"
+    local config_file="$REPO_ROOT/.automation/config/continuous-deployment"
     cat > "$config_file" << EOF
 # Continuous Deployment Configuration
 # Generated on $(date)
@@ -166,7 +169,7 @@ show_status() {
     echo ""
     
     # Check if CD is configured
-    local config_file="$REPO_ROOT/.continuous-deployment"
+    local config_file="$REPO_ROOT/.automation/config/continuous-deployment"
     if [[ ! -f "$config_file" ]]; then
         print_warning "Continuous deployment not configured"
         echo "Run: $0 setup [--target DIR] [--auto-release]"
@@ -222,8 +225,8 @@ watch_deployment() {
 create_dev_workflow() {
     print_status "Creating development workflow integration..."
     
-    # Create convenience script for developers
-    cat > "$REPO_ROOT/deploy" << 'EOF'
+    # Create convenience script for developers in scripts directory
+    cat > "$REPO_ROOT/scripts/deploy" << 'EOF'
 #!/bin/bash
 # Quick deployment helper
 # Usage: ./deploy [target_directory]
@@ -239,10 +242,10 @@ else
 fi
 EOF
     
-    chmod +x "$REPO_ROOT/deploy"
+    chmod +x "$REPO_ROOT/scripts/deploy"
     
-    # Create setup helper
-    cat > "$REPO_ROOT/setup-cd" << 'EOF'
+    # Create setup helper in scripts directory
+    cat > "$REPO_ROOT/scripts/setup-cd" << 'EOF'
 #!/bin/bash
 # Continuous deployment setup helper
 # Usage: ./setup-cd [target_directory]
@@ -258,11 +261,11 @@ else
 fi
 EOF
     
-    chmod +x "$REPO_ROOT/setup-cd"
+    chmod +x "$REPO_ROOT/scripts/setup-cd"
     
     print_success "Development workflow helpers created:"
-    echo "  ./deploy [target]     - Quick deployment"
-    echo "  ./setup-cd <target>   - Setup continuous deployment"
+    echo "  ./scripts/deploy [target]     - Quick deployment"
+    echo "  ./scripts/setup-cd <target>   - Setup continuous deployment"
 }
 
 # Function to show usage
@@ -292,6 +295,7 @@ show_usage() {
     echo "  $0 setup --target ~/deployments/signalhire-staging --auto-release"
     echo ""
     echo "  # Then make changes and commit - everything else is automatic!"
+    echo "  # Use convenience scripts: ./scripts/deploy or ./scripts/setup-cd"
 }
 
 # Parse arguments first

@@ -24,6 +24,9 @@ NC='\033[0m' # No Color
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
+# Ensure automation directories exist
+mkdir -p "$REPO_ROOT/.automation/config" "$REPO_ROOT/.automation/state"
+
 print_status() {
     echo -e "${BLUE}[RELEASE]${NC} $1"
 }
@@ -142,7 +145,7 @@ analyze_commits() {
 # Function to check if a new release should be created
 check_release_needed() {
     local last_version=$(get_latest_version)
-    local last_release_file="$REPO_ROOT/.last-release-check"
+    local last_release_file="$REPO_ROOT/.automation/state/last-release-check"
     local current_commit=$(git rev-parse HEAD)
     
     # Check if we have any commits since last version tag
@@ -255,7 +258,7 @@ create_release() {
     fi
     
     # Update last release check
-    echo "$(git rev-parse HEAD)" > "$REPO_ROOT/.last-release-check"
+    echo "$(git rev-parse HEAD)" > "$REPO_ROOT/.automation/state/last-release-check"
     
     # Trigger auto-sync if configured
     if [[ -f "$SCRIPT_DIR/auto-sync-config.sh" ]]; then
