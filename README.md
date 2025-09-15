@@ -32,7 +32,12 @@ AI-powered lead generation automation for SignalHire with full API integration. 
    ```bash
    git clone https://github.com/vanman2024/signalhireagent.git
    cd signalhireagent
+   
+   # Use the latest stable version
+   git checkout v0.1.0
    ```
+   
+   **Current Version**: `v0.1.0` - [View Release](https://github.com/vanman2024/signalhireagent/releases/tag/v0.1.0)
 
 2. **Set up environment:**
    ```bash
