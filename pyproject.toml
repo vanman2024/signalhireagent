@@ -102,7 +102,7 @@ Documentation = "https://docs.signalhire-agent.com"
 "Bug Tracker" = "https://github.com/signalhire-agent/signalhire-agent/issues"
 
 [project.scripts]
-signalhire-agent = "signalhire_agent.cli.main:main"
+signalhire-agent = "cli.main:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
