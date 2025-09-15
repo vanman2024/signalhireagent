@@ -87,7 +87,7 @@ signalhire search \
 
 **Key Learnings**:
 - Boolean OR searches discover 3x more prospects than single title searches
-- Daily search quotas (~2,500) separate from reveal credit limits
+- Daily search quotas (200 queries) separate from reveal credit limits (5,000)
 - `--skip-existing` flag automatically saves credits on existing contacts
 - Enterprise pricing available for bulk projects (contact support@signalhire.com)
 
@@ -419,6 +419,57 @@ signalhire config reset
 # Validate configuration
 signalhire config validate
 ```
+
+## 📊 SignalHire API Limits & Pricing
+
+### Official API Quotas (Updated September 2025)
+
+**Search API Limits:**
+- 🔍 **Daily Search Queries**: 200 search requests per 24 hours
+- 👁️ **Profile Snippet Views**: 5,000 profile views per 24 hours
+- ⏰ **Reset Time**: Daily at 12:00 AM UTC
+- 🔄 **Applies To**: Both API and UI requests
+
+**Person API (Contact Reveals):**
+- 📞 **Daily Contact Reveals**: 5,000 successful reveals per 24 hours
+- ⏰ **Reset Time**: Daily at 12:00 AM UTC
+- 💳 **Credit-based**: Each successful reveal consumes credits
+
+### Upgrade Options
+
+**Double Profile Snippet Limit** ($49 one-time):
+- 📈 **Profile Views**: 5,000 → 10,000 per 24 hours
+- 📧 **Plan Upgrade**: Automatically upgrades to "Emails only" tier
+- 💰 **Monthly Cost**: $98/month for 350 credits/month
+- ✨ **Permanent**: Doubled limit maintained on recurring billing
+
+**Double Contact Reveal Limit** (Bulk Credit Purchase):
+- 📞 **Daily Reveals**: 5,000 → 10,000 per 24 hours
+- 📈 **Bonus**: Also doubles profile snippet limit to 10,000
+- 💳 **Purchase**: Available through additional credit packages
+
+### Rate Limits (Technical)
+- ⚡ **Search API**: 600 elements/minute (3 concurrent requests)
+- 🔄 **Person API**: Async callback-based processing
+- 📊 **Batch Size**: Up to 100 items per reveal request
+
+### Monitoring Your Usage
+```bash
+# Check current quota usage (fast)
+signalhire status --credits
+
+# Example output:
+# 📊 Search API: 45/200 daily queries used
+# 👁️ Profile Views: 1,250/5,000 daily views used  
+# 📞 Contact Reveals: 23/5,000 daily reveals used
+# ⏰ Quota resets: 2025-09-16 00:00:00 UTC
+```
+
+**Pro Tips:**
+- 🎯 Use Boolean search to maximize results per query
+- 💰 Enable `--skip-existing` flag to save reveal credits
+- 📈 Monitor usage with `signalhire status --credits`
+- 🚀 Contact SignalHire support for enterprise quotas
 
 ## 📁 File Formats
 
