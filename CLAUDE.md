@@ -73,10 +73,12 @@ TypeScript: ESLint + Prettier for Stagehand automation scripts
 
 ### Critical Completion Protocol
 - ✅ **ALWAYS commit code changes** when completing tasks
+- ✅ **ALWAYS push commits to remote** immediately after committing (`git push origin main`)
 - ✅ **ALWAYS mark tasks as complete** with `[x]` symbol in tasks.md
 - ✅ **Use completion symbols** to show you have committed your work
 - ✅ **VERIFY 100% FR COMPLIANCE** before merging - all Functional Requirements must be implemented
 - ✅ **TEST ALL EDGE CASES** before merging - must handle gracefully, not crash
+- ❌ **NEVER forget to push commits** - other developers/directories won't see changes until pushed
 - ❌ **NEVER delete feature branch** until 100% FR compliance verified
 - ❌ **NEVER leave uncommitted work** when marking tasks complete
 
