@@ -144,8 +144,9 @@ def check_and_install_dependencies(argv: list[str]):
     
     # Skip dependency checks for normal CLI usage unless forced
     # Only check on doctor command or when explicitly requested
-    is_doctor_command = "doctor" in argv
+    is_doctor_command = any("doctor" in str(arg) for arg in argv)
     if not force_check and not running_pytest and not is_doctor_command:
+        print(f"Using Python: {python_cmd}")
         return True
 
     if running_pytest:
