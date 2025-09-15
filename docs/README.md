@@ -15,6 +15,7 @@ Agent-specific instructions and context files:
 System design and coordination documentation:
 - **[AI_COORDINATION_PLAN.md](./architecture/AI_COORDINATION_PLAN.md)** - Revolutionary @symbol coordination system
 - **[api.md](./architecture/api.md)** - API documentation and specifications
+- **[CLI_FIRST_PATTERN.md](./CLI_FIRST_PATTERN.md)** - CLI-first development pattern for API connectors
 
 ### 🛠️ [`development/`](./development/)
 Development processes and guidelines:
@@ -40,7 +41,9 @@ grep "@deepseek" agents/DEEPSEEK.md  # Check @deepseek tasks
 - **@Symbol System**: [AI_COORDINATION_PLAN.md](./architecture/AI_COORDINATION_PLAN.md)
 - **Multi-Agent Workflow**: See breakthrough coordination approach
 
-## 🚀 Key Innovation: @Symbol Coordination
+## 🚀 Key Innovations
+
+### @Symbol Coordination System
 
 This project pioneered the **@symbol coordination system** - a simple, scalable approach to multi-agent development using familiar @mention syntax in markdown files. This system outperforms complex orchestration frameworks through:
 
@@ -49,6 +52,17 @@ This project pioneered the **@symbol coordination system** - a simple, scalable 
 - **Self-Documenting**: The system explains itself
 - **Tool Agnostic**: Works with any agent or human
 - **Instantly Scalable**: Add new agents by just using @newagent
+
+### CLI-First Architecture Pattern
+
+This project demonstrates the **CLI-First Pattern** for API connector projects - a proven strategy for building on top of existing services:
+
+- **Rapid API Validation**: Test integrations without frontend complexity
+- **Technical Early Adopters**: Serve power users first, expand to broader audiences later
+- **Future-Proof Foundation**: CLI logic becomes the backbone for web UIs, mobile apps, and integrations
+- **Real-World Success**: Pattern used by Terraform, Docker, Stripe, and other major tools
+
+See [CLI_FIRST_PATTERN.md](./CLI_FIRST_PATTERN.md) for the complete guide.
 
 ## 📊 Agent Ecosystem
 
