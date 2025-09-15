@@ -197,10 +197,30 @@ if [[ -f ".env" ]]; then
     ACTUAL_REVEAL_LIMIT=$(grep "^DAILY_REVEAL_LIMIT=" .env 2>/dev/null | cut -d'=' -f2- || echo "5000")
     ACTUAL_SEARCH_LIMIT=$(grep "^DAILY_SEARCH_PROFILE_LIMIT=" .env 2>/dev/null | cut -d'=' -f2- || echo "5000")
     
+    # Create .env.example as template
     cat > "$TARGET_DIR/.env.example" << EOF
 # SignalHire Agent Configuration
-# This file contains actual values from your development environment
-# Copy this to .env to use the same configuration
+# Copy this to .env and add your actual values
+
+# SignalHire credentials
+SIGNALHIRE_API_KEY=your_api_key_here
+SIGNALHIRE_EMAIL=your_email@example.com
+SIGNALHIRE_PASSWORD=your_password_here
+
+# Optional: API Configuration
+SIGNALHIRE_API_BASE_URL=https://www.signalhire.com
+SIGNALHIRE_API_PREFIX=/api/v1
+
+# Optional: Rate Limiting
+RATE_LIMIT_REQUESTS_PER_MINUTE=600
+DAILY_REVEAL_LIMIT=5000
+DAILY_SEARCH_PROFILE_LIMIT=5000
+EOF
+
+    # Create .env with actual values
+    cat > "$TARGET_DIR/.env" << EOF
+# SignalHire Agent Configuration
+# Auto-generated from development environment
 
 # SignalHire credentials
 SIGNALHIRE_API_KEY=$ACTUAL_API_KEY
@@ -216,6 +236,9 @@ RATE_LIMIT_REQUESTS_PER_MINUTE=$ACTUAL_RATE_LIMIT
 DAILY_REVEAL_LIMIT=$ACTUAL_REVEAL_LIMIT
 DAILY_SEARCH_PROFILE_LIMIT=$ACTUAL_SEARCH_LIMIT
 EOF
+
+    # Remove .env.example after creating .env
+    rm "$TARGET_DIR/.env.example"
 else
     print_warning "No source .env file found, creating template with default values..."
     cat > "$TARGET_DIR/.env.example" << EOF
@@ -236,11 +259,13 @@ RATE_LIMIT_REQUESTS_PER_MINUTE=600
 DAILY_REVEAL_LIMIT=5000
 DAILY_SEARCH_PROFILE_LIMIT=5000
 EOF
-fi
 
-# Automatically create .env from .env.example for immediate use
-print_status "Creating production .env file..."
-cp "$TARGET_DIR/.env.example" "$TARGET_DIR/.env"
+    # Create .env with same template values (user will need to update)
+    cp "$TARGET_DIR/.env.example" "$TARGET_DIR/.env"
+    
+    # Remove .env.example after creating .env
+    rm "$TARGET_DIR/.env.example"
+fi
 
 # Create simple deployment script
 print_status "Creating deployment utilities..."
@@ -311,8 +336,7 @@ cat > "$TARGET_DIR/BUILD_INFO.md" << EOF
 - \`VERSION\` - Version information (JSON)
 - \`install.sh\` - Installation script
 - \`signalhire-agent\` - CLI wrapper script
-- \`.env.example\` - Configuration template (auto-populated from source .env)
-- \`.env\` - Production environment file (automatically created from .env.example)
+- \`.env\` - Production environment file (automatically created with your credentials)
 - \`CLAUDE.md\` - Claude Code agent instructions
 - \`AGENTS.md\` - All AI agents instructions (Codex, Gemini, etc.)
 - \`.github/copilot-instructions.md\` - GitHub Copilot instructions
