@@ -340,7 +340,24 @@ Running: /mnt/c/Python312/python.exe -m pytest with appropriate markers (unit, i
 - ✅ **Enforcement**: New scripts must have headers, existing scripts updated when modified
 - **Standard**: All agents must follow header format for maintainability
 
-### VI. Documentation & Shared Memory (ACTIVE)
+### VI. Local Deployment & Testing Standards (CRITICAL)
+- ✅ **ALL production changes MUST be tested locally first** using production build system
+- ✅ **Required local testing workflow**: Build → Install → Validate → Test CLI → Commit
+- ✅ **Production build testing**: `./scripts/build/build-production.sh test-build --latest --force`
+- ✅ **Environment isolation**: Virtual environments for production testing
+- ✅ **End-user validation**: Test all CLI commands work in production environment
+- ✅ **Deployment validation**: Verify .env configuration, dependencies, and functionality
+- **Protocol**: Never release without local production build verification
+
+### VII. Quality Assurance Pipeline (MANDATORY)
+- ✅ **Code quality gates**: Lint (ruff), type-check (mypy), format (black) before commit
+- ✅ **Test coverage requirements**: ≥80% coverage on new/changed code
+- ✅ **Integration testing**: httpx mocking to avoid burning API credits during development
+- ✅ **Contract testing**: Browser automation tests marked appropriately (slow/browser)
+- ✅ **Production readiness**: Local deployment testing before any release
+- **Standard**: All quality gates must pass before code integration
+
+### VIII. Documentation & Shared Memory (ACTIVE)
 - ✅ Keep agent context files synchronized (use /update-memory)
 - ✅ Update constitution.md when processes change (auto-generated)
 - ✅ Document coordination decisions in AI_COORDINATION_PLAN.md  

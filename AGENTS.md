@@ -81,6 +81,57 @@ PART OF: AI agent coordination system
 CONNECTS TO: Task management system, agent instruction files (CLAUDE.md, AGENTS.md)
 """
 ```
+
+## 🚨 CRITICAL: Local Deployment Testing Standards
+**MANDATORY for ALL AGENTS**: Every production change must be validated locally using the production build system.
+
+### Required Local Testing Workflow:
+```bash
+# 1. Create local production build
+./scripts/build/build-production.sh test-build --latest --force
+
+# 2. Test production environment
+cd test-build
+./install.sh  # Sets up virtual environment and dependencies
+
+# 3. Validate CLI functionality  
+./signalhire-agent --help  # Test CLI works
+./signalhire-agent status --credits  # Test API connectivity
+
+# 4. Run production validation tests
+python3 run.py -m pytest -m "not slow"  # Quick validation
+
+# 5. Clean up test build
+cd .. && rm -rf test-build
+```
+
+### Production Readiness Requirements:
+- ✅ **Build validation**: Production build must complete without errors
+- ✅ **Environment setup**: Virtual environment and dependencies must install cleanly
+- ✅ **CLI functionality**: All commands must work in production environment
+- ✅ **Configuration validation**: .env setup and API connectivity verified
+- ✅ **End-user experience**: Test installation and usage as end user would
+
+### Quality Assurance Pipeline:
+```bash
+# Code quality checks (run before every commit)
+ruff check src/ --fix          # Lint and auto-fix
+black src/                     # Format code
+mypy src/                      # Type checking
+
+# Test suite validation
+python3 run.py -m pytest -m unit                    # Unit tests
+python3 run.py -m pytest -m "integration and not slow"  # Integration tests
+python3 run.py -m pytest --cov=src --cov-report=term-missing  # Coverage
+```
+
+### Never Release Without:
+- ✅ **Local production build testing completed successfully**
+- ✅ **All quality gates passed (lint, type-check, tests)**
+- ✅ **End-user installation workflow validated**
+- ✅ **API connectivity and core functionality verified**
+- ✅ **Environment configuration auto-setup working**
+
 ## 🚨 CRITICAL: Agent Commit Requirements
 **MANDATORY for ALL AGENTS**: Every commit must identify the agent and reference task numbers.
 
