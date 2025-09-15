@@ -1,0 +1,138 @@
+name: Automated Release
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js (if Node.js project)
+        if: ${{ hashFiles('package.json') != '' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Setup Python (if Python project)
+        if: ${{ hashFiles('requirements.txt', 'pyproject.toml') != '' }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          
+      - name: Setup Go (if Go project)
+        if: ${{ hashFiles('go.mod') != '' }}
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+          
+      - name: Install Dependencies
+        run: |
+          if [[ -f "package.json" ]]; then
+            npm ci
+          elif [[ -f "requirements.txt" ]]; then
+            pip install -r requirements.txt
+          elif [[ -f "pyproject.toml" ]]; then
+            pip install -e .
+          elif [[ -f "go.mod" ]]; then
+            go mod download
+          fi
+          
+      - name: Run Tests (if available)
+        run: |
+          if [[ -f "package.json" ]] && npm run test --if-present; then
+            npm test
+          elif [[ -f "pyproject.toml" ]] || [[ -f "requirements.txt" ]]; then
+            if command -v pytest >/dev/null 2>&1; then
+              pytest --maxfail=1 -q
+            fi
+          elif [[ -f "go.mod" ]]; then
+            go test ./...
+          fi
+        continue-on-error: true
+        
+      - name: Build Production Package
+        run: |
+          # Create production build using the automation system
+          ./scripts/build/build-production.sh release-build --latest --force
+          
+          # Create release archive
+          cd release-build
+          tar -czf ../release.tar.gz .
+          cd ..
+          
+          # Create checksums
+          sha256sum release.tar.gz > release.tar.gz.sha256
+          
+      - name: Extract Release Info
+        id: release_info
+        run: |
+          # Get version from tag
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          
+          # Check if it's a prerelease (contains alpha, beta, rc)
+          if [[ "$VERSION" =~ (alpha|beta|rc) ]]; then
+            echo "prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "prerelease=false" >> $GITHUB_OUTPUT
+          fi
+          
+          # Get commit message for this tag
+          COMMIT_MSG=$(git tag -l --format='%(contents)' $VERSION)
+          echo "commit_message<<EOF" >> $GITHUB_OUTPUT
+          echo "$COMMIT_MSG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release.tar.gz
+            release.tar.gz.sha256
+          name: Release ${{ steps.release_info.outputs.version }}
+          body: |
+            ## Automated Release ${{ steps.release_info.outputs.version }}
+            
+            ${{ steps.release_info.outputs.commit_message }}
+            
+            ### 📦 Installation
+            
+            ```bash
+            # Download and extract
+            curl -L https://github.com/${{ github.repository }}/releases/download/${{ steps.release_info.outputs.version }}/release.tar.gz | tar -xz
+            
+            # Install
+            ./install.sh
+            ```
+            
+            ### ✅ What's Included
+            
+            - Production-ready application code
+            - All dependencies and configuration
+            - Installation and setup scripts
+            - Documentation and CLI tools
+            
+            **Full Changelog**: https://github.com/${{ github.repository }}/compare/${{ github.event.before }}...${{ steps.release_info.outputs.version }}
+            
+          prerelease: ${{ steps.release_info.outputs.prerelease }}
+          generate_release_notes: true
+          append_body: true
+          
+      - name: Trigger Deployment (Optional)
+        if: ${{ !steps.release_info.outputs.prerelease }}
+        run: |
+          echo "🚀 Release ${{ steps.release_info.outputs.version }} created successfully!"
+          echo "Consider adding deployment steps here for production releases."
+          
+          # Example: Deploy to production server
+          # curl -X POST https://your-deployment-webhook.com/deploy \
+          #   -H "Authorization: Bearer ${{ secrets.DEPLOY_TOKEN }}" \
+          #   -d '{"version": "${{ steps.release_info.outputs.version }}"}'
