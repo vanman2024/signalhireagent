@@ -47,4 +47,5 @@ async def test_live_search_small_query():
         pytest.xfail("Invalid API key or unauthorized; live path verified")
     assert resp.success is True
     assert isinstance(resp.data, dict)
-    assert "prospects" in resp.data
+    # SignalHire API returns 'profiles' not 'prospects'
+    assert "profiles" in resp.data

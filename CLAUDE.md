@@ -72,6 +72,9 @@ TypeScript: ESLint + Prettier for Stagehand automation scripts
 - ✅ **ALWAYS commit code changes** when completing tasks
 - ✅ **ALWAYS mark tasks as complete** with `[x]` symbol in tasks.md
 - ✅ **Use completion symbols** to show you have committed your work
+- ✅ **VERIFY 100% FR COMPLIANCE** before merging - all Functional Requirements must be implemented
+- ✅ **TEST ALL EDGE CASES** before merging - must handle gracefully, not crash
+- ❌ **NEVER delete feature branch** until 100% FR compliance verified
 - ❌ **NEVER leave uncommitted work** when marking tasks complete
 
 ### Commit Message Requirements for ALL AGENTS

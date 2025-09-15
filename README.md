@@ -16,7 +16,7 @@ AI-powered lead generation automation for SignalHire with full API integration. 
 - 🔄 **Async Processing**: Callback-based processing with request tracking
 - 💳 **Credit Management**: Real-time credit monitoring and usage tracking
 - 💰 **Smart Credit Usage**: Skip existing contacts automatically to save credits (`--skip-existing` flag)
-- ⏱️ **Rate Limits**: 600 elements/minute, separate daily search quotas vs reveal credits
+- ⏱️ **Rate Limits**: 600 elements/minute, 5000 reveals/day, 5000 search profiles/day with automatic tracking
 
 ### 🛠️ **Developer-Friendly CLI**
 - 📋 **Multiple Formats**: CSV (SignalHire-compatible), JSON, Excel exports with automatic timestamps
@@ -61,7 +61,7 @@ signalhire-agent search --title "Software Engineer" --location "San Francisco"
 - ✅ **Universal**: Works on Windows/WSL/Linux/Mac
 - ✅ **Simple setup**: Creates `.env` and adds command to PATH automatically
 
-**Current Version**: `v0.1.0` - [View Release](https://github.com/vanman2024/signalhireagent/releases/tag/v0.1.0)
+**Current Version**: `v0.2.0` - [View Release](https://github.com/vanman2024/signalhireagent/releases/tag/v0.2.0)
 
 ## 📈 Real-World Case Study: Professional Lead Generation
 
@@ -87,8 +87,9 @@ signalhire search \
 
 **Key Learnings**:
 - Boolean OR searches discover 3x more prospects than single title searches
-- Daily search quotas (200 queries) separate from reveal credit limits (5,000)
+- Daily search quotas (5,000 profiles/day) separate from reveal credit limits (5,000/day)
 - `--skip-existing` flag automatically saves credits on existing contacts
+- Search profile tracking prevents hitting API limits automatically
 - Enterprise pricing available for bulk projects (contact support@signalhire.com)
 
 **Timeline**: 15-20 minutes for complete data extraction + reveals (within rate limits)
@@ -363,7 +364,7 @@ api_key                  # SignalHire API key (alternative)
 default_mode             # Default operation mode (default: api)
 api_only                 # Disable browser fallback (default: false)
 prefer_api               # Prefer API over browser when available (default: true)
-daily_reveal_limit       # Daily API reveal limit tracking (default: 100)
+daily_reveal_limit       # Daily API reveal limit tracking (default: 5000)
 
 # API Settings
 api_timeout              # API request timeout (default: 30s)
@@ -425,15 +426,17 @@ signalhire config validate
 ### Official API Quotas (Updated September 2025)
 
 **Search API Limits:**
-- 🔍 **Daily Search Queries**: 200 search requests per 24 hours
-- 👁️ **Profile Snippet Views**: 5,000 profile views per 24 hours
+- 🔍 **Daily Search Queries**: Unlimited search requests per 24 hours
+- 👁️ **Profile Snippet Views**: 5,000 profile views per 24 hours (automatically tracked)
 - ⏰ **Reset Time**: Daily at 12:00 AM UTC
 - 🔄 **Applies To**: Both API and UI requests
+- 🚦 **Auto-Protection**: System prevents exceeding limits automatically
 
 **Person API (Contact Reveals):**
-- 📞 **Daily Contact Reveals**: 5,000 successful reveals per 24 hours
+- 📞 **Daily Contact Reveals**: 5,000 successful reveals per 24 hours (automatically tracked)
 - ⏰ **Reset Time**: Daily at 12:00 AM UTC
 - 💳 **Credit-based**: Each successful reveal consumes credits
+- 📊 **Real-time Monitoring**: Usage tracking with warning levels (50%, 75%, 90%)
 
 ### Upgrade Options
 
@@ -459,9 +462,10 @@ signalhire config validate
 signalhire status --credits
 
 # Example output:
-# 📊 Search API: 45/200 daily queries used
-# 👁️ Profile Views: 1,250/5,000 daily views used  
-# 📞 Contact Reveals: 23/5,000 daily reveals used
+# 📊 Search API: Unlimited daily queries available
+# 👁️ Profile Views: 1,250/5,000 daily views used (25.0%)
+# 📞 Contact Reveals: 23/5,000 daily reveals used (0.5%)
+# ⚠️  Warning Level: none
 # ⏰ Quota resets: 2025-09-16 00:00:00 UTC
 ```
 

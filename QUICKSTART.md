@@ -10,9 +10,8 @@ git clone https://github.com/your-username/signalhire-agent.git
 cd signalhire-agent
 sudo apt install python3-pydantic python3-click python3-httpx python3-pandas python3-structlog python3-dotenv python3-email-validator
 
-# 2. Set credentials
-export SIGNALHIRE_EMAIL="your@email.com"
-export SIGNALHIRE_PASSWORD="your-password"
+# 2. Set credentials (API key required)
+export SIGNALHIRE_API_KEY="your-api-key-here"
 
 # 3. Test installation (runs slower due to checks)
 signalhire doctor
@@ -74,15 +73,25 @@ signalhire workflow prospect-enrichment \
   --output-dir ./enriched
 ```
 
-## 📊 Monitor Your Usage
+## 📊 Monitor Your Usage & API Limits
 
 ```bash
-# Check credits and status (fast)
+# Check credits and status (fast) - Shows 5000/day limits
 signalhire status --credits
+
+# Example output:
+# 👁️ Profile Views: 1,250/5,000 daily views used (25.0%)
+# 📞 Contact Reveals: 23/5,000 daily reveals used (0.5%) 
+# ⚠️  Warning Level: none
 
 # View recent operations
 signalhire status --operations
 ```
+
+**New in v0.2.0**: Automatic API limit tracking prevents exceeding daily quotas
+- 🔍 **Search Profiles**: 5,000/day automatically tracked
+- 📞 **Contact Reveals**: 5,000/day automatically tracked  
+- ⚠️ **Smart Warnings**: At 50%, 75%, 90% usage levels
 
 ## ⚙️ Configuration
 
