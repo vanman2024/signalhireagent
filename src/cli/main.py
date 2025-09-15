@@ -170,7 +170,7 @@ def main(ctx: Context, email, password, api_key, api_base_url, api_prefix, api_o
     """
     SignalHire Agent - API-First Lead Generation & Contact Revelation
     🚀 API-FIRST APPROACH: Uses SignalHire's API by default for reliable, fast contact reveals
-    📊 RATE LIMIT: 100 contacts/day via API - perfect for daily lead generation needs
+    📊 Rate limits: 600 elements/minute search, separate daily reveal quotas
     🌐 BROWSER MODE: Optional browser automation for bulk operations (1000+ contacts)
     
     QUICK START:
@@ -190,7 +190,7 @@ def main(ctx: Context, email, password, api_key, api_base_url, api_prefix, api_o
       signalhire reveal --input large_list.csv --browser --bulk-size 1000
     
     MODES:
-      • API Mode (Default): Fast, reliable, 100 contacts/day limit
+      • API Mode (Default): Fast, reliable, daily reveal quotas
       • Browser Mode: Slower but handles large volumes, bypasses API limits
       • Auto Mode: Automatically chooses best method based on volume
     

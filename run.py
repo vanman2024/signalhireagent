@@ -153,7 +153,6 @@ def check_and_install_dependencies(argv: list[str]):
             "python-dotenv",
             "uvicorn",
             "pydantic-settings",
-            "playwright",
         ]
     missing_packages = []
     

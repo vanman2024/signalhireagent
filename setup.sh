@@ -80,14 +80,18 @@ if [ ! -f .env ]; then
     echo "📝 Creating .env configuration file..."
     cat > .env << 'EOF'
 # SignalHire Agent Configuration
-# Get your API key from SignalHire support
+# 
+# REQUIRED: Get your API key from SignalHire
+# 1. Contact SignalHire support: support@signalhire.com
+# 2. Request API access for lead generation
+# 3. Replace the line below with your actual API key
 SIGNALHIRE_API_KEY=your_api_key_here
 
 # Optional: Alternative authentication (choose one method)
 # SIGNALHIRE_EMAIL=your@email.com
 # SIGNALHIRE_PASSWORD=your_password
 
-# Optional: API Configuration
+# Optional: API Configuration (use defaults unless advised otherwise)
 # SIGNALHIRE_API_BASE_URL=https://api.signalhire.com
 # SIGNALHIRE_API_PREFIX=/api/v1
 EOF
@@ -100,19 +104,25 @@ echo ""
 echo "🎉 SignalHire Agent setup complete!"
 echo ""
 echo "Next steps:"
-echo "1. Edit .env file with your SignalHire API key:"
+echo "1. Get your SignalHire API key:"
+echo "   • Contact SignalHire support: support@signalhire.com"
+echo "   • Request API access for lead generation"
+echo ""
+echo "2. Edit .env file with your actual API key:"
 echo "   nano .env"
+echo "   # Replace: SIGNALHIRE_API_KEY=your_api_key_here"
+echo "   # With:    SIGNALHIRE_API_KEY=your_actual_key"
 echo ""
 
 if [ "$GLOBAL_INSTALL" = true ]; then
-    echo "2. Test the installation:"
+    echo "3. Test the installation:"
     echo "   signalhire-agent doctor"
     echo ""
-    echo "3. Start searching for prospects:"
+    echo "4. Start searching for prospects:"
     echo "   signalhire-agent search --help"
     echo "   signalhire-agent search --title 'Software Engineer' --location 'San Francisco'"
     echo ""
-    echo "4. Get help anytime:"
+    echo "5. Get help anytime:"
     echo "   signalhire-agent --help"
     echo ""
     echo "🎉 You can now run 'signalhire-agent' from anywhere!"
