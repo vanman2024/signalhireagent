@@ -238,6 +238,10 @@ DAILY_SEARCH_PROFILE_LIMIT=5000
 EOF
 fi
 
+# Automatically create .env from .env.example for immediate use
+print_status "Creating production .env file..."
+cp "$TARGET_DIR/.env.example" "$TARGET_DIR/.env"
+
 # Create simple deployment script
 print_status "Creating deployment utilities..."
 cat > "$TARGET_DIR/install.sh" << 'EOF'
@@ -262,9 +266,8 @@ chmod +x src/cli/main.py
 echo "Installation complete!"
 echo ""
 echo "Next steps:"
-echo "1. Copy .env.example to .env"
-echo "2. Add your SIGNALHIRE_API_KEY to .env"
-echo "3. Run: python3 -m src.cli.main --help"
+echo "1. Environment is already configured (.env created from your development settings)"
+echo "2. Run: python3 -m src.cli.main --help"
 
 EOF
 
@@ -309,6 +312,7 @@ cat > "$TARGET_DIR/BUILD_INFO.md" << EOF
 - \`install.sh\` - Installation script
 - \`signalhire-agent\` - CLI wrapper script
 - \`.env.example\` - Configuration template (auto-populated from source .env)
+- \`.env\` - Production environment file (automatically created from .env.example)
 - \`CLAUDE.md\` - Claude Code agent instructions
 - \`AGENTS.md\` - All AI agents instructions (Codex, Gemini, etc.)
 - \`.github/copilot-instructions.md\` - GitHub Copilot instructions
@@ -325,9 +329,8 @@ cat > "$TARGET_DIR/BUILD_INFO.md" << EOF
 
 ## Installation
 1. Run \`./install.sh\`
-2. Copy \`.env.example\` to \`.env\` (or use as-is if auto-populated)
-3. Verify SIGNALHIRE_API_KEY in \`.env\`
-4. Test: \`./signalhire-agent --help\`
+2. Environment is already configured (.env automatically created)
+3. Test: \`./signalhire-agent --help\`
 
 ## Version Check
 Check \`VERSION\` file for build information (JSON format).
@@ -363,6 +366,6 @@ print_success ""
 print_success "Next steps:"
 print_success "  cd $TARGET_DIR"
 print_success "  ./install.sh"
-print_success "  cp .env.example .env"
-print_success "  # Add your SIGNALHIRE_API_KEY to .env"
 print_success "  ./signalhire-agent --help"
+print_success ""
+print_success "Environment is ready to use! (.env automatically created with your credentials)"
