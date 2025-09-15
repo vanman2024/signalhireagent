@@ -6,7 +6,7 @@ AI-powered lead generation automation for SignalHire with full API integration. 
 
 ### 🚀 **SignalHire Search API Integration**
 - 🔍 **Advanced Search**: Boolean queries with titles, locations, keywords, and company filters
-- 📊 **Real Results**: Successfully tested with 2,300+ professionals + 7,400+ total with Boolean search across multiple industries  
+- 📊 **Real Results**: Successfully tested with 2,300+ professionals + 7,400+ total with Boolean search across multiple industries
 - ⚡ **Fast Performance**: Sub-second search responses with pagination support (600 elements/minute rate limit)
 - 🎯 **High Accuracy**: 100% location accuracy and title relevance in testing
 - 🔍 **Boolean Search**: Advanced OR/AND queries - `"(Software Engineer) OR (Full Stack Developer) OR (Senior Developer)"`
@@ -21,6 +21,7 @@ AI-powered lead generation automation for SignalHire with full API integration. 
 ### 🛠️ **Developer-Friendly CLI**
 - 📋 **Multiple Formats**: CSV (SignalHire-compatible), JSON, Excel exports with automatic timestamps
 - 🔧 **Configuration Management**: Secure API key storage and settings
+- ⚡ **Fast Startup**: Optimized CLI performance - commands start instantly without dependency checks
 - 🧪 **Comprehensive Testing**: Contract, integration, and performance tests
 - 📖 **Complete Documentation**: Detailed examples and troubleshooting guides
 
@@ -55,6 +56,7 @@ signalhire-agent search --title "Software Engineer" --location "San Francisco"
 **That's it!** Just like `claude`, `gh`, or `gemini` CLI:
 - ✅ **Global command**: Run `signalhire-agent` from anywhere (added to PATH)
 - ✅ **No pip install**: No package managers or virtual environments needed
+- ✅ **Fast startup**: Commands like `signalhire search` now start instantly
 - ✅ **Auto-dependencies**: Automatically handles all dependencies via `run.py`
 - ✅ **Universal**: Works on Windows/WSL/Linux/Mac
 - ✅ **Simple setup**: Creates `.env` and adds command to PATH automatically
@@ -70,7 +72,7 @@ signalhire-agent search --title "Software Engineer" --location "San Francisco"
 **Solution**: Used Boolean search strategy to capture all job title variations:
 ```bash
 # Single comprehensive search covering all variations
-python3 -m src.cli.main search \
+signalhire search \
   --title "(Senior Developer) OR (Software Engineer) OR (Full Stack Developer)" \
   --location "United States" \
   --size 100 --all-pages --max-pages 75
@@ -106,7 +108,7 @@ SIGNALHIRE_API_KEY=your_actual_api_key_here
 signalhire-agent doctor
 ```
 
-**Getting API Access**: 
+**Getting API Access**:
 - API key authentication required for all operations
 - Search API limited to 3 concurrent requests
 
@@ -122,10 +124,10 @@ signalhire-agent doctor
    Location Accuracy: 100% (all in target locations)
    Title Relevance: 100% (all relevant positions)
    Response Time: <1 second
-   
+
 📊 Sample Results:
    1. John Smith - San Francisco, CA - Software Engineer (contacts available)
-   2. Sarah Johnson - New York, NY - Full Stack Developer (contacts available)  
+   2. Sarah Johnson - New York, NY - Full Stack Developer (contacts available)
    3. Michael Chen - Seattle, WA - Senior Developer (contacts available)
    4. Jessica Brown - Austin, TX - Lead Engineer
    5. David Wilson - Chicago, IL - Principal Developer
@@ -135,7 +137,7 @@ signalhire-agent doctor
 
 **API Capabilities**:
 - ✅ **Search API**: Find prospects by title, location, company, keywords
-- ✅ **Boolean Queries**: Complex search with AND, OR, NOT operators  
+- ✅ **Boolean Queries**: Complex search with AND, OR, NOT operators
 - ✅ **Pagination**: Handle large result sets with scroll search
 - ✅ **Contact Reveal**: Get email/phone via callback URLs
 - ✅ **Credit Management**: Real-time usage tracking and limits
@@ -145,24 +147,24 @@ signalhire-agent doctor
 ### 1. Basic Commands
 
 ```bash
-# Check system health
-python3 -m src.cli.main doctor
+# Check system health and dependencies (runs slower due to checks)
+signalhire doctor
 
 # View configuration
-python3 -m src.cli.main config list
+signalhire config list
 
-# Check credits
-python3 -m src.cli.main status --credits
+# Check credits (fast)
+signalhire status --credits
 ```
 
 ### 2. Search for Prospects
 
 ```bash
 # Simple search
-python3 -m src.cli.main search --title "Software Engineer" --location "San Francisco"
+signalhire search --title "Software Engineer" --location "San Francisco"
 
 # Advanced Boolean search (SignalHire Search API)
-python3 -m src.cli.main search \
+signalhire search \
   --title "(Software AND Engineer) OR Developer" \
   --location "New York, New York, United States" \
   --company "(Google OR Microsoft) AND Tech" \
@@ -171,7 +173,7 @@ python3 -m src.cli.main search \
   --output prospects.json
 
 # Software Engineer example (tested)
-python3 -m src.cli.main search \
+signalhire search \
   --title "Software Engineer" \
   --location "United States" \
   --keywords "python OR javascript OR react OR node" \
@@ -180,7 +182,7 @@ python3 -m src.cli.main search \
 
 **Boolean Search Operators**:
 - `AND` - Both terms must appear: `"PHP AND HTML"`
-- `OR` - Either term can appear: `"Python OR Java"`  
+- `OR` - Either term can appear: `"Python OR Java"`
 - `NOT` - Exclude term: `"Manager NOT Assistant"`
 - `()` - Group terms: `"(Java AND Spring) OR Python"`
 - `""` - Exact phrases: `"Software Engineer"`
@@ -189,14 +191,14 @@ python3 -m src.cli.main search \
 
 ```bash
 # Reveal contacts using Person API (callback-based)
-python3 -m src.cli.main reveal --search-file prospects.json --output contacts.csv
+signalhire reveal --search-file prospects.json --output contacts.csv
 
 # Reveal by LinkedIn URL directly
-python3 -m src.cli.main reveal --linkedin-url "https://www.linkedin.com/in/johndoe" --callback-url "https://your-domain.com/callback"
+signalhire reveal --linkedin-url "https://www.linkedin.com/in/johndoe" --callback-url "https://your-domain.com/callback"
 
 # Reveal by email or phone
-python3 -m src.cli.main reveal --identifier "john@example.com" --callback-url "https://your-domain.com/callback"
-python3 -m src.cli.main reveal --identifier "+1-555-123-4567" --callback-url "https://your-domain.com/callback"
+signalhire reveal --identifier "john@example.com" --callback-url "https://your-domain.com/callback"
+signalhire reveal --identifier "+1-555-123-4567" --callback-url "https://your-domain.com/callback"
 ```
 
 **Person API Features**:
@@ -212,48 +214,48 @@ python3 -m src.cli.main reveal --identifier "+1-555-123-4567" --callback-url "ht
 
 ```bash
 # 🔍 STEP 1: Search and get prospect data
-python3 -m src.cli.main search \
-  --title "Software Engineer" \
-  --location "United States" \
-  --size 100 \
-  --output engineers_prospects.json
+signalhire search \
+  --title "Heavy Equipment Mechanic" \
+  --location "Canada" \
+  --limit 250 \
+  --output heavy_equipment_mechanics_canada.json
 
 # 📋 Check what you found
-python3 -m src.cli.main export preview engineers_prospects.json
+signalhire export preview heavy_equipment_mechanics_canada.json
 
 # 🖥️ STEP 2: Start callback server (in separate terminal)
-python3 -m src.cli.main callback-server start --port 8000
+signalhire callback-server start --port 8000
 
 # 📞 STEP 3: Bulk reveal all contacts
-python3 -m src.cli.main reveal bulk \
-  --search-file engineers_prospects.json \
+signalhire reveal bulk \
+  --search-file heavy_equipment_mechanics_canada.json \
   --callback-url "http://localhost:8000/callback" \
   --batch-size 100 \
   --output revealed_contacts.csv \
   --monitor
 
-# 📊 STEP 4: Check results 
-python3 -m src.cli.main export summary revealed_contacts.csv
+# 📊 STEP 4: Check results
+signalhire export summary revealed_contacts.csv
 ```
 
 **Quick Bulk Reveal Options**:
 ```bash
 # From search results file
-python3 -m src.cli.main reveal bulk --search-file prospects.json --output contacts.csv
+signalhire reveal bulk --search-file prospects.json --output contacts.csv
 
 # From specific UIDs (if you have them)
-python3 -m src.cli.main reveal bulk --uids "uid1,uid2,uid3" --output contacts.csv
+signalhire reveal bulk --uids "uid1,uid2,uid3" --output contacts.csv
 
-# From LinkedIn URLs 
-python3 -m src.cli.main reveal bulk --linkedin-urls "url1,url2" --output contacts.csv
+# From LinkedIn URLs
+signalhire reveal bulk --linkedin-urls "url1,url2" --output contacts.csv
 
 # Monitor progress in real-time
-python3 -m src.cli.main reveal bulk --search-file prospects.json --output contacts.csv --monitor --verbose
+signalhire reveal bulk --search-file prospects.json --output contacts.csv --monitor --verbose
 ```
 
 **Bulk Reveal Features**:
 - 🔢 **Large Batches**: Process 100+ contacts at once
-- 📊 **Progress Monitoring**: Real-time status updates  
+- 📊 **Progress Monitoring**: Real-time status updates
 - 🔄 **Auto-retry**: Failed requests automatically retried
 - 💾 **Multiple Formats**: Export to CSV, JSON, Excel
 - ⚡ **Concurrent Processing**: Respect API limits efficiently
@@ -266,7 +268,7 @@ Complete search → reveal → export pipeline:
 
 ```bash
 # Using search parameters
-python3 -m src.cli.main workflow lead-generation \
+signalhire workflow lead-generation \
   --title "Software Engineer" \
   --location "Silicon Valley" \
   --company "Startup" \
@@ -275,7 +277,7 @@ python3 -m src.cli.main workflow lead-generation \
   --list-name "Q4 Tech Leads"
 
 # Using search criteria file
-python3 -m src.cli.main workflow lead-generation \
+signalhire workflow lead-generation \
   --search-criteria search_config.json \
   --output-dir ./campaigns/q4-2024
 ```
@@ -284,7 +286,7 @@ python3 -m src.cli.main workflow lead-generation \
 Enrich existing prospect list with contact information:
 
 ```bash
-python3 -m src.cli.main workflow prospect-enrichment \
+signalhire workflow prospect-enrichment \
   --prospect-list existing_leads.csv \
   --output-dir ./enriched
 
@@ -322,29 +324,29 @@ Note: UI-based bulk export workflow is not supported in API-only mode.
 
 ```bash
 # Convert between formats
-python3 -m src.cli.main export convert prospects.json --format xlsx
+signalhire export convert prospects.json --format xlsx
 
 # Export with specific columns
-python3 -m src.cli.main export operation results.json \
+signalhire export operation results.json \
   --format csv \
   --columns "full_name,email_work,current_company" \
   --include-contacts
 
 # List available export columns
-python3 -m src.cli.main export operation --list-columns
+signalhire export operation --list-columns
 ```
 
 ### 6. Status and Monitoring
 
 ```bash
 # Check overall status
-python3 -m src.cli.main status
+signalhire status
 
 # Monitor specific operation
-python3 -m src.cli.main status --operation-id abc123
+signalhire status --operation-id abc123
 
 # View recent operations
-python3 -m src.cli.main status --operations --logs
+signalhire status --operations --logs
 ```
 
 ## 🔧 Configuration Options
@@ -354,12 +356,12 @@ python3 -m src.cli.main status --operations --logs
 ```bash
 # Authentication
 signalhire_email         # SignalHire account email
-signalhire_password      # SignalHire account password  
+signalhire_password      # SignalHire account password
 api_key                  # SignalHire API key (alternative)
 
 # Operation Mode (API-First Configuration)
 default_mode             # Default operation mode (default: api)
-api_only                 # Disable browser fallback (default: false)  
+api_only                 # Disable browser fallback (default: false)
 prefer_api               # Prefer API over browser when available (default: true)
 daily_reveal_limit       # Daily API reveal limit tracking (default: 100)
 
@@ -392,30 +394,30 @@ callback_port           # Port for callback server (default: 8000)
 
 ```bash
 # Configure API-first mode (recommended)
-python3 -m src.cli.main config set default_mode api
-python3 -m src.cli.main config set prefer_api true
-python3 -m src.cli.main config set rate_limit_warnings true
+signalhire config set default_mode api
+signalhire config set prefer_api true
+signalhire config set rate_limit_warnings true
 
 # Configure API-only mode (disable browser fallback)
-python3 -m src.cli.main config set api_only true
+signalhire config set api_only true
 
 # Configure for bulk operations (browser mode)
-python3 -m src.cli.main config set default_mode browser
-python3 -m src.cli.main config set browser_headless false
+signalhire config set default_mode browser
+signalhire config set browser_headless false
 
 # API performance tuning
-python3 -m src.cli.main config set batch_size 10
-python3 -m src.cli.main config set api_retry_attempts 3
+signalhire config set batch_size 10
+signalhire config set api_retry_attempts 3
 
 # Get configuration
-python3 -m src.cli.main config get default_mode
-python3 -m src.cli.main config list
+signalhire config get default_mode
+signalhire config list
 
 # Reset to defaults
-python3 -m src.cli.main config reset
+signalhire config reset
 
 # Validate configuration
-python3 -m src.cli.main config validate
+signalhire config validate
 ```
 
 ## 📁 File Formats
@@ -444,7 +446,7 @@ def456,Jane Smith,Product Manager,StartupInc
 ### Example 1: Software Engineer Search (Verified)
 ```bash
 # Search for Software Engineers in United States (2,300+ results found)
-python3 -m src.cli.main search \
+signalhire search \
   --title "Software Engineer" \
   --location "United States" \
   --keywords "python OR javascript OR react OR node" \
@@ -458,7 +460,7 @@ python3 -m src.cli.main search \
 ### Example 2: Boolean Search for Software Engineers
 ```bash
 # Advanced Boolean search for tech talent
-python3 -m src.cli.main search \
+signalhire search \
   --title "(Software AND Engineer) OR (Full Stack AND Developer)" \
   --location "San Francisco, California, United States" \
   --company "(Google OR Microsoft OR Meta OR Apple) AND Tech" \
@@ -469,30 +471,30 @@ python3 -m src.cli.main search \
 ### Example 3: Bulk Contact Reveal Workflow (CLI Interface)
 ```bash
 # Step 1: Search for prospects (get their UIDs)
-python3 -m src.cli.main search \
+signalhire search \
   --title "Product Manager" \
   --location "New York" \
   --size 50 \
   --output pm_prospects.json
 
 # Step 2: Set up callback server for receiving contact data
-python3 -m src.cli.main callback-server start --port 8000
+signalhire callback-server start --port 8000
 
 # Step 3: Bulk reveal contacts (CLI handles API calls)
-python3 -m src.cli.main reveal bulk \
+signalhire reveal bulk \
   --search-file pm_prospects.json \
   --callback-url "http://localhost:8000/callback" \
   --batch-size 25 \
   --output contacts_revealed.csv
 
 # Alternative: Reveal specific profiles by UID
-python3 -m src.cli.main reveal bulk \
+signalhire reveal bulk \
   --uids "abc123,def456,ghi789" \
   --callback-url "http://localhost:8000/callback" \
   --output specific_contacts.csv
 
 # Alternative: Reveal from LinkedIn URLs
-python3 -m src.cli.main reveal bulk \
+signalhire reveal bulk \
   --linkedin-urls "https://linkedin.com/in/person1,https://linkedin.com/in/person2" \
   --callback-url "http://localhost:8000/callback" \
   --output linkedin_contacts.csv
@@ -500,7 +502,7 @@ python3 -m src.cli.main reveal bulk \
 
 **Bulk Reveal Process**:
 1. 🔍 **Search** → Get prospect UIDs/profiles
-2. 🖥️ **Callback Server** → Start local server to receive results  
+2. 🖥️ **Callback Server** → Start local server to receive results
 3. 📞 **Bulk Reveal** → CLI sends API requests for all contacts
 4. ⏳ **Processing** → SignalHire processes requests asynchronously
 5. 📨 **Results** → Contacts sent to your callback URL
@@ -556,59 +558,57 @@ FORCE_WSL_PYTHON=0 python3 run.py -m pytest -q
 1. **Authentication Errors**
    ```bash
    # Validate credentials
-   python3 -m src.cli.main config validate
-   
-   # Test login
-   python3 -m src.cli.main doctor
+   signalhire config validate
+
+   # Test login (runs slower due to checks)
+   signalhire doctor
    ```
 
 2. **Browser Automation Issues**
    ```bash
    # Run in non-headless mode for debugging
-   python3 -m src.cli.main config set browser_headless false
-   
-   # Check browser configuration
-   python3 -m src.cli.main doctor --browser
+   signalhire config set browser_headless false
+
+   # Check browser configuration (runs slower due to checks)
+   signalhire doctor --browser
    ```
 
 3. **Rate Limiting & Daily Limits**
    ```bash
-   # Check current usage and limits
-   python3 -m src.cli.main status --credits
-   
+   # Check current usage and limits (fast)
+   signalhire status --credits
+
    # Example output:
-   # ✅ Available credits: 45/100  
+   # ✅ Available credits: 45/100
    # 📊 Daily usage: 55/100 contact reveals
    # ⚠️  Warning: 90% of daily limit reached
    # ⏰ Resets at: 2025-09-12 00:00:00 UTC
-   
+
    # Configure rate limit warnings
-   python3 -m src.cli.main config set rate_limit_warnings true
-   
-   # Switch to browser mode for more reveals
-   python3 -m src.cli.main reveal --browser --search-file prospects.json
+   signalhire config set rate_limit_warnings true
+   signalhire reveal --browser --search-file prospects.json
    ```
 
 4. **API vs Browser Mode Issues**
    ```bash
    # Force API-only mode to avoid browser issues
-   python3 -m src.cli.main config set api_only true
-   
+   signalhire config set api_only true
+
    # Check which mode is being used
-   python3 -m src.cli.main config get default_mode
-   
+   signalhire config get default_mode
+
    # Switch to browser for bulk operations
-   python3 -m src.cli.main config set default_mode browser
+   signalhire config set default_mode browser
    ```
 
 ### Debug Mode
 
 ```bash
 # Run with debug output
-python3 -m src.cli.main --debug search --title "Engineer"
+signalhire --debug search --title "Engineer"
 
 # View detailed logs
-python3 -m src.cli.main status --logs --verbose
+signalhire status --logs --verbose
 ```
 
 ## 🎯 **Your Complete Bulk Reveal Workflow**
@@ -617,22 +617,22 @@ python3 -m src.cli.main status --logs --verbose
 
 ```bash
 # 1️⃣ Search (find prospects)
-python3 -m src.cli.main search --title "Software Engineer" --location "United States" --size 100 --output prospects.json
+signalhire search --title "Software Engineer" --location "United States" --size 100 --output prospects.json
 
-# 2️⃣ Start callback server (separate terminal window)  
-python3 -m src.cli.main callback-server start --port 8000
+# 2️⃣ Start callback server (separate terminal window)
+signalhire callback-server start --port 8000
 
 # 3️⃣ Bulk reveal (main command)
-python3 -m src.cli.main reveal bulk --search-file prospects.json --callback-url "http://localhost:8000/callback" --output contacts.csv --monitor
+signalhire reveal bulk --search-file prospects.json --callback-url "http://localhost:8000/callback" --output contacts.csv --monitor
 
 # 4️⃣ Check results
-python3 -m src.cli.main export summary contacts.csv
+signalhire export summary contacts.csv
 ```
 
 **✅ Proven Results** (tested September 2025):
 - 🔍 **2,300+ prospects** found for various professional searches
 - ⚡ **Sub-second** search response times
-- 🎯 **100% accuracy** for location and title filtering  
+- 🎯 **100% accuracy** for location and title filtering
 - 📞 **Bulk reveals** successfully submitted via Person API
 - 🔄 **Request tracking** with unique IDs (e.g., 102183026, 102183027)
 
@@ -646,7 +646,7 @@ python3 -m src.cli.main export summary contacts.csv
 - **Rate Limits**: 3 concurrent requests, 600 elements/minute
 
 ### Person API (Contact Reveals)
-- **Processing**: Async callback-based system  
+- **Processing**: Async callback-based system
 - **Batch Size**: Up to 100 items per request
 - **Request Tracking**: Unique IDs for monitoring
 - **Success Rate**: High reliability for valid identifiers
@@ -691,7 +691,7 @@ The SignalHire project has been successfully pushed to GitHub with:
 ### 🚀 Key Features Now Public:
 
 - ✅ **API-first SignalHire integration** with proper authentication
-- ✅ **Complete CLI interface** for search, reveal, export commands  
+- ✅ **Complete CLI interface** for search, reveal, export commands
 - ✅ **Real API testing** with verified Heavy Equipment Mechanic results (2,332+ profiles)
 - ✅ **Boolean search support** and scroll pagination
 - ✅ **Comprehensive error handling** and user experience
@@ -708,11 +708,11 @@ cd signalhireagent
 cp .env.example .env
 # Edit .env with your actual SignalHire credentials
 
-# Install dependencies  
+# Install dependencies
 pip install -r requirements.txt
 
-# Test the installation
-python3 -m src.cli.main doctor
+# Test the installation (runs slower due to checks)
+signalhire doctor
 ```
 
 The repository is ready for collaboration, deployment, or use across multiple environments!

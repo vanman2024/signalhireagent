@@ -48,6 +48,7 @@ TypeScript: ESLint + Prettier for Stagehand automation scripts
 - Run tests: `python3 run.py -m pytest`
 - Tests with coverage: `python3 run.py -m pytest --cov=src --cov-report=term-missing`
 - Test selection: `python3 run.py -m pytest -m unit`, `python3 run.py -m pytest -m "integration and not slow"`
+- Check dependencies: `signalhire doctor` (dependency checking only runs for doctor command now for fast startup)
 
 ## Task Assignment & Coordination
 
@@ -136,7 +137,7 @@ grep "@claude" [current-spec]/tasks.md
 - [ ] T031 @claude FastAPI callback server for Person API in src/lib/callback_server.py
 ```
 **After completion:**
-```  
+```
 - [x] T031 @claude FastAPI callback server for Person API in src/lib/callback_server.py
 ```
 
@@ -168,7 +169,7 @@ grep "@claude" [current-spec]/tasks.md
 ## Code Quality Commands
 - **ALWAYS** run linting and type checking commands after making code changes
 - Lint code: `ruff check src/`
-- Fix linting issues: `ruff check --fix src/`  
+- Fix linting issues: `ruff check --fix src/`
 - Type check: `mypy src/`
 - Use python3 run.py instead of direct pytest commands for consistent environment setup
 - Test message for consistent behavior

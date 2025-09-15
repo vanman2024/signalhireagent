@@ -10,7 +10,7 @@
 1. Clone repo and ensure existing CLI is working:
    ```bash
    git checkout 003-autonomous-lead-generation
-   python3 -m src.cli.main doctor  # Verify existing CLI works
+   signalhire doctor  # Verify existing CLI works (runs slower due to checks)
    ```
 
 2. Install dependencies (existing + new MCP server deps):
@@ -38,7 +38,7 @@
 ## Testing MCP Tools
 Test each MCP tool directly via FastAPI docs at `http://localhost:8000/docs`:
 
-1. **Test search_by_query**: 
+1. **Test search_by_query**:
    ```bash
    curl -X POST "http://localhost:8000/mcp/search_by_query" \
      -H "Content-Type: application/json" \
@@ -53,7 +53,7 @@ Test each MCP tool directly via FastAPI docs at `http://localhost:8000/docs`:
 3. **Validate against CLI**: Compare MCP tool output with CLI equivalent:
    ```bash
    # CLI command
-   python3 -m src.cli.main search --title "Software Engineer" --location "California" --size 5
+   signalhire search --title "Software Engineer" --location "California" --size 5
    # Should match MCP search_by_query output
    ```
 

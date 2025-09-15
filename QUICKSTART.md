@@ -14,8 +14,8 @@ sudo apt install python3-pydantic python3-click python3-httpx python3-pandas pyt
 export SIGNALHIRE_EMAIL="your@email.com"
 export SIGNALHIRE_PASSWORD="your-password"
 
-# 3. Test installation
-python3 -m src.cli.main doctor
+# 3. Test installation (runs slower due to checks)
+signalhire doctor
 ```
 
 ## ⚡ 3-Minute Lead Generation
@@ -23,13 +23,13 @@ python3 -m src.cli.main doctor
 ### Option 1: Quick Search & Reveal
 ```bash
 # Search for prospects
-python3 -m src.cli.main search \
+signalhire search \
   --title "Software Engineer" \
   --location "San Francisco" \
   --output prospects.json
 
 # Reveal contacts
-python3 -m src.cli.main reveal \
+signalhire reveal \
   --search-file prospects.json \
   --output contacts.csv
 ```
@@ -37,7 +37,7 @@ python3 -m src.cli.main reveal \
 ### Option 2: Complete Workflow (Recommended)
 ```bash
 # One command does it all: search → reveal → export
-python3 -m src.cli.main workflow lead-generation \
+signalhire workflow lead-generation \
   --title "Software Engineer" \
   --location "San Francisco" \
   --company "Startup" \
@@ -49,7 +49,7 @@ python3 -m src.cli.main workflow lead-generation \
 
 ### Tech Recruiting
 ```bash
-python3 -m src.cli.main workflow lead-generation \
+signalhire workflow lead-generation \
   --title "Software Engineer, Full Stack Developer" \
   --location "San Francisco, Seattle, Austin" \
   --keywords "Python, React, Node.js" \
@@ -59,7 +59,7 @@ python3 -m src.cli.main workflow lead-generation \
 
 ### Sales Prospecting
 ```bash
-python3 -m src.cli.main workflow lead-generation \
+signalhire workflow lead-generation \
   --title "VP Engineering, CTO, Engineering Manager" \
   --company "SaaS, Technology" \
   --keywords "B2B, Enterprise" \
@@ -69,7 +69,7 @@ python3 -m src.cli.main workflow lead-generation \
 
 ### Enriching Existing Lists
 ```bash
-python3 -m src.cli.main workflow prospect-enrichment \
+signalhire workflow prospect-enrichment \
   --prospect-list my_leads.csv \
   --output-dir ./enriched
 ```
@@ -77,37 +77,37 @@ python3 -m src.cli.main workflow prospect-enrichment \
 ## 📊 Monitor Your Usage
 
 ```bash
-# Check credits and status
-python3 -m src.cli.main status --credits
+# Check credits and status (fast)
+signalhire status --credits
 
 # View recent operations
-python3 -m src.cli.main status --operations
+signalhire status --operations
 ```
 
 ## ⚙️ Configuration
 
 ```bash
 # View current settings
-python3 -m src.cli.main config list
+signalhire config list
 
 # Configure for your needs
-python3 -m src.cli.main config set browser_headless false  # See browser
-python3 -m src.cli.main config set rate_limit_reveal_per_hour 200  # Faster reveals
+signalhire config set browser_headless false  # See browser
+signalhire config set rate_limit_reveal_per_hour 200  # Faster reveals
 ```
 
 ## 🆘 Need Help?
 
 ```bash
 # Get help for any command
-python3 -m src.cli.main --help
-python3 -m src.cli.main workflow --help
-python3 -m src.cli.main search --help
+signalhire --help
+signalhire workflow --help
+signalhire search --help
 
-# Run diagnostics
-python3 -m src.cli.main doctor
+# Run diagnostics (runs slower due to checks)
+signalhire doctor
 
 # List all available export columns
-python3 -m src.cli.main export operation --list-columns
+signalhire export operation --list-columns
 ```
 
 ## 🎉 You're Ready!

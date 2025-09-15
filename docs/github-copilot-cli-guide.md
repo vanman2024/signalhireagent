@@ -92,7 +92,7 @@ gh copilot explain "<command>"
 
 #### Examples
 ```bash
-gh copilot explain "python3 -m src.cli.main search --title 'Heavy Equipment'"
+gh copilot explain "signalhire search --title 'Heavy Equipment'"
 gh copilot explain "grep -r 'contactsFetched' src/ | head -10"
 gh copilot explain "git log --oneline --graph --all --decorate"
 gh copilot explain "docker run -d -p 8080:80 nginx"
@@ -193,10 +193,10 @@ gh copilot suggest -t shell "organize SignalHire results by date and region"
 
 ```bash
 # Explain our complex search commands
-gh copilot explain "python3 -m src.cli.main search --title '(Heavy Equipment Mechanic) OR (Heavy Equipment Technician)' --location Canada --size 100 --all-pages"
+gh copilot explain "signalhire search --title '(Heavy Equipment Mechanic) OR (Heavy Equipment Technician)' --location Canada --size 100 --all-pages"
 
 # Explain reveal operations
-gh copilot explain "python3 -m src.cli.main reveal --search-file prospects.json --skip-existing --output contacts.csv"
+gh copilot explain "signalhire reveal --search-file prospects.json --skip-existing --output contacts.csv"
 
 # Explain our commit patterns
 gh copilot explain "git commit -m 'feat: improve CLI to handle existing contacts and save credits'"

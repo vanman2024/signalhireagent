@@ -11,14 +11,14 @@ OUTDIR=${OUTDIR:-"./daily"}
 mkdir -p "$OUTDIR"
 
 echo "[daily] Running search..."
-python3 -m src.cli.main search \
+signalhire search \
   --title "$TITLE" \
   --location "$LOCATION" \
   --size "$SIZE" \
   --output "$OUTDIR/search.json"
 
 echo "[daily] Revealing contacts (API-only)..."
-python3 -m src.cli.main reveal \
+signalhire reveal \
   --api-only \
   --search-file "$OUTDIR/search.json" \
   --output "$OUTDIR/contacts.csv"
