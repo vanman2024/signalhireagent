@@ -193,6 +193,33 @@ git pull origin main
 
 ---
 
+## Recent Feature Releases
+
+### 004-enterprise-contact-deduplication (Latest)
+**Released**: September 15, 2025  
+**Status**: ✅ Complete - Merged to main
+
+**Features Added**:
+- Multi-file JSON deduplication with uid-based merging
+- Job title filtering with configurable exclusion lists  
+- Progress tracking for large operations with resume capability
+- CLI commands: `signalhire-agent dedupe`, `analyze`, `filter`
+- Full test coverage: integration, unit, and performance tests
+
+**Testing Performed**:
+- ✅ All existing tests pass (12 passed, 2 skipped)
+- ✅ Integration testing with real workflows validated
+- ✅ Performance test for 7,000+ contacts completed
+- ✅ Bug fixes applied and validated
+
+**CLI Validation**:
+```bash
+# Validated working commands:
+signalhire-agent dedupe merge --input "file1,file2" --output result.json
+signalhire-agent filter job-title --input data.json --exclude-job-titles "operator,driver"
+signalhire-agent analyze job-titles --input contacts.json
+```
+
 ## Notes
 - Keep this file updated as workflows evolve
 - Add new testing patterns as you discover them

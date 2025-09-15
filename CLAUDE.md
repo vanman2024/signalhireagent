@@ -142,6 +142,7 @@ grep "@claude" [current-spec]/tasks.md
 ```
 
 ## Recent Changes
+- 004-enterprise-contact-deduplication: Complete contact deduplication and filtering system for enterprise workflows
 - 003-autonomous-lead-generation: Building autonomous lead generation system with agentic MCP server
 - Single FastAPI service architecture with 8 essential MCP tools
 - Supabase for persistent state management and Railway for deployment
