@@ -1,23 +1,14 @@
 #!/bin/bash
 
-# SignalHire Agent - Universal launcher script
-# This script works whether the package is installed or not
-
+# SignalHire Agent - Fast launcher (no dependency checks)
 # Get the actual script location (resolves symlinks)
 SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
 SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
 
-# Check if we're in the project directory and run.py exists
-if [ -f "$SCRIPT_DIR/run.py" ]; then
-    # For doctor command, use run.py for dependency checks
-    if [[ "$*" == *"doctor"* ]]; then
-        cd "$SCRIPT_DIR"
-        python3 "$SCRIPT_DIR/run.py" -m src.cli.main "$@"
-    else
-        # For all other commands, skip dependency checks for speed
-        cd "$SCRIPT_DIR"
-        python3 -m src.cli.main "$@"
-    fi
+# Always use direct Python execution for speed
+if [ -f "$SCRIPT_DIR/src/cli/main.py" ]; then
+    cd "$SCRIPT_DIR"
+    python3 -m src.cli.main "$@"
 else
     # Try to use installed package
     python3 -m cli.main "$@" 2>/dev/null || {
