@@ -131,25 +131,72 @@ Follow semantic versioning format: `v0.0.1`, `v0.0.2`, `v0.0.3`, etc.
 - **Minor (0.X.0)**: New features, significant enhancements (when patch reaches .10+)  
 - **Major (X.0.0)**: Breaking changes, major rewrites (when minor reaches .10+)
 
+### GitHub Actions Workflow
+The repository includes automated release builds via `.github/workflows/release.yml`:
+- **Triggers**: Automatically on version tags (`v*`) or manual workflow dispatch
+- **Builds**: Production deployment packages with clean dependencies
+- **Tests**: Validates build integrity, install script, CLI wrapper, and auto-generated .env
+- **Releases**: Creates GitHub releases with downloadable tar.gz and zip packages
+- **Artifacts**: Stores production builds for 30 days
+
 ### Current Version Status
 - **Latest Release**: `v0.2.0` (Contact Deduplication & Search Limit Tracking)
-- **Next Release**: `v0.2.1` (for next bug fix/improvement)
+- **Next Release**: `v0.2.1` (for production build system improvements)
 - **Next Minor**: `v0.3.0` (for next major feature)
 
-### Changes Since v0.2.0 (Pending for v0.2.1)
-**📝 Documentation Improvements (No Release Required):**
-- ✅ Updated CLI commands reference with AI agent guidance  
-- ✅ Enhanced testing and release guide with semantic versioning
-- ✅ Added comprehensive command mapping for natural language requests
-- ✅ Improved Boolean search operator documentation
-- ✅ Added reminder to always push commits to remote
+### Changes Since v0.2.0 (Ready for v0.2.1)
+**🚀 Production Build System (Major Infrastructure Improvement):**
+- ✅ Complete production build script with version tracking and environment handling
+- ✅ Automatic environment configuration (copies dev .env to production .env)
+- ✅ Virtual environment support with fallback to system-wide installation
+- ✅ Complete dependency specification including all required packages (rich, fastapi, etc.)
+- ✅ Remove development files (tests, specs, version.py) from production deployment
+- ✅ GitHub Actions workflow for automated release builds and packaging
 
-**🔧 Code Changes (Will Trigger v0.2.1 When Accumulated):**
-- ✅ Added production build script with version tracking
-- ✅ Added GitHub Actions workflow for automated releases
-- ✅ Created clean development/production separation
+**🤖 AI Agent Integration Enhancements:**
+- ✅ Updated CLI commands reference with comprehensive AI agent guidance
+- ✅ Enhanced agent instruction files (CLAUDE.md, AGENTS.md, copilot-instructions.md)
+- ✅ Added natural language to CLI command mappings for all agents
 
-**Release Readiness:** Ready for v0.2.1 - includes production build system
+**📝 Documentation Updates:**
+- ✅ Enhanced testing and release guide with GitHub Actions workflow info
+- ✅ Added comprehensive production deployment documentation
+- ✅ Updated semantic versioning strategy and decision trees
+
+**Release Readiness:** ✅ **READY FOR v0.2.1** - Complete production build system with robust environment handling
+
+### Testing GitHub Actions Workflow
+
+**To test the release workflow:**
+```bash
+# Method 1: Create and push a test tag (triggers automatic build)
+git tag v0.2.1-test
+git push origin v0.2.1-test
+
+# Method 2: Manual workflow dispatch via GitHub UI
+# Go to Actions tab → Release and Package → Run workflow
+
+# Method 3: Test with gh CLI
+gh workflow run release.yml
+```
+
+**Workflow Validation Checklist:**
+- [ ] Build completes without errors
+- [ ] Production deployment includes all required files
+- [ ] install.sh is executable and works with virtual environments
+- [ ] .env file is auto-created with proper credentials
+- [ ] CLI wrapper (signalhire-agent) is executable
+- [ ] Release artifacts (tar.gz, zip) are created
+- [ ] GitHub release is published with correct version
+
+**Production Build Testing:**
+```bash
+# Test locally before creating release
+./scripts/build-production.sh test-build --latest --force
+cd test-build
+./install.sh
+./signalhire-agent --help
+```
 
 ### When to Create Releases vs Regular Commits
 

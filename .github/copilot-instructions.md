@@ -36,7 +36,7 @@ When helping users with natural language requests, reference the CLI command map
 - "Filter contacts" → `signalhire filter job-title` commands
 - "Analyze data" → `signalhire analyze` commands (job-titles, geography, overlap)
 
-### Updated Commands (v0.2.0+):
+### Updated Commands (v0.2.1+):
 ```bash
 # Search with automatic 5000/day limit tracking
 signalhire search --title "Software Engineer" --location "San Francisco" --size 50
@@ -53,7 +53,18 @@ signalhire filter job-title --input contacts.json --output filtered.json --exclu
 
 # Check daily usage (5000 reveals/day, 5000 search profiles/day)
 signalhire status --credits
+
+# Production deployment
+./scripts/build-production.sh ~/target/directory --latest --force
 ```
+
+### Production Deployment System
+For production builds and deployments:
+- **Build script**: `./scripts/build-production.sh` creates clean production packages
+- **Auto-environment**: Copies development .env credentials to production .env
+- **Virtual environments**: Automatic setup with `install.sh` script
+- **GitHub Actions**: Automated releases on version tags (`git tag v0.2.1 && git push origin v0.2.1`)
+- **Clean deployment**: Excludes development files (tests, specs, etc.)
 
 ## Development Standards
 - **Python**: Follow PEP 8, use async/await patterns, structured logging with JSON
@@ -88,8 +99,10 @@ signalhire status --credits
   - ❌ **NEVER batch multiple task completions** before committing
 
 ## Recent Features
-- 001-looking-to-build: Added SignalHire lead generation agent with web-based contact reveal + native CSV export
-- 002-create-a-professional: Enhanced to API-first approach with optional browser automation for bulk operations
+- 004-enterprise-contact-deduplication: Complete contact deduplication system with file merging and filtering
+- Production build system with automated GitHub Actions workflow for clean deployments
+- Robust environment management with virtual environment support and auto-configuration
+- Enhanced AI agent integration with comprehensive CLI command references
 
 <!-- MANUAL ADDITIONS START -->
 

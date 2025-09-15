@@ -27,36 +27,47 @@ AI-powered lead generation automation for SignalHire with full API integration. 
 
 ## 🚀 Quick Start
 
-### Installation (2 Commands Only!)
+### Installation
 
-**Stable Version (Recommended for Production):**
+**Production Deployment (Recommended):**
 ```bash
-# 1. Clone and setup stable version
-git clone https://github.com/vanman2024/signalhireagent.git
-cd signalhireagent && ./setup.sh --stable
+# 1. Download latest release from GitHub
+wget https://github.com/vanman2024/signalhireagent/releases/latest/download/signalhire-agent-production.tar.gz
+tar -xzf signalhire-agent-production.tar.gz
+cd signalhire-agent-*/
 
-# 2. Add your API key and start using
-nano .env  # Add your SignalHire API key
-signalhire-agent doctor  # Test setup
-signalhire-agent search --title "Software Engineer" --location "San Francisco"
+# 2. Install with automatic environment setup
+./install.sh  # Creates virtual environment and installs dependencies
+
+# 3. Start using immediately (environment pre-configured)
+./signalhire-agent search --title "Software Engineer" --location "San Francisco"
 ```
 
-**Latest Development Version:**
+**Development Setup:**
 ```bash
 # 1. Clone and setup latest code
 git clone https://github.com/vanman2024/signalhireagent.git
-cd signalhireagent && ./setup.sh
+cd signalhireagent
 
-# 2. Add your API key and start using
+# 2. Add your API key
 nano .env  # Add your SignalHire API key
-signalhire-agent doctor  # Test setup
-signalhire-agent search --title "Software Engineer" --location "San Francisco"
+
+# 3. Test and use
+python3 -m src.cli.main search --title "Software Engineer" --location "San Francisco"
 ```
 
-**That's it!** Just like `claude`, `gh`, or `gemini` CLI:
-- ✅ **Global command**: Run `signalhire-agent` from anywhere (added to PATH)
-- ✅ **No pip install**: No package managers or virtual environments needed
-- ✅ **Fast startup**: Commands like `signalhire search` now start instantly
+**Production Build (For CI/CD):**
+```bash
+# Create clean production deployment
+./scripts/build-production.sh ~/production-deploy --latest --force
+cd ~/production-deploy && ./install.sh
+```
+
+**Key Features:**
+- ✅ **Production ready**: Clean deployment with virtual environment isolation
+- ✅ **Auto-configuration**: Environment automatically configured with your credentials
+- ✅ **CLI wrapper**: Easy execution with `./signalhire-agent` script
+- ✅ **Fast startup**: Commands start instantly with optimized dependency loading
 - ✅ **Auto-dependencies**: Automatically handles all dependencies via `run.py`
 - ✅ **Universal**: Works on Windows/WSL/Linux/Mac
 - ✅ **Simple setup**: Creates `.env` and adds command to PATH automatically

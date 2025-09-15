@@ -151,10 +151,10 @@ grep "@claude" [current-spec]/tasks.md
 
 ## Recent Changes
 - 004-enterprise-contact-deduplication: Complete contact deduplication and filtering system for enterprise workflows
-- 003-autonomous-lead-generation: Building autonomous lead generation system with agentic MCP server
-- Single FastAPI service architecture with 8 essential MCP tools
-- Supabase for persistent state management and Railway for deployment
-- Agent abstraction layer supporting multiple AI backends (Claude, Gemini)
+- Production build system with automated GitHub Actions workflow for clean deployments  
+- Robust environment management with virtual environment support and auto-configuration
+- Enhanced AI agent integration with comprehensive CLI command references for natural language assistance
+- Complete dependency specification and automated release packaging
 
 ## Prerequisites
 - SignalHire API key (for MCP tool integration)
@@ -174,6 +174,40 @@ grep "@claude" [current-spec]/tasks.md
 - NEVER proactively create documentation files (*.md) or README files unless explicitly requested
 
 - Always use absolute paths when reading files
+
+## Production Build System
+
+### Creating Production Deployments
+Use the production build script for clean, deployment-ready packages:
+
+```bash
+# Create production build in target directory
+./scripts/build-production.sh ~/target/directory --latest --force
+
+# What it does:
+# - Copies only essential application files (src/, docs/, agent instructions)
+# - Auto-creates .env with your development credentials
+# - Removes development files (tests/, specs/, version.py)
+# - Creates install.sh with virtual environment support
+# - Includes complete dependency specification
+# - Generates CLI wrapper for easy execution
+```
+
+### GitHub Actions Integration
+Automated releases via `.github/workflows/release.yml`:
+- **Triggers**: Version tags (`git tag v0.2.1 && git push origin v0.2.1`) or manual dispatch
+- **Builds**: Production packages with clean dependencies
+- **Tests**: Validates build integrity and required files
+- **Releases**: Creates GitHub releases with downloadable packages
+
+### Testing Production Builds
+```bash
+# Test locally before releasing
+./scripts/build-production.sh test-build --latest --force
+cd test-build
+./install.sh  # Sets up virtual environment and dependencies
+./signalhire-agent --help  # Test CLI works
+```
 
 ## Code Quality Commands
 - **ALWAYS** run linting and type checking commands after making code changes

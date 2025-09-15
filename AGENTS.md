@@ -164,6 +164,37 @@ When users give natural language requests, ALL agents should reference the CLI c
 - ✅ **Contact Deduplication**: uid-based merging with LinkedIn fallback
 - ✅ **Geographic Analysis**: Coverage gaps and optimization suggestions
 - ✅ **Progress Tracking**: Resume capability for large operations
+- ✅ **Production Deployment**: Automated build system with environment configuration
+
+## Production Deployment System
+
+### For All AI Agents Working with Production
+When users request deployment or production builds, use these commands:
+
+```bash
+# Create production deployment
+./scripts/build-production.sh ~/target/directory --latest --force
+
+# Test production build
+cd ~/target/directory
+./install.sh  # Automatic virtual environment setup
+./signalhire-agent --help  # Verify CLI works
+```
+
+### Key Production Features:
+- **Auto-environment setup**: Copies dev .env credentials to production .env
+- **Virtual environment support**: Creates isolated Python environment with dependencies  
+- **Clean deployment**: Excludes tests, specs, and development files
+- **CLI wrapper**: `signalhire-agent` script for easy execution
+- **GitHub Actions**: Automated releases on version tags
+
+### What Gets Deployed:
+- ✅ Core application (`src/`)
+- ✅ Agent instruction files (CLAUDE.md, AGENTS.md, copilot-instructions.md)
+- ✅ CLI commands reference (`docs/cli-commands.md`)
+- ✅ Production dependencies and install script
+- ✅ Auto-configured environment with user's credentials
+- ❌ Tests, specs, development tools (excluded)
 
 ## Active Technologies
 - Python 3.11 + asyncio (signalhireagent)
