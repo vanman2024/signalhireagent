@@ -147,12 +147,11 @@ def check_and_install_dependencies(argv: list[str]):
             "httpx",
             "pydantic",
             "fastapi",
-            "email-validator",
+            "email-validator", 
             "structlog",
             "click",
             "python-dotenv",
             "uvicorn",
-            "pydantic-settings",
         ]
     missing_packages = []
     
