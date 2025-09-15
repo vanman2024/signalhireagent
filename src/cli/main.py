@@ -269,19 +269,27 @@ def doctor(ctx, ping):
 
     # Check dependencies
     echo("\n📦 Dependencies:")
-    required_packages = [
-        'click', 'httpx', 'pandas', 'pydantic', 'fastapi',
-        'uvicorn', 'structlog', 'python-dotenv', 'email-validator'
-    ]
+    # Map package names to import names
+    required_packages = {
+        'click': 'click',
+        'httpx': 'httpx', 
+        'pandas': 'pandas',
+        'pydantic': 'pydantic',
+        'fastapi': 'fastapi',
+        'uvicorn': 'uvicorn',
+        'structlog': 'structlog',
+        'python-dotenv': 'dotenv',
+        'email-validator': 'email_validator'
+    }
 
     missing_packages = []
-    for package in required_packages:
+    for package_name, import_name in required_packages.items():
         try:
-            __import__(package.replace('-', '_'))
-            echo(f"  ✅ {package}")
+            __import__(import_name)
+            echo(f"  ✅ {package_name}")
         except ImportError:
-            echo(f"  ❌ {package} - {style('MISSING', fg='red')}")
-            missing_packages.append(package)
+            echo(f"  ❌ {package_name} - {style('MISSING', fg='red')}")
+            missing_packages.append(package_name)
 
     if missing_packages:
         echo(f"\n⚠️  Install missing packages: pip install {' '.join(missing_packages)}")
