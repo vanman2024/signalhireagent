@@ -141,8 +141,22 @@ mkdir -p "$TARGET_DIR"
 # Copy essential application files
 print_status "Copying application files..."
 
-# Core application code
-cp -r src/ "$TARGET_DIR/"
+# Core application code (excluding development metadata)
+print_status "Copying source code (excluding development files)..."
+if command -v rsync >/dev/null 2>&1; then
+    rsync -av --exclude='*.egg-info' --exclude='__pycache__' --exclude='*.pyc' --exclude='*.pyo' src/ "$TARGET_DIR/src/"
+else
+    # Fallback to cp if rsync not available
+    cp -r src/ "$TARGET_DIR/"
+    print_warning "rsync not available, using cp (will clean up development files afterward)"
+fi
+
+# Clean up any development files that might exist in target
+print_status "Cleaning up development files from target..."
+find "$TARGET_DIR/src" -name "*.egg-info" -type d -exec rm -rf {} + 2>/dev/null || true
+find "$TARGET_DIR/src" -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
+find "$TARGET_DIR/src" -name "*.pyc" -delete 2>/dev/null || true
+find "$TARGET_DIR/src" -name "*.pyo" -delete 2>/dev/null || true
 
 # Essential configuration and documentation
 cp README.md "$TARGET_DIR/" 2>/dev/null || true
@@ -423,6 +437,9 @@ cat > "$TARGET_DIR/BUILD_INFO.md" << EOF
 - \`pyproject.toml\` - Development configuration
 - \`TESTING_AND_RELEASE.md\` - Development workflow guide
 - \`version.py\` - Development version utility (not needed in production)
+- \`*.egg-info/\` - Python package development metadata
+- \`__pycache__/\` - Python bytecode cache
+- \`*.pyc\`, \`*.pyo\` - Compiled Python files
 - Development scripts and tools
 
 ## Installation
