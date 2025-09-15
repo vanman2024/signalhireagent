@@ -101,12 +101,16 @@ cd ~/Projects/signalhireagenttests2/signalhireagent && git log --oneline -1
 
 ### Version Verification
 ```bash
-# Check you have the latest performance fixes:
-git describe --tags  # Should show v1.2.0-fast-cli or newer
+# Check current version:
+git describe --tags  # Should show v0.2.0 or newer
 
-# Test the fix is working:
+# Test the latest features working:
 ./signalhire-agent search --title "Engineer" --dry-run
-# Should start instantly without dependency installation
+# Should start instantly with search profile limit tracking
+
+# Test contact deduplication (latest feature):
+./signalhire-agent dedupe --help
+# Should show deduplication commands
 ```
 
 ### Cross-Directory Testing
@@ -119,11 +123,64 @@ cd ~/Projects/signalhireagenttests2/signalhireagent && ./signalhire-agent search
 
 ## Release Process
 
-### Tagging Strategy
+### Semantic Versioning Strategy
+Follow semantic versioning format: `v0.0.1`, `v0.0.2`, `v0.0.3`, etc.
+
+**Version Increment Rules:**
+- **Patch (0.0.X)**: Bug fixes, minor improvements, documentation updates
+- **Minor (0.X.0)**: New features, significant enhancements (when patch reaches .10+)  
+- **Major (X.0.0)**: Breaking changes, major rewrites (when minor reaches .10+)
+
+### Current Version Status
+- **Latest Release**: `v0.2.0` (Contact Deduplication & Search Limit Tracking)
+- **Next Release**: `v0.2.1` (for next bug fix/improvement)
+- **Next Minor**: `v0.3.0` (for next major feature)
+
+### Creating Release Tags
 ```bash
-# Create version tags for major improvements:
-git tag -a v1.3.0-feature-name -m "Description of changes"
-git push origin main --tags
+# 1. Update version in documentation first
+# Update README.md, QUICKSTART.md version references
+
+# 2. Commit all changes
+git add .
+git commit -m "feat: description of changes
+
+🤖 Generated with Claude Code
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
+
+# 3. Create annotated tag with proper increment
+git tag -a v0.2.1 -m "Release v0.2.1: Brief description
+
+## ✨ New Features
+- Feature 1
+- Feature 2
+
+## 🐛 Bug Fixes  
+- Fix 1
+- Fix 2
+
+## 🛠 Technical Improvements
+- Improvement 1
+- Improvement 2
+
+🤖 Generated with Claude Code"
+
+# 4. Push commit and tag
+git push origin main
+git push origin v0.2.1
+```
+
+### Version Examples by Change Type
+```bash
+# Bug fixes, documentation updates
+v0.2.0 → v0.2.1 → v0.2.2 → v0.2.3
+
+# New features (after reaching v0.2.10 or significant feature)
+v0.2.10 → v0.3.0 → v0.3.1 → v0.3.2
+
+# Breaking changes (after reaching v0.10.0 or major rewrite)  
+v0.9.10 → v1.0.0 → v1.0.1 → v1.0.2
 ```
 
 ### Documentation Updates
@@ -134,9 +191,13 @@ git push origin main --tags
 ### Pre-Release Checklist
 - [ ] Both directories on `main` branch
 - [ ] Both directories have identical `git log --oneline -1`
-- [ ] Performance tests pass in both directories
+- [ ] Performance tests pass in both directories  
+- [ ] Documentation updated with correct version number
+- [ ] Version incremented properly (0.0.X format)
+- [ ] All new features tested with live API calls
 - [ ] Documentation matches actual command behavior
 - [ ] All workarounds removed, clean solution implemented
+- [ ] Release notes written with clear changelog
 
 ## Common Issues and Solutions
 
@@ -181,6 +242,27 @@ cd ~/Projects/signalhireagenttests2/signalhireagent && git sync
 
 # Performance test
 ./signalhire-agent search --title "test" --dry-run
+```
+
+### Version Quick Reference
+```bash
+# Current version format: v0.2.0
+
+# Next patch release (bug fixes):
+v0.2.1, v0.2.2, v0.2.3, etc.
+
+# Next minor release (new features):  
+v0.3.0, v0.4.0, v0.5.0, etc.
+
+# Next major release (breaking changes):
+v1.0.0, v2.0.0, v3.0.0, etc.
+
+# Check latest tag:
+git tag --list | sort -V | tail -1
+
+# Create next patch version:
+NEXT_VERSION=$(git tag --list | grep -E "^v[0-9]+\.[0-9]+\.[0-9]+$" | sort -V | tail -1 | awk -F. '{print $1"."$2"."$3+1}')
+echo "Next version: $NEXT_VERSION"
 ```
 
 ### Emergency Recovery
