@@ -74,28 +74,143 @@ CREATE TABLE search_sessions (
 );
 ```
 
+## Boolean Search Strategy for Precision at Scale
+
+### Heavy Equipment Mechanics: Optimal Search Patterns
+
+**Target Roles (INCLUDE):**
+- Heavy Equipment Mechanic
+- Heavy Duty Mechanic  
+- Heavy Equipment Technician
+- Diesel Mechanic (with heavy equipment context)
+- Equipment Technician (with heavy/industrial context)
+- Machinery Mechanic
+- Field Service Technician (heavy equipment)
+
+**Unwanted Roles (EXCLUDE):**
+- Heavy Equipment Operator ❌
+- Heavy Equipment Driver ❌  
+- Equipment Operator ❌
+- Crane Operator ❌
+- Foreman/Supervisor roles ❌
+- Administrative roles ❌
+
+### Proven Boolean Query Templates
+
+#### Template 1: Core Mechanics (Highest Precision)
+```bash
+--title "(Heavy Equipment Mechanic OR Heavy Duty Mechanic OR Heavy Equipment Technician) AND NOT (Operator OR Driver OR Foreman OR Supervisor)"
+```
+
+#### Template 2: Expanded Technicians  
+```bash
+--title "(Equipment Technician OR Machinery Mechanic OR Diesel Mechanic) AND (Heavy OR Industrial OR Construction) AND NOT (Operator OR Driver OR Foreman)"
+```
+
+#### Template 3: Field Service Focus
+```bash
+--title "(Field Service Technician OR Mobile Mechanic OR Service Technician) AND (Heavy Equipment OR Construction Equipment OR Industrial) AND NOT (Operator OR Driver)"
+```
+
+#### Template 4: Industry-Specific
+```bash
+--title "(Mechanic OR Technician) AND (Caterpillar OR Komatsu OR John Deere OR Case OR Volvo) AND NOT (Operator OR Driver OR Sales)"
+```
+
+### Search Quality Validation
+
+**Expected Result Distribution:**
+- ✅ Heavy Equipment Mechanic: 35-40%
+- ✅ Heavy Equipment Technician: 25-30%  
+- ✅ Diesel Mechanic: 15-20%
+- ✅ Field Service Technician: 10-15%
+- ❌ Operators (should be <5% with proper exclusions)
+
+**Quality Check Commands:**
+```bash
+# Analyze search results before importing
+signalhire analyze-search mechanics_batch_1.json --show-titles
+
+# Expected output:
+# 📊 Title Analysis (2,500 contacts):
+# ✅ Heavy Equipment Mechanic: 875 (35%)
+# ✅ Heavy Equipment Technician: 625 (25%)
+# ✅ Diesel Mechanic: 375 (15%)
+# ❌ Heavy Equipment Operator: 125 (5%) ⚠️ Filter needed
+# ✅ Field Service Technician: 250 (10%)
+```
+
+### Advanced Boolean Filtering Techniques
+
+#### Post-Search Quality Filtering
+```bash
+# Filter out unwanted titles from imported data
+signalhire filter-contacts \
+  --exclude-titles "Operator,Driver,Foreman,Supervisor,Manager" \
+  --min-relevance-score 80 \
+  --output filtered_mechanics.json
+
+# Company-based filtering (focus on relevant industries)
+signalhire filter-contacts \
+  --include-companies "Construction,Mining,Oil,Gas,Heavy Equipment,Caterpillar,Komatsu" \
+  --exclude-companies "Software,IT,Finance,Retail" \
+  --output industry_filtered.json
+```
+
+#### Search Refinement Strategies
+```bash
+# If getting too many operators, strengthen exclusions:
+--title "(Heavy Equipment Mechanic OR Heavy Duty Mechanic) AND NOT (Operator OR Driver OR Foreman OR Supervisor OR Lead OR Manager)"
+
+# If missing relevant results, expand inclusions:
+--title "(Heavy Equipment Mechanic OR Heavy Duty Mechanic OR Heavy Equipment Technician OR Diesel Technician OR Mobile Mechanic OR Field Mechanic) AND NOT (Operator OR Driver)"
+
+# Geographic precision for large countries:
+--location "(Alberta OR Saskatchewan OR British Columbia), Canada"
+--location "(Texas OR Louisiana OR North Dakota OR Wyoming), United States"
+```
+
+#### Industry-Specific Boolean Patterns
+```bash
+# Mining focus
+--title "(Heavy Equipment Mechanic OR Diesel Mechanic) AND (Mining OR Mine OR Coal OR Copper OR Gold) AND NOT (Operator OR Driver)"
+
+# Construction focus  
+--title "(Heavy Equipment Technician OR Equipment Mechanic) AND (Construction OR Contractor OR Building) AND NOT (Operator OR Foreman)"
+
+# Oil & Gas focus
+--title "(Heavy Equipment Mechanic OR Diesel Mechanic OR Field Technician) AND (Oil OR Gas OR Pipeline OR Drilling) AND NOT (Operator OR Driver)"
+```
+
+**Quality Assurance Best Practices:**
+- 🎯 Always include NOT clauses to exclude operators
+- 📊 Run `analyze-search` before importing large batches
+- 🔍 Strengthen exclusions if seeing >10% operators in results
+- 💎 Target 90%+ relevance for cost-effective campaigns
+- 🏭 Use industry-specific terms for better precision
+
 ## Implementation Strategy
 
 ### Phase 1: Search & Collect (0 credits used)
 ```bash
 # Search in chunks to stay within 200 query limit
-# Day 1: Search #1
+# Day 1: Primary mechanics search with exclusions
 signalhire search \
-  --title "Heavy Equipment Mechanic" \
+  --title "(Heavy Equipment Mechanic OR Heavy Duty Mechanic OR Heavy Equipment Technician) AND NOT (Operator OR Driver OR Foreman)" \
   --location "Canada" \
   --size 100 --all-pages --max-pages 20 \
   --output mechanics_batch_1.json
 
-# Day 2: Search #2 (different location filter)
+# Day 2: Expanded mechanics search (different location)
 signalhire search \
-  --title "Heavy Equipment Mechanic" \
+  --title "(Heavy Equipment Mechanic OR Heavy Duty Mechanic OR Heavy Equipment Technician) AND NOT (Operator OR Driver OR Foreman)" \
   --location "United States" \
   --size 100 --all-pages --max-pages 20 \
   --output mechanics_batch_2.json
 
-# Day 3: Search #3 (different keywords)
+# Day 3: Alternative titles search with strict exclusions
 signalhire search \
-  --title "Equipment Technician OR Machinery Mechanic" \
+  --title "(Equipment Technician OR Machinery Mechanic OR Diesel Mechanic) AND (Heavy OR Industrial) AND NOT (Operator OR Driver OR Foreman OR Supervisor)" \
   --location "Canada OR United States" \
   --size 100 --all-pages --max-pages 20 \
   --output mechanics_batch_3.json
@@ -217,11 +332,22 @@ signalhire reveal-from-db --limit 5000 --progress
 ### Complete 7,000+ Contact Campaign
 
 ```bash
-# Week 1: Data Collection (0 credits used)
-Day 1: signalhire search --title "Heavy Equipment Mechanic" --location "Alberta, Canada" --output ab_mechanics.json
-Day 2: signalhire search --title "Heavy Equipment Mechanic" --location "Ontario, Canada" --output on_mechanics.json  
-Day 3: signalhire search --title "Heavy Equipment Mechanic" --location "Texas, USA" --output tx_mechanics.json
-Day 4: signalhire search --title "Equipment Technician" --location "Canada OR USA" --output technicians.json
+# Week 1: Data Collection (0 credits used) - Precision Boolean Searches
+Day 1: signalhire search \
+  --title "(Heavy Equipment Mechanic OR Heavy Duty Mechanic OR Heavy Equipment Technician) AND NOT (Operator OR Driver OR Foreman)" \
+  --location "Alberta, Canada" --output ab_mechanics.json
+
+Day 2: signalhire search \
+  --title "(Heavy Equipment Mechanic OR Heavy Duty Mechanic OR Heavy Equipment Technician) AND NOT (Operator OR Driver OR Foreman)" \
+  --location "Ontario, Canada" --output on_mechanics.json
+
+Day 3: signalhire search \
+  --title "(Equipment Technician OR Machinery Mechanic OR Diesel Mechanic) AND (Heavy OR Industrial) AND NOT (Operator OR Driver)" \
+  --location "Texas, USA" --output tx_mechanics.json
+
+Day 4: signalhire search \
+  --title "(Field Service Technician OR Mobile Mechanic) AND (Heavy Equipment OR Construction Equipment) AND NOT (Operator OR Driver)" \
+  --location "Canada OR USA" --output field_technicians.json
 
 # Week 2: Database Setup & Import
 signalhire db init
