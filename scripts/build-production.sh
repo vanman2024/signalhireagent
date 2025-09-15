@@ -180,14 +180,52 @@ cat > "$TARGET_DIR/VERSION" << EOF
 }
 EOF
 
-# Create production .env template
+# Create production .env template with actual values from source
 print_status "Creating .env template..."
-cat > "$TARGET_DIR/.env.example" << EOF
+
+# Check if source .env exists and copy actual values
+if [[ -f ".env" ]]; then
+    print_status "Found source .env file, copying actual values to template..."
+    
+    # Extract actual values from source .env
+    ACTUAL_API_KEY=$(grep "^SIGNALHIRE_API_KEY=" .env 2>/dev/null | cut -d'=' -f2- || echo "your_api_key_here")
+    ACTUAL_EMAIL=$(grep "^SIGNALHIRE_EMAIL=" .env 2>/dev/null | cut -d'=' -f2- || echo "your_email@example.com")
+    ACTUAL_PASSWORD=$(grep "^SIGNALHIRE_PASSWORD=" .env 2>/dev/null | cut -d'=' -f2- || echo "your_password_here")
+    ACTUAL_BASE_URL=$(grep "^SIGNALHIRE_API_BASE_URL=" .env 2>/dev/null | cut -d'=' -f2- || echo "https://www.signalhire.com")
+    ACTUAL_PREFIX=$(grep "^SIGNALHIRE_API_PREFIX=" .env 2>/dev/null | cut -d'=' -f2- || echo "/api/v1")
+    ACTUAL_RATE_LIMIT=$(grep "^RATE_LIMIT_REQUESTS_PER_MINUTE=" .env 2>/dev/null | cut -d'=' -f2- || echo "600")
+    ACTUAL_REVEAL_LIMIT=$(grep "^DAILY_REVEAL_LIMIT=" .env 2>/dev/null | cut -d'=' -f2- || echo "5000")
+    ACTUAL_SEARCH_LIMIT=$(grep "^DAILY_SEARCH_PROFILE_LIMIT=" .env 2>/dev/null | cut -d'=' -f2- || echo "5000")
+    
+    cat > "$TARGET_DIR/.env.example" << EOF
+# SignalHire Agent Configuration
+# This file contains actual values from your development environment
+# Copy this to .env to use the same configuration
+
+# SignalHire credentials
+SIGNALHIRE_API_KEY=$ACTUAL_API_KEY
+SIGNALHIRE_EMAIL=$ACTUAL_EMAIL
+SIGNALHIRE_PASSWORD=$ACTUAL_PASSWORD
+
+# Optional: API Configuration  
+SIGNALHIRE_API_BASE_URL=$ACTUAL_BASE_URL
+SIGNALHIRE_API_PREFIX=$ACTUAL_PREFIX
+
+# Optional: Rate Limiting
+RATE_LIMIT_REQUESTS_PER_MINUTE=$ACTUAL_RATE_LIMIT
+DAILY_REVEAL_LIMIT=$ACTUAL_REVEAL_LIMIT
+DAILY_SEARCH_PROFILE_LIMIT=$ACTUAL_SEARCH_LIMIT
+EOF
+else
+    print_warning "No source .env file found, creating template with default values..."
+    cat > "$TARGET_DIR/.env.example" << EOF
 # SignalHire Agent Configuration
 # Copy this to .env and add your actual values
 
-# Required: SignalHire API Key
+# SignalHire credentials
 SIGNALHIRE_API_KEY=your_api_key_here
+SIGNALHIRE_EMAIL=your_email@example.com
+SIGNALHIRE_PASSWORD=your_password_here
 
 # Optional: API Configuration
 SIGNALHIRE_API_BASE_URL=https://www.signalhire.com
@@ -198,6 +236,7 @@ RATE_LIMIT_REQUESTS_PER_MINUTE=600
 DAILY_REVEAL_LIMIT=5000
 DAILY_SEARCH_PROFILE_LIMIT=5000
 EOF
+fi
 
 # Create simple deployment script
 print_status "Creating deployment utilities..."
@@ -231,44 +270,8 @@ EOF
 
 chmod +x "$TARGET_DIR/install.sh"
 
-# Create version check utility
-cat > "$TARGET_DIR/version.py" << 'EOF'
-#!/usr/bin/env python3
-"""Version information utility for SignalHire Agent."""
-
-import json
-import sys
-from pathlib import Path
-
-def get_version():
-    """Get version information from VERSION file."""
-    version_file = Path(__file__).parent / "VERSION"
-    if not version_file.exists():
-        return {"version": "unknown", "error": "VERSION file not found"}
-    
-    try:
-        with open(version_file) as f:
-            return json.load(f)
-    except (json.JSONDecodeError, OSError) as e:
-        return {"version": "unknown", "error": str(e)}
-
-def main():
-    """Print version information."""
-    version_info = get_version()
-    
-    if "error" in version_info:
-        print(f"Error getting version: {version_info['error']}")
-        sys.exit(1)
-    
-    print(f"SignalHire Agent {version_info['version']}")
-    print(f"Build: {version_info['commit'][:8]} ({version_info['build_date']})")
-    print(f"Type: {version_info['build_type']}")
-
-if __name__ == "__main__":
-    main()
-EOF
-
-chmod +x "$TARGET_DIR/version.py"
+# Version information is available via VERSION file (JSON format)
+# No version.py utility needed in production deployment
 
 # Create simple CLI wrapper (optional)
 cat > "$TARGET_DIR/signalhire-agent" << 'EOF'
@@ -303,10 +306,9 @@ cat > "$TARGET_DIR/BUILD_INFO.md" << EOF
 - \`src/\` - Core application code
 - \`requirements.txt\` - Production dependencies only
 - \`VERSION\` - Version information (JSON)
-- \`version.py\` - Version utility script
 - \`install.sh\` - Installation script
 - \`signalhire-agent\` - CLI wrapper script
-- \`.env.example\` - Configuration template
+- \`.env.example\` - Configuration template (auto-populated from source .env)
 - \`CLAUDE.md\` - Claude Code agent instructions
 - \`AGENTS.md\` - All AI agents instructions (Codex, Gemini, etc.)
 - \`.github/copilot-instructions.md\` - GitHub Copilot instructions
@@ -318,16 +320,17 @@ cat > "$TARGET_DIR/BUILD_INFO.md" << EOF
 - \`.pytest_cache/\` - Test cache
 - \`pyproject.toml\` - Development configuration
 - \`TESTING_AND_RELEASE.md\` - Development workflow guide
+- \`version.py\` - Development version utility (not needed in production)
 - Development scripts and tools
 
 ## Installation
 1. Run \`./install.sh\`
-2. Copy \`.env.example\` to \`.env\`
-3. Add your SIGNALHIRE_API_KEY to \`.env\`
+2. Copy \`.env.example\` to \`.env\` (or use as-is if auto-populated)
+3. Verify SIGNALHIRE_API_KEY in \`.env\`
 4. Test: \`./signalhire-agent --help\`
 
 ## Version Check
-Run \`python3 version.py\` to see build information.
+Check \`VERSION\` file for build information (JSON format).
 EOF
 
 # Final verification
