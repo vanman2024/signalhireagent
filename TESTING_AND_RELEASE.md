@@ -142,11 +142,14 @@ Follow semantic versioning format: `v0.0.1`, `v0.0.2`, `v0.0.3`, etc.
 - ✅ Enhanced testing and release guide with semantic versioning
 - ✅ Added comprehensive command mapping for natural language requests
 - ✅ Improved Boolean search operator documentation
+- ✅ Added reminder to always push commits to remote
 
 **🔧 Code Changes (Will Trigger v0.2.1 When Accumulated):**
-- *None yet - waiting for next bug fix or feature*
+- ✅ Added production build script with version tracking
+- ✅ Added GitHub Actions workflow for automated releases
+- ✅ Created clean development/production separation
 
-**Release Readiness:** Not ready - only documentation changes so far
+**Release Readiness:** Ready for v0.2.1 - includes production build system
 
 ### When to Create Releases vs Regular Commits
 
@@ -182,6 +185,22 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 git push origin main
 
 # Status: Still on v0.2.0 + improvements
+```
+
+**Production Build & Testing (New Workflow):**
+```bash
+# 1. Create production build locally
+./scripts/build-production.sh ~/Projects/signalhireagenttests2/signalhireagent/ --latest --force
+
+# 2. Test in production-like environment
+cd ~/Projects/signalhireagenttests2/signalhireagent/
+./install.sh
+cp .env.example .env
+# Add SIGNALHIRE_API_KEY to .env
+./signalhire-agent search --title "Engineer" --dry-run
+
+# 3. Verify version info
+python3 version.py
 ```
 
 **Feature/Bug Fix Changes (Create Release):**

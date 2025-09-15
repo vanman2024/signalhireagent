@@ -1,0 +1,102 @@
+name: Release and Package
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger on version tags like v0.2.1
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  create-production-build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Get full git history for version info
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Get version from tag
+      id: version
+      run: |
+        if [[ $GITHUB_REF == refs/tags/* ]]; then
+          VERSION=${GITHUB_REF#refs/tags/}
+        else
+          VERSION=$(git describe --tags --dirty || echo "v0.0.0-dev")
+        fi
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Version: $VERSION"
+    
+    - name: Create production build
+      run: |
+        mkdir -p production-build
+        ./scripts/build-production.sh production-build --version ${{ steps.version.outputs.version }} --force
+    
+    - name: Create build archive
+      run: |
+        cd production-build
+        tar -czf ../signalhire-agent-${{ steps.version.outputs.version }}-production.tar.gz .
+        cd ..
+        zip -r signalhire-agent-${{ steps.version.outputs.version }}-production.zip production-build/
+    
+    - name: Test production build
+      run: |
+        cd production-build
+        # Test version utility
+        python3 version.py
+        # Test CLI import (without actual API calls)
+        python3 -c "import sys; sys.path.insert(0, '.'); from src.cli.main import cli; print('CLI import successful')"
+    
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: |
+          signalhire-agent-${{ steps.version.outputs.version }}-production.tar.gz
+          signalhire-agent-${{ steps.version.outputs.version }}-production.zip
+        body: |
+          ## SignalHire Agent ${{ steps.version.outputs.version }}
+          
+          ### Production Release
+          
+          This release contains the production-ready SignalHire Agent without development dependencies.
+          
+          **Download Options:**
+          - `signalhire-agent-${{ steps.version.outputs.version }}-production.tar.gz` - Linux/macOS
+          - `signalhire-agent-${{ steps.version.outputs.version }}-production.zip` - Windows/Universal
+          
+          ### Installation
+          1. Download and extract the archive
+          2. Run `./install.sh` (Linux/macOS) or install requirements manually
+          3. Copy `.env.example` to `.env` and add your SIGNALHIRE_API_KEY
+          4. Run `./signalhire-agent --help` to get started
+          
+          ### What's Included
+          - Core application code (`src/`)
+          - Production dependencies only
+          - Installation scripts
+          - Configuration templates
+          - Version information
+          
+          ### What's Excluded (Development Only)
+          - Test suites (`tests/`)
+          - Development specifications (`specs/`)
+          - Development tools and configuration
+          
+          For development and contributing, see the full repository.
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: production-build-${{ steps.version.outputs.version }}
+        path: production-build/
+        retention-days: 30
