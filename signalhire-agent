@@ -11,7 +11,7 @@ SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
 if [ -f "$SCRIPT_DIR/run.py" ]; then
     # Use run.py method for dependency handling
     cd "$SCRIPT_DIR"
-    RUNPY_AUTO_INSTALL=1 python3 "$SCRIPT_DIR/run.py" -m src.cli.main "$@"
+    python3 "$SCRIPT_DIR/run.py" -m src.cli.main "$@"
 else
     # Try to use installed package
     python3 -m cli.main "$@" 2>/dev/null || {
