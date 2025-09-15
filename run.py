@@ -135,9 +135,18 @@ def check_and_install_dependencies(argv: list[str]):
 
     For pytest runs, skip heavy dependency checks to allow unit tests to run
     without full stack installed.
+    
+    Skip dependency checks for normal CLI commands unless RUNPY_FORCE_CHECK=1.
     """
     python_cmd = get_python_cmd()
     running_pytest = is_pytest_invocation(argv)
+    force_check = os.getenv("RUNPY_FORCE_CHECK", "0") == "1"
+    
+    # Skip dependency checks for normal CLI usage unless forced
+    # Only check on doctor command or when explicitly requested
+    is_doctor_command = "doctor" in argv
+    if not force_check and not running_pytest and not is_doctor_command:
+        return True
 
     if running_pytest:
         required_packages = []  # let pytest fail if actually missing
