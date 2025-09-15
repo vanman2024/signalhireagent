@@ -25,6 +25,62 @@
 - File naming: `tests/**/test_*.py`.
 - Aim for ≥80% coverage on new/changed code; include negative and async-path tests.
 - Browser/slow tests should be marked; default CI path should skip `-m slow`.
+
+## 🚨 CRITICAL: Script Documentation Standards
+**MANDATORY for ALL AGENTS**: Every script file must include a standardized header following the format in `docs/developer/SCRIPT_HEADER_STANDARD.md`.
+
+### Required Header Format for ALL Scripts:
+```bash
+#!/bin/bash  # or #!/usr/bin/env python3 for Python
+# Script Name
+#
+# PURPOSE: One-line description of what this script does
+# USAGE: ./script-name.sh [arguments] [flags]
+# PART OF: Which system/workflow this script belongs to
+# CONNECTS TO: What other scripts, workflows, or systems this interacts with
+#
+# Detailed description explaining:
+# - What this script accomplishes
+# - Key operations it performs
+# - Important notes about usage or dependencies
+```
+
+### Mandatory Fields for ALL Agents:
+- **PURPOSE**: One-line explanation of what the script does
+- **USAGE**: How to run the script with arguments and flags
+- **PART OF**: Which larger system or workflow this belongs to
+- **CONNECTS TO**: Dependencies, related scripts, or systems it interacts with
+
+### Script Documentation Enforcement:
+- ✅ **ALL new scripts MUST include proper headers**
+- ✅ **Existing scripts missing headers should be updated when modified**
+- ✅ **Headers serve as inline documentation for maintenance**
+- ✅ **Clear connections between scripts and systems must be documented**
+
+### Examples:
+**Shell Script:**
+```bash
+#!/bin/bash
+# Production Build Script for SignalHire Agent
+#
+# PURPOSE: Creates clean production deployment with version tracking
+# USAGE: ./build-production.sh <target_directory> [--version TAG] [--latest] [--force]
+# PART OF: Build and deployment system
+# CONNECTS TO: GitHub Actions workflow (.github/workflows/release.yml)
+```
+
+**Python Script:**
+```python
+#!/usr/bin/env python3
+"""
+Agent Coordinator Script
+
+PURPOSE: Orchestrates multi-agent workflows and task coordination
+USAGE: python agent-coordinator.py [--config file] [--mode interactive]
+PART OF: AI agent coordination system
+CONNECTS TO: Task management system, agent instruction files (CLAUDE.md, AGENTS.md)
+"""
+```
 ## 🚨 CRITICAL: Agent Commit Requirements
 **MANDATORY for ALL AGENTS**: Every commit must identify the agent and reference task numbers.
 
@@ -173,7 +229,7 @@ When users request deployment or production builds, use these commands:
 
 ```bash
 # Create production deployment
-./scripts/build-production.sh ~/target/directory --latest --force
+./scripts/build/build-production.sh ~/target/directory --latest --force
 
 # Test production build
 cd ~/target/directory

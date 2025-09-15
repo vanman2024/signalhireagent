@@ -59,7 +59,7 @@ python3 -m src.cli.main search --title "Software Engineer" --location "San Franc
 **Production Build (For CI/CD):**
 ```bash
 # Create clean production deployment
-./scripts/build-production.sh ~/production-deploy --latest --force
+./scripts/build/build-production.sh ~/production-deploy --latest --force
 cd ~/production-deploy && ./install.sh
 ```
 

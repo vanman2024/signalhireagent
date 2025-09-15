@@ -332,7 +332,15 @@ Running: /mnt/c/Python312/python.exe -m pytest with appropriate markers (unit, i
 - ✅ Follow existing code patterns and conventions
 - **Current**: 6 services, 14 libraries implemented
 
-### V. Documentation & Shared Memory (ACTIVE)
+### V. Script Documentation Standards (ENFORCED)
+- ✅ **ALL script files MUST include standardized headers** (see `docs/developer/SCRIPT_HEADER_STANDARD.md`)
+- ✅ **Required fields**: PURPOSE, USAGE, PART OF, CONNECTS TO
+- ✅ **Headers serve as inline documentation** for maintenance and onboarding
+- ✅ **Clear system connections** must be documented in every script
+- ✅ **Enforcement**: New scripts must have headers, existing scripts updated when modified
+- **Standard**: All agents must follow header format for maintainability
+
+### VI. Documentation & Shared Memory (ACTIVE)
 - ✅ Keep agent context files synchronized (use /update-memory)
 - ✅ Update constitution.md when processes change (auto-generated)
 - ✅ Document coordination decisions in AI_COORDINATION_PLAN.md  

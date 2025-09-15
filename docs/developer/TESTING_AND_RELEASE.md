@@ -192,7 +192,7 @@ gh workflow run release.yml
 **Production Build Testing:**
 ```bash
 # Test locally before creating release
-./scripts/build-production.sh test-build --latest --force
+./scripts/build/build-production.sh test-build --latest --force
 cd test-build
 ./install.sh
 ./signalhire-agent --help

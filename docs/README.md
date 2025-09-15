@@ -1,87 +1,54 @@
-# SignalHire Agent Documentation
+# Documentation Directory
 
-This directory contains comprehensive documentation for the SignalHire lead generation agent project and its revolutionary **@symbol coordination system**.
+Comprehensive documentation for the SignalHire Agent project.
 
-## 📁 Documentation Structure
+## Directory Structure
 
-### 🤖 [`agents/`](./agents/)
-Agent-specific instructions and context files:
-- **[COPILOT_SUMMARY.md](./agents/COPILOT_SUMMARY.md)** - GitHub Copilot integration and tasks
-- **[DEEPSEEK.md](./agents/DEEPSEEK.md)** - @deepseek refactoring & architecture specialist  
-- **[GEMINI.md](./agents/GEMINI.md)** - @gemini research & performance specialist
-- **[QWEN.md](./agents/QWEN.md)** - @qwen optimization & performance specialist
+### 👥 `user/`
+**End-user documentation** - for people using the SignalHire Agent CLI
 
-### 🏗️ [`architecture/`](./architecture/)
-System design and coordination documentation:
-- **[AI_COORDINATION_PLAN.md](./architecture/AI_COORDINATION_PLAN.md)** - Revolutionary @symbol coordination system
-- **[api.md](./architecture/api.md)** - API documentation and specifications
-- **[CLI_FIRST_PATTERN.md](./CLI_FIRST_PATTERN.md)** - CLI-first development pattern for API connectors
+- `cli-commands.md` - Complete CLI command reference with examples
+- `README.md` - User-focused project overview and getting started guide
 
-### 🛠️ [`development/`](./development/)
-Development processes and guidelines:
-- **[DEVELOPMENT.md](./development/DEVELOPMENT.md)** - Development guidelines and standards
-- **[testing_strategy.md](./development/testing_strategy.md)** - Comprehensive testing framework
+**Target Audience:** Users running the SignalHire Agent to search for prospects and reveal contacts
 
-## 🎯 Quick Navigation
+### 🔧 `developer/`
+**Developer documentation** - for people contributing to or understanding the codebase
 
-### For AI Agents
-Each agent has specific context files with their role, responsibilities, and task patterns:
-```bash
-# Agent instructions are in agents/ directory
-grep "@qwen" agents/QWEN.md     # Check @qwen tasks
-grep "@deepseek" agents/DEEPSEEK.md  # Check @deepseek tasks
-```
+#### Core Development Docs:
+- `CLI_FIRST_PATTERN.md` - CLI-first development pattern and architecture
+- `TESTING_AND_RELEASE.md` - Testing workflows and release procedures
 
-### For Developers
-- **Start here**: [DEVELOPMENT.md](./development/DEVELOPMENT.md)
-- **Testing**: [testing_strategy.md](./development/testing_strategy.md)
-- **API Reference**: [api.md](./architecture/api.md)
+#### Subdirectories:
+- `architecture/` - System architecture and design documents
+- `development/` - Development setup, patterns, and guidelines
+- `agents/` - AI agent coordination and workflow documentation
 
-### For Project Coordination
-- **@Symbol System**: [AI_COORDINATION_PLAN.md](./architecture/AI_COORDINATION_PLAN.md)
-- **Multi-Agent Workflow**: See breakthrough coordination approach
+**Target Audience:** Developers working on the SignalHire Agent codebase
 
-## 🚀 Key Innovations
+## Documentation Guidelines
 
-### @Symbol Coordination System
+### For User Documentation:
+- Focus on **how to use** the application
+- Include practical examples and common workflows
+- Assume minimal technical background
+- Prioritize clarity and ease of use
 
-This project pioneered the **@symbol coordination system** - a simple, scalable approach to multi-agent development using familiar @mention syntax in markdown files. This system outperforms complex orchestration frameworks through:
+### For Developer Documentation:
+- Focus on **how the system works** internally
+- Include architectural decisions and patterns
+- Assume technical background
+- Prioritize completeness and technical accuracy
 
-- **Universal Pattern**: Uses GitHub/social media @mention syntax
-- **Zero Infrastructure**: Just markdown files - works anywhere  
-- **Self-Documenting**: The system explains itself
-- **Tool Agnostic**: Works with any agent or human
-- **Instantly Scalable**: Add new agents by just using @newagent
+## Quick Navigation
 
-### CLI-First Architecture Pattern
+**New User?** → Start with [`user/README.md`](user/README.md)  
+**Using the CLI?** → See [`user/cli-commands.md`](user/cli-commands.md)  
+**Contributing code?** → Start with [`developer/development/`](developer/development/)  
+**Understanding architecture?** → See [`developer/architecture/`](developer/architecture/)
 
-This project demonstrates the **CLI-First Pattern** for API connector projects - a proven strategy for building on top of existing services:
+## Maintenance
 
-- **Rapid API Validation**: Test integrations without frontend complexity
-- **Technical Early Adopters**: Serve power users first, expand to broader audiences later
-- **Future-Proof Foundation**: CLI logic becomes the backbone for web UIs, mobile apps, and integrations
-- **Real-World Success**: Pattern used by Terraform, Docker, Stripe, and other major tools
-
-See [CLI_FIRST_PATTERN.md](./CLI_FIRST_PATTERN.md) for the complete guide.
-
-## 📊 Agent Ecosystem
-
-| Agent | Role | Access | Specialization |
-|-------|------|--------|----------------|
-| @claude | Architecture & Integration | Claude Code | Complex system design, multi-file changes |
-| @copilot | Implementation & Code Gen | GitHub Copilot | Single-file implementations, patterns |
-| @codex | Interactive Development | OpenAI | TDD, interactive debugging |
-| @gemini | Research & Performance | Google Gemini | Documentation, optimization |
-| @qwen | Code Optimization | FREE (Ollama) | Algorithm performance, efficiency |
-| @deepseek | Refactoring & Architecture | FREE (Ollama/API) | Large-scale refactoring, maintainability |
-
-## 💡 Usage Examples
-
-```markdown
-# Example task assignments using @symbol coordination:
-- [ ] T060 @qwen Optimize search algorithm performance (<2s response time)
-- [ ] T061 @deepseek Refactor browser automation for maintainability (removed in API-only mode)
-- [ ] T062 @gemini Create performance benchmarks and analysis
-```
-
-This documentation structure supports the scalable, self-organizing nature of the @symbol coordination breakthrough.
+- Keep user docs updated when CLI commands change
+- Update developer docs when architecture or patterns change
+- Maintain clear separation between user-facing and developer-facing content

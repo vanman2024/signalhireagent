@@ -35,7 +35,7 @@ jobs:
     - name: Create production build
       run: |
         mkdir -p production-build
-        ./scripts/build-production.sh production-build --version ${{ steps.version.outputs.version }} --force
+        ./scripts/build/build-production.sh production-build --version ${{ steps.version.outputs.version }} --force
     
     - name: Create build archive
       run: |

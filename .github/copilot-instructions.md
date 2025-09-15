@@ -55,12 +55,12 @@ signalhire filter job-title --input contacts.json --output filtered.json --exclu
 signalhire status --credits
 
 # Production deployment
-./scripts/build-production.sh ~/target/directory --latest --force
+./scripts/build/build-production.sh ~/target/directory --latest --force
 ```
 
 ### Production Deployment System
 For production builds and deployments:
-- **Build script**: `./scripts/build-production.sh` creates clean production packages
+- **Build script**: `./scripts/build/build-production.sh` creates clean production packages
 - **Auto-environment**: Copies development .env credentials to production .env
 - **Virtual environments**: Automatic setup with `install.sh` script
 - **GitHub Actions**: Automated releases on version tags (`git tag v0.2.1 && git push origin v0.2.1`)

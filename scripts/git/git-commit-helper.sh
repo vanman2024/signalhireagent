@@ -1,7 +1,13 @@
 #!/bin/bash
-
 # Git Commit Helper Script
-# Helps maintain consistent commit practices with AI assistance
+#
+# PURPOSE: Generates standardized commit messages following project conventions
+# USAGE: ./git-commit-helper.sh [--help]
+# PART OF: Git workflow automation
+# CONNECTS TO: Development workflow, used by all agents for consistent commits
+#
+# This script helps create commit messages that follow the project's conventional
+# commit format with proper agent attribution and task references.
 
 set -e
 

@@ -182,7 +182,7 @@ Use the production build script for clean, deployment-ready packages:
 
 ```bash
 # Create production build in target directory
-./scripts/build-production.sh ~/target/directory --latest --force
+./scripts/build/build-production.sh ~/target/directory --latest --force
 
 # What it does:
 # - Copies only essential application files (src/, docs/, agent instructions)
@@ -203,7 +203,7 @@ Automated releases via `.github/workflows/release.yml`:
 ### Testing Production Builds
 ```bash
 # Test locally before releasing
-./scripts/build-production.sh test-build --latest --force
+./scripts/build/build-production.sh test-build --latest --force
 cd test-build
 ./install.sh  # Sets up virtual environment and dependencies
 ./signalhire-agent --help  # Test CLI works
@@ -220,6 +220,33 @@ cd test-build
 - Never commit secrets or API keys - always use environment variables and .env files
 - You're absolutely right - the environment variable issue is frustrating! The problem is that we're running Python from Windows but the .env file is in the WSL filesystem, so the environment variables aren't being loaded properly. We need to make sure we are we are using wsl properly its super annoying but I don't see any way around it
 - for all agents make sure they are commiting their work and using there symbols that they have committed their work so we know they did it
+
+## 🚨 CRITICAL: Script Documentation Standards
+**MANDATORY for ALL AGENTS**: Every script file must include a standardized header.
+
+### Required Header Format:
+```bash
+#!/bin/bash  # or #!/usr/bin/env python3 for Python
+# Script Name
+#
+# PURPOSE: One-line description of what this script does
+# USAGE: ./script-name.sh [arguments] [flags]
+# PART OF: Which system/workflow this script belongs to
+# CONNECTS TO: What other scripts, workflows, or systems this interacts with
+#
+# Detailed description explaining key operations and usage notes
+```
+
+### Mandatory Fields:
+- **PURPOSE**: One-line explanation of what the script does
+- **USAGE**: How to run the script with arguments and flags
+- **PART OF**: Which larger system or workflow this belongs to
+- **CONNECTS TO**: Dependencies, related scripts, or systems it interacts with
+
+### Standards Enforcement:
+- ✅ **ALL new scripts MUST include proper headers**
+- ✅ **Existing scripts missing headers should be updated when modified**
+- ✅ **Reference**: `docs/developer/SCRIPT_HEADER_STANDARD.md` for complete guidelines
 
 ## Agent Work Validation Protocol
 When checking any agent's completed work, use this systematic validation approach:
