@@ -355,7 +355,7 @@ def validate_url(url: str) -> bool:
         r'localhost|'
         r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'
         r'(?::\d+)?'
-        r'(?:/?|[/?]\S+)
+        r'(?:/?|[/?]\S+)'
 , re.IGNORECASE)
 
     return url_pattern.match(url) is not None

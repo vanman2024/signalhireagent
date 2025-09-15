@@ -37,4 +37,4 @@ def test_filter_job_titles_excludes_unwanted(tmp_path):
     #     assert "Operator" not in job_titles
     #     assert "Driver" not in job_titles
     #     assert "Foreman" not in job_titles
-    assert "Would filter" in result.output
+    assert "Filtered" in result.output

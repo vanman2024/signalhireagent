@@ -39,4 +39,4 @@ def test_dedupe_merge_removes_duplicates(tmp_path):
     #     assert len(deduped) == 3
     #     uids = {c["uid"] for c in deduped}
     #     assert uids == {"1", "2", "3"}
-    assert "Would merge" in result.output
+    assert "Deduplicated" in result.output
