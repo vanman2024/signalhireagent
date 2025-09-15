@@ -35,15 +35,16 @@ cd signalhireagent && ./setup.sh
 
 # 2. Add your API key and start using
 nano .env  # Add your SignalHire API key
-./signalhire-agent doctor  # Test setup
-./signalhire-agent search --title "Software Engineer" --location "San Francisco"
+signalhire-agent doctor  # Test setup
+signalhire-agent search --title "Software Engineer" --location "San Francisco"
 ```
 
-**That's it!** No pip install, no dependencies, no virtual environments:
-- ✅ Universal launcher works on all systems (Windows/WSL/Linux/Mac)
-- ✅ Automatically handles dependencies via `run.py`
-- ✅ Creates `.env` configuration file  
-- ✅ Just clone and run `./signalhire-agent` - that's it!
+**That's it!** Just like `claude`, `gh`, or `gemini` CLI:
+- ✅ **Global command**: Run `signalhire-agent` from anywhere (added to PATH)
+- ✅ **No pip install**: No package managers or virtual environments needed
+- ✅ **Auto-dependencies**: Automatically handles all dependencies via `run.py`
+- ✅ **Universal**: Works on Windows/WSL/Linux/Mac
+- ✅ **Simple setup**: Creates `.env` and adds command to PATH automatically
 
 **Current Version**: `v0.1.0` - [View Release](https://github.com/vanman2024/signalhireagent/releases/tag/v0.1.0)
 
@@ -89,7 +90,7 @@ nano .env
 SIGNALHIRE_API_KEY=your_actual_api_key_here
 
 # Test your credentials
-./signalhire-agent doctor
+signalhire-agent doctor
 ```
 
 **Getting API Access**: 

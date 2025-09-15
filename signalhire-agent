@@ -3,11 +3,14 @@
 # SignalHire Agent - Universal launcher script
 # This script works whether the package is installed or not
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Get the actual script location (resolves symlinks)
+SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
+SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
 
 # Check if we're in the project directory and run.py exists
 if [ -f "$SCRIPT_DIR/run.py" ]; then
     # Use run.py method for dependency handling
+    cd "$SCRIPT_DIR"
     RUNPY_AUTO_INSTALL=1 python3 "$SCRIPT_DIR/run.py" -m src.cli.main "$@"
 else
     # Try to use installed package
