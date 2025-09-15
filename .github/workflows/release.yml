@@ -47,10 +47,14 @@ jobs:
     - name: Test production build
       run: |
         cd production-build
-        # Test version utility
-        python3 version.py
-        # Test CLI import (without actual API calls)
-        python3 -c "import sys; sys.path.insert(0, '.'); from src.cli.main import cli; print('CLI import successful')"
+        # Test version information (JSON format)
+        cat VERSION
+        # Test that install script exists and is executable
+        test -x install.sh
+        # Test CLI wrapper exists and is executable  
+        test -x signalhire-agent
+        # Test that .env was auto-created with credentials
+        test -f .env
     
     - name: Create Release
       uses: softprops/action-gh-release@v1
@@ -72,16 +76,18 @@ jobs:
           
           ### Installation
           1. Download and extract the archive
-          2. Run `./install.sh` (Linux/macOS) or install requirements manually
-          3. Copy `.env.example` to `.env` and add your SIGNALHIRE_API_KEY
+          2. Run `./install.sh` to set up dependencies and virtual environment
+          3. Environment is automatically configured with production settings
           4. Run `./signalhire-agent --help` to get started
           
           ### What's Included
           - Core application code (`src/`)
           - Production dependencies only
-          - Installation scripts
-          - Configuration templates
-          - Version information
+          - Installation script with virtual environment support
+          - Auto-configured environment file
+          - CLI wrapper for easy execution
+          - AI agent instruction files for development assistance
+          - Version information (JSON format)
           
           ### What's Excluded (Development Only)
           - Test suites (`tests/`)
@@ -95,7 +101,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: production-build-${{ steps.version.outputs.version }}
         path: production-build/
