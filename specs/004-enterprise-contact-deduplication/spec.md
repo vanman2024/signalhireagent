@@ -103,17 +103,13 @@ As a recruiter searching for 7,000+ Heavy Equipment Mechanics, I need to run mul
 - **FR-024**: System MUST validate contact data integrity during processing
 - **FR-025**: System MUST log all operations for troubleshooting and audit purposes
 
-### Key Entities *(include if feature involves data)*
+### Data Formats *(file-based, no database)*
 
-- **Contact**: Individual prospect from SignalHire search results with uid, LinkedIn URL, name, job title, company, and location. Core entity for deduplication logic using uid as primary key and LinkedIn URL as secondary key.
-
-- **Search Results File**: JSON file containing SignalHire API search results. Contains array of contacts with metadata about search parameters, pagination, and result counts.
-
-- **Deduplication Report**: Summary of merge operation showing total contacts processed, duplicates removed by method (uid vs LinkedIn URL), and final unique contact count.
-
-- **Quality Filter**: Configuration for excluding unwanted job titles and companies. Applied to contact lists to remove operators, drivers, and other non-target roles before reveals.
-
-- **Reveal Progress**: State tracking for large reveal operations including contacts processed, remaining, failed attempts, and resume capabilities for interrupted processes.
+- **Input**: SignalHire JSON search result files containing contact arrays with uid, LinkedIn URL, name, job title, company, location
+- **Processing**: In-memory deduplication using uid as primary key, LinkedIn URL as fallback
+- **Output**: Deduplicated JSON files and CSV exports for reveal operations
+- **State**: Simple progress files for resume capability during large reveals
+- **Reports**: Text-based statistics showing deduplication results and quality metrics
 
 ---
 
