@@ -25,17 +25,34 @@ tests/
 └── unit/               # Unit tests for individual components
 ```
 
-## Key Commands
+## CLI Commands for AI Assistance
+
+**📖 Complete Reference**: See `docs/cli-commands.md`
+
+When helping users with natural language requests, reference the CLI command mappings:
+- "Find prospects" → `signalhire search` with Boolean operators  
+- "Merge contacts" → `signalhire dedupe merge` commands
+- "Check limits" → `signalhire status --credits` (shows 5000/day quotas)
+- "Filter contacts" → `signalhire filter job-title` commands
+- "Analyze data" → `signalhire analyze` commands (job-titles, geography, overlap)
+
+### Updated Commands (v0.2.0+):
 ```bash
-# Search and reveal prospects via API (recommended - 100/day limit)
-signalhire search --title "Software Engineer" --location "San Francisco" --company "Tech Corp" --limit 50
-signalhire reveal --input search_results.csv --limit 10 --output contacts.csv
+# Search with automatic 5000/day limit tracking
+signalhire search --title "Software Engineer" --location "San Francisco" --size 50
 
-# Bulk reveal using browser automation (1000+ contacts - optional)
-signalhire reveal --input large_prospect_list.csv --browser --bulk-size 1000
+# Contact deduplication and merging  
+signalhire dedupe merge --input "file1.json,file2.json" --output merged.json
 
-# Monitor credits via API
-signalhire credits --check
+# Geographic and job title analysis
+signalhire analyze job-titles --input contacts.json
+signalhire analyze geography --input contacts.json
+
+# Contact filtering
+signalhire filter job-title --input contacts.json --output filtered.json --exclude-job-titles "operator,driver"
+
+# Check daily usage (5000 reveals/day, 5000 search profiles/day)
+signalhire status --credits
 ```
 
 ## Development Standards
@@ -54,11 +71,12 @@ signalhire credits --check
 - **Coordination**: Check for @mentions in tasks before proceeding with implementation
 - **Dynamic Assignment**: Auto-assign based on task keywords, file patterns, and content type rather than fixed task IDs
 
-## Important Notes
-- **API-First Approach**: Use API-based contact reveal for reliability (100 contacts/day limit)
+## Important Notes  
+- **API-First Approach**: Use API-based contact reveal for reliability (5000 contacts/day limit)
+- **Search Profile Tracking**: Automatic 5000 search profiles/day limit monitoring  
 - **Browser Automation**: Optional capability for bulk operations (1000+ contacts) when needed
 - **Hybrid Strategy**: API for daily operations, browser automation for high-volume scenarios
-- **Rate Limiting**: Respect 100 contacts/day API limit with built-in rate limiter
+- **Rate Limiting**: Respect 5000/day limits with built-in tracking and warnings (50%, 75%, 90%)
 - Environment variables: SIGNALHIRE_EMAIL, SIGNALHIRE_PASSWORD
 - **Dependency Installation**: Automatically handle missing dependencies with `run.py` script - will use sudo when needed and prompt for password
 - **Task Management & Completion Protocol**: 

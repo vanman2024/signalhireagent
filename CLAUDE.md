@@ -24,21 +24,24 @@ tests/
 └── unit/               # Unit tests for individual components
 ```
 
-## Commands
-```bash
-# Search and reveal prospects via web interface
-signalhire search --title "Software Engineer" --location "San Francisco" --company "Tech Corp" --limit 50
+## CLI Commands for AI Agents
 
-# Bulk reveal using SignalHire's native web export (1000+ contacts)
-signalhire bulk-reveal --search-id <id> --export-format csv --output results.csv
+**📖 Complete Reference**: See `/home/vanman2025/signalhireagent/docs/cli-commands.md`
 
-# Monitor credits via API
-signalhire credits --check
+When the user gives natural language requests, use the CLI command mappings in the reference file:
 
-# List and manage saved searches from web interface
-signalhire list-searches
-signalhire export-search --search-id <id> --format csv
-```
+### Quick Examples:
+- **"Find software engineers in California"** → `signalhire search --title "Software Engineer" --location "California"`
+- **"Merge these contact files"** → `signalhire dedupe merge --input "file1.json,file2.json" --output merged.json`
+- **"Check my daily limits"** → `signalhire status --credits`
+- **"Remove operators from contacts"** → `signalhire filter job-title --input contacts.json --output filtered.json --exclude-job-titles "operator"`
+
+### Key Features:
+- Search with Boolean operators (AND, OR, NOT)
+- Contact deduplication and filtering
+- Geographic and job title analysis
+- Automatic 5000/day limit tracking (search profiles + reveals)
+- Progress tracking and resume capability
 
 ## Code Style
 Python: Follow PEP 8, use async/await patterns, structured logging with JSON

@@ -144,6 +144,27 @@ grep "@codex" [current-spec]/tasks.md
 
 
 
+## CLI Commands for All AI Agents
+
+**📖 Complete Reference**: See `docs/cli-commands.md`
+
+When users give natural language requests, ALL agents should reference the CLI command mappings:
+
+### Quick Command Reference:
+- **"Find prospects"** → `signalhire search --title "X" --location "Y"`
+- **"Merge contact files"** → `signalhire dedupe merge --input "file1,file2" --output merged.json`
+- **"Check daily limits"** → `signalhire status --credits`
+- **"Remove unwanted titles"** → `signalhire filter job-title --exclude-job-titles "operator,driver"`
+- **"Analyze contacts"** → `signalhire analyze job-titles --input contacts.json`
+
+### Key Features ALL Agents Should Know:
+- ✅ **Search Profile Tracking**: 5000/day automatic limit monitoring
+- ✅ **Contact Reveals**: 5000/day with usage warnings (50%, 75%, 90%)
+- ✅ **Boolean Search**: AND, OR, NOT operators supported
+- ✅ **Contact Deduplication**: uid-based merging with LinkedIn fallback
+- ✅ **Geographic Analysis**: Coverage gaps and optimization suggestions
+- ✅ **Progress Tracking**: Resume capability for large operations
+
 ## Active Technologies
 - Python 3.11 + asyncio (signalhireagent)
 - FastAPI (MCP server + autonomous workflows)
