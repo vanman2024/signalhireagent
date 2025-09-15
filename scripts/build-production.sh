@@ -154,19 +154,34 @@ cat > "$TARGET_DIR/requirements.txt" << EOF
 # SignalHire Agent Production Dependencies
 # Generated on $BUILD_DATE
 
-# Core dependencies
-click>=8.0.0
-httpx>=0.24.0
-pandas>=1.5.0
+# Core async HTTP client
+httpx>=0.25.0
+
+# Data validation and models
 pydantic>=2.0.0
-structlog>=22.0.0
+
+# Web framework for callback server
+fastapi>=0.100.0
+uvicorn>=0.20.0
+
+# Data processing and CSV export
+pandas>=2.0.0
+
+# CLI framework
+click>=8.1.0
+rich>=13.0.0
+
+# Configuration management
 python-dotenv>=1.0.0
+
+# Logging and monitoring
+structlog>=23.0.0
+
+# Async utilities
+anyio>=3.6.0
 
 # Email validation
 email-validator>=2.0.0
-
-# Optional: Remove if not using async features
-anyio>=3.6.0
 EOF
 
 # Create version information file
