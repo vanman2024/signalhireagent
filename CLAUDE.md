@@ -18,10 +18,15 @@ src/
 ├── services/            # Business logic (search, reveal, export services)
 ├── cli/                 # Command-line interface
 └── lib/                 # Libraries (browser_client, csv_exporter, rate_limiter)
-tests/
+backend-tests/           # Python/pytest backend testing
 ├── contract/            # Browser automation contract tests
 ├── integration/         # End-to-end workflow tests
 └── unit/               # Unit tests for individual components
+frontend-tests/          # Playwright/TypeScript frontend testing
+├── e2e/                 # End-to-end user workflows
+├── api/                 # API integration tests
+├── visual/              # Visual regression tests
+└── accessibility/       # WCAG compliance tests
 ```
 
 ## CLI Commands for AI Agents
@@ -48,9 +53,9 @@ Python: Follow PEP 8, use async/await patterns, structured logging with JSON
 TypeScript: ESLint + Prettier for Stagehand automation scripts
 
 ## Testing Commands
-- Run tests: `python3 run.py -m pytest`
-- Tests with coverage: `python3 run.py -m pytest --cov=src --cov-report=term-missing`
-- Test selection: `python3 run.py -m pytest -m unit`, `python3 run.py -m pytest -m "integration and not slow"`
+- Run backend tests: `python3 run.py -m pytest backend-tests/`
+- Backend tests with coverage: `python3 run.py -m pytest --cov=src --cov-report=term-missing backend-tests/`
+- Test selection: `python3 run.py -m pytest -m unit backend-tests/`, `python3 run.py -m pytest -m "integration and not slow" backend-tests/`
 - Check dependencies: `signalhire doctor` (dependency checking only runs for doctor command now for fast startup)
 
 ## Task Assignment & Coordination

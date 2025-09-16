@@ -13,23 +13,25 @@ A universal, battle-tested frontend testing suite built with Playwright for solo
 
 ## 🚀 Quick Start
 
-### 1. Copy to New Project
+### 1. Scaffold into a project (solo/agent friendly)
 
 ```bash
-# Copy the template to your new project
-cp -r frontend-testing-suite-template your-project/tests/
+# From your project root (with package.json)
+./frontend-testing-suite-template/setup-testing.sh --yes --skip-install
 
-# Navigate to your project
-cd your-project
+# Install deps when ready (choose your PM)
+npm i -D @playwright/test @types/node eslint typescript \
+  @typescript-eslint/eslint-plugin @typescript-eslint/parser prettier \
+  axe-playwright playwright-visual-regression
 
-# Install dependencies
-npm install
+# Install browsers (Chromium first for speed/stability)
+npx playwright install chromium
+# On Linux/WSL: system libs for Chromium
+npx playwright install-deps chromium
 
-# Set up browsers
-npm run setup
-
-# Run your first test
-npm test
+# Run fast smoke tests
+./tests/run-smoke.sh
+# Or via npm: npm run test:smoke
 ```
 
 ### 2. Configure for Your Project
@@ -43,9 +45,10 @@ export default defineConfig({
   },
 
   // Update webServer command for your framework
-  webServer: {
+  webServer: process.env.SKIP_WEBSERVER ? undefined : {
     command: 'npm run dev', // Change to your dev command
     url: 'http://localhost:3000',
+    reuseExistingServer: !process.env.CI,
   },
 });
 ```
@@ -172,6 +175,9 @@ npm run test:shard     # Run tests in shards (for CI distribution)
 # Utilities
 npm run codegen        # Generate tests from user interactions
 npm run report         # View test reports
+
+# Local smoke runner (script)
+./tests/run-smoke.sh [--headed] [--debug]
 ```
 
 ## ⚙️ Configuration
@@ -182,8 +188,14 @@ npm run report         # View test reports
 # Base URL for tests
 BASE_URL=http://localhost:3000
 
-# Skip web server startup (for CI)
+# Skip web server startup (for CI or when dev server is already running)
 SKIP_WEBSERVER=true
+
+# Enable other browsers beyond Chromium
+ALL_BROWSERS=1
+
+# Disable Chromium sandbox (CI/WSL friendly)
+PW_NO_SANDBOX=1
 
 # Browser installation
 INSTALL_BROWSERS=true
@@ -240,26 +252,47 @@ name: Frontend Tests
 on: [push, pull_request]
 
 jobs:
-  test:
+  test-chromium:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
-
-      - name: Install dependencies
+      - name: Install deps
         run: npm ci
-
-      - name: Setup browsers
-        run: npm run setup
-
-      - name: Run tests
-        run: npm run ci
+      - name: Setup Playwright (cached)
+        uses: microsoft/playwright-github-action@v1
+        with:
+          browsers: 'chromium'
+      - name: Run smoke tests (Chromium)
         env:
           BASE_URL: http://localhost:3000
           SKIP_WEBSERVER: true
+          PW_NO_SANDBOX: '1'
+        run: ./tests/run-smoke.sh
+
+  # Optional nightly full matrix
+  nightly-all-browsers:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - uses: microsoft/playwright-github-action@v1
+        with:
+          browsers: 'all'
+      - name: Run full suite
+        env:
+          BASE_URL: http://localhost:3000
+          ALL_BROWSERS: '1'
+          SKIP_WEBSERVER: true
+        run: npm test
 ```
 
 ## 📊 Test Reporting
@@ -340,9 +373,18 @@ export class CustomUtils extends TestUtils {
 - Use `TestUtils.retry()` for flaky operations
 - Check for race conditions
 
-**Browser not found?**
+**Chromium fails to launch (CI/WSL/Linux)?**
 ```bash
-npm run install:browsers
+# Install Chromium only (faster)
+npx playwright install chromium
+
+# Install required system libraries
+npx playwright install-deps chromium
+
+# Disable sandbox (common in CI/WSL)
+PW_NO_SANDBOX=1 ./tests/run-smoke.sh
+
+# Still failing? Check missing libs from the error and install via apt/yum.
 ```
 
 **TypeScript errors?**

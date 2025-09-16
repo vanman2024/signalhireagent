@@ -7,7 +7,7 @@ const noSandbox = !!process.env.PW_NO_SANDBOX || !!process.env.CI || !!process.e
 const allBrowsers = !!process.env.ALL_BROWSERS;
 
 export default defineConfig({
-  testDir: './tests',
+  testDir: './frontend-tests',
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -75,6 +75,6 @@ export default defineConfig({
   },
 
   /* Global setup and teardown */
-  globalSetup: require.resolve('./tests/global-setup'),
-  globalTeardown: require.resolve('./tests/global-teardown'),
+  globalSetup: require.resolve('./frontend-tests/global-setup'),
+  globalTeardown: require.resolve('./frontend-tests/global-teardown'),
 });

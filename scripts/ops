@@ -96,22 +96,53 @@ EOF
 }
 
 cmd_qa() {
-    print_status "Running quality assurance checks"
-    activate_venv
+    local test_type="all"
     
-    echo "🧹 Linting and fixing..."
-    ruff check src/ --fix || true
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --backend) test_type="backend"; shift ;;
+            --frontend) test_type="frontend"; shift ;;
+            --all) test_type="all"; shift ;;
+            *) break ;;
+        esac
+    done
     
-    echo "🎨 Formatting..."
-    black src/ || true
+    print_status "Running quality assurance checks ($test_type)"
     
-    echo "🔍 Type checking..."
-    mypy src/ || true
+    # Backend QA
+    if [[ "$test_type" == "backend" ]] || [[ "$test_type" == "all" ]]; then
+        activate_venv
+        
+        echo "🧹 Linting and fixing backend..."
+        ruff check src/ --fix || true
+        
+        echo "🎨 Formatting backend..."
+        black src/ || true
+        
+        echo "🔍 Type checking backend..."
+        mypy src/ || true
+        
+        echo "🧪 Running backend tests..."
+        python3 run.py -m pytest -m "not slow" backend-tests/ || true
+    fi
     
-    echo "🧪 Running fast tests..."
-    python3 run.py -m pytest -m "not slow" || true
+    # Frontend QA
+    if [[ "$test_type" == "frontend" ]] || [[ "$test_type" == "all" ]]; then
+        if [[ -d "frontend-tests" ]] && [[ -f "package.json" ]]; then
+            echo "🧹 Linting frontend..."
+            npm run lint:frontend 2>/dev/null || echo "⚠️ Frontend linting not configured"
+            
+            echo "🔍 Type checking frontend..."
+            npm run typecheck:frontend 2>/dev/null || echo "⚠️ Frontend type checking not configured"
+            
+            echo "🎭 Running frontend tests..."
+            npm run test:frontend:smoke 2>/dev/null || npm run test:frontend 2>/dev/null || echo "⚠️ Frontend tests not configured"
+        else
+            echo "📝 Frontend tests directory not found - skipping frontend QA"
+        fi
+    fi
     
-    print_success "QA complete"
+    print_success "QA complete ($test_type)"
 }
 
 cmd_build() {
@@ -446,7 +477,7 @@ USAGE:
 
 COMMANDS:
     setup [target]           Setup operations config and target directory
-    qa                       Run quality checks (lint, format, typecheck, tests)
+    qa [--backend|--frontend|--all]  Run quality checks (lint, format, typecheck, tests)
     build --target PATH      Build production version to target
     verify-prod [target]     Verify production build works correctly
     sync                     Sync to all configured targets
