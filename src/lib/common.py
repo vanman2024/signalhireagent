@@ -396,12 +396,9 @@ def flatten_dict(data: dict[str, Any], separator: str = '.') -> dict[str, Any]:
 
 
 # Commonly used regex patterns
-EMAIL_PATTERN = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}
-)
-LINKEDIN_PROFILE_PATTERN = re.compile(r'^https?://(?:www\.)?linkedin\.com/in/[\w-]+/?
-)
-PHONE_PATTERN = re.compile(r'^\+?[1-9]\d{1,14}
-)
+EMAIL_PATTERN = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+LINKEDIN_PROFILE_PATTERN = re.compile(r'^https?://(?:www\.)?linkedin\.com/in/[\w-]+/?$')
+PHONE_PATTERN = re.compile(r'^\+?[1-9]\d{1,14}$')
 
 
 def is_valid_email(email: str) -> bool:

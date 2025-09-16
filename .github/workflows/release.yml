@@ -32,10 +32,30 @@ jobs:
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         echo "Version: $VERSION"
     
+    - name: Install dependencies and test
+      run: |
+        ./scripts/build.sh
+        ./scripts/test.sh
+    
     - name: Create production build
       run: |
         mkdir -p production-build
-        ./scripts/build/build-production.sh production-build --version ${{ steps.version.outputs.version }} --force
+        
+        # Copy source code
+        cp -r src/ production-build/
+        cp pyproject.toml production-build/
+        cp README.md production-build/
+        
+        # Create version file
+        echo "${{ steps.version.outputs.version }}" > production-build/VERSION
+        
+        # Create simple install script
+        cat > production-build/install.sh << 'EOF'
+        #!/bin/bash
+        pip install -e .
+        echo "Installation complete! Run 'signalhire-agent --help' to get started."
+        EOF
+        chmod +x production-build/install.sh
     
     - name: Create build archive
       run: |
@@ -47,14 +67,12 @@ jobs:
     - name: Test production build
       run: |
         cd production-build
-        # Test version information (JSON format)
+        # Test version information
         cat VERSION
         # Test that install script exists and is executable
         test -x install.sh
-        # Test CLI wrapper exists and is executable  
-        test -x signalhire-agent
-        # Test that .env was auto-created with credentials
-        test -f .env
+        # Test that source code was copied
+        test -d src/
     
     - name: Create Release
       uses: softprops/action-gh-release@v2
