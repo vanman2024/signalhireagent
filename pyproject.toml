@@ -136,7 +136,7 @@ markers = [
 ]
 
 [tool.ruff]
-target-version = "0.4.0"
+target-version = "py311"
 line-length = 88
 select = [
     "E",   # pycodestyle errors
@@ -171,7 +171,7 @@ ignore = [
 "tests/**/*" = ["ARG", "S101", "S106"]
 
 [tool.mypy]
-python_version = "0.4.0"
+python_version = "3.11"
 check_untyped_defs = true
 disallow_any_generics = true
 disallow_incomplete_defs = true
