@@ -121,7 +121,7 @@ After running the setup, these convenience scripts are created in the scripts di
 The automation system creates these configuration files:
 
 - `.automation/config/auto-sync-targets` - List of directories to sync automatically
-- `.automation/config/continuous-deployment` - Main CD configuration  
+- `.automation/config/continuous-deployment` - Main CD configuration
 - `.automation/state/last-auto-sync` - Tracks last sync commit
 - `.automation/state/last-release-check` - Tracks release checking state
 - `.git/hooks/post-commit` - Automatic git hooks
@@ -137,7 +137,7 @@ Check the status of all automation systems:
 # Auto-sync specific status
 ./scripts/build/auto-sync-config.sh status
 
-# Release management status  
+# Release management status
 ./scripts/build/auto-release-manager.sh status
 ```
 
@@ -201,7 +201,7 @@ cd test-build && ./install.sh && ./signalhire-agent --help
 ## 📚 Integration with Existing Systems
 
 - **GitHub Actions**: Automatically triggered by release tags
-- **Production Build**: Uses existing `build-production.sh` 
+- **Production Build**: Uses existing `build-production.sh`
 - **Environment Config**: Automatically copies `.env` files
 - **Virtual Environments**: Handles `venv` setup automatically
 - **CI/CD**: Compatible with existing GitHub workflows

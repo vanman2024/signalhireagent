@@ -62,9 +62,9 @@ ops env doctor           # Check WSL/Windows environment issues
 
 ### Release Commands
 ```bash
-ops release patch        # v0.3.0 → v0.3.1 (bug fixes)
-ops release minor        # v0.3.0 → v0.4.0 (new features)
-ops release major        # v0.3.0 → v1.0.0 (breaking changes)
+ops release patch        # v0.4.2 → v0.4.3 (bug fixes)
+ops release minor        # v0.4.2 → v0.5.0 (new features)
+ops release major        # v0.4.2 → v1.0.0 (breaking changes)
 ```
 
 ### Sync Commands

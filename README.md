@@ -72,7 +72,7 @@ cd ~/production-deploy && ./install.sh
 - ✅ **Universal**: Works on Windows/WSL/Linux/Mac
 - ✅ **Simple setup**: Creates `.env` and adds command to PATH automatically
 
-**Current Version**: `v0.3.0` - [View Release](https://github.com/vanman2024/signalhireagent/releases/tag/v0.3.0)
+**Current Version**: `v0.4.2` - [View Release](https://github.com/vanman2024/signalhireagent/releases/tag/v0.4.2)
 
 ## 📈 Real-World Case Study: Professional Lead Generation
 

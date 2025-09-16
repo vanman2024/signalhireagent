@@ -242,4 +242,4 @@ signalhire dedupe --help
 
 ---
 
-**Version**: v0.3.0 | **Last Updated**: September 15, 2025
+**Version**: v0.4.2 | **Last Updated**: September 15, 2025
