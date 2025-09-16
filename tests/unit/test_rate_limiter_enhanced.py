@@ -48,7 +48,7 @@ async def test_rate_limiter_daily_boundary(monkeypatch):
     limiter = RateLimiter(max_requests=10, time_window=60, daily_limit=100)
 
     # Mock the internal daily usage check to control the test environment
-    mock_usage = {"credits_used": 99, "reveals": 99}
+    mock_usage = {"credits_used": 99, "reveals": 99, "search_profiles": 0}
     async def mock_check_daily_usage():
         return mock_usage
 
@@ -73,7 +73,7 @@ async def test_rate_limiter_daily_boundary(monkeypatch):
 
     monkeypatch.setattr('src.services.signalhire_client.datetime', MockDateTime)
     
-    mock_usage = {"credits_used": 0, "reveals": 0} # Reset for the new day
+    mock_usage = {"credits_used": 0, "reveals": 0, "search_profiles": 0} # Reset for the new day
     
     # This call should now succeed as the daily limit has reset
     await limiter.wait_if_needed(credits_needed=1)
