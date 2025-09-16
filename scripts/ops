@@ -236,7 +236,7 @@ cmd_release() {
     activate_venv
     
     # Get current version from pyproject.toml
-    local current_version=$(python3 -c "import toml; print(toml.load('pyproject.toml')['project']['version'])")
+    local current_version=$(grep '^version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
     print_status "Current version: $current_version"
     
     # Calculate new version
@@ -268,13 +268,7 @@ cmd_release() {
     print_status "New version: $new_version"
     
     # Update pyproject.toml
-    python3 -c "
-import toml
-data = toml.load('pyproject.toml')
-data['project']['version'] = '$new_version'
-with open('pyproject.toml', 'w') as f:
-    toml.dump(data, f)
-"
+    sed -i "s/version = \".*\"/version = \"$new_version\"/" pyproject.toml
     
     # Commit version bump
     git add pyproject.toml
