@@ -25,12 +25,8 @@ class QwenAgent:
             async with httpx.AsyncClient() as client:
                 response = await client.post(
                     f"{self.base_url}/api/generate",
-                    json={
-                        "model": self.model,
-                        "prompt": full_prompt,
-                        "stream": False
-                    },
-                    timeout=60.0
+                    json={"model": self.model, "prompt": full_prompt, "stream": False},
+                    timeout=60.0,
                 )
                 response.raise_for_status()
                 result = response.json()
@@ -57,7 +53,9 @@ class DeepSeekAgent:
     def __init__(self, model: str = "deepseek-coder:6.7b", use_api: bool = False):
         self.model = model
         self.use_api = use_api
-        self.base_url = "http://localhost:11434" if not use_api else "https://api.deepseek.com/v1"
+        self.base_url = (
+            "http://localhost:11434" if not use_api else "https://api.deepseek.com/v1"
+        )
 
     async def generate_code(self, prompt: str, context: str | None = None) -> str:
         """Generate code using DeepSeek Coder."""
@@ -73,12 +71,8 @@ class DeepSeekAgent:
             async with httpx.AsyncClient() as client:
                 response = await client.post(
                     f"{self.base_url}/api/generate",
-                    json={
-                        "model": self.model,
-                        "prompt": full_prompt,
-                        "stream": False
-                    },
-                    timeout=60.0
+                    json={"model": self.model, "prompt": full_prompt, "stream": False},
+                    timeout=60.0,
                 )
                 response.raise_for_status()
                 result = response.json()
@@ -104,6 +98,7 @@ def ai_agents():
 @click.option('--model', '-m', default='qwen2.5-coder:7b', help='Qwen model to use')
 def qwen(prompt: str, file: str | None, model: str):
     """Generate code using Qwen Coder."""
+
     async def _qwen():
         agent = QwenAgent(model)
 
@@ -120,10 +115,13 @@ def qwen(prompt: str, file: str | None, model: str):
 @ai_agents.command()
 @click.argument('prompt')
 @click.option('--file', '-f', help='File to use as context')
-@click.option('--model', '-m', default='deepseek-coder:6.7b', help='DeepSeek model to use')
+@click.option(
+    '--model', '-m', default='deepseek-coder:6.7b', help='DeepSeek model to use'
+)
 @click.option('--api', is_flag=True, help='Use DeepSeek API instead of local Ollama')
 def deepseek(prompt: str, file: str | None, model: str, api: bool):
     """Generate code using DeepSeek Coder."""
+
     async def _deepseek():
         agent = DeepSeekAgent(model, api)
 
@@ -140,9 +138,16 @@ def deepseek(prompt: str, file: str | None, model: str, api: bool):
 @ai_agents.command()
 @click.argument('file_path')
 @click.argument('task')
-@click.option('--agent', '-a', type=click.Choice(['qwen', 'deepseek']), default='qwen', help='AI agent to use')
+@click.option(
+    '--agent',
+    '-a',
+    type=click.Choice(['qwen', 'deepseek']),
+    default='qwen',
+    help='AI agent to use',
+)
 def analyze(file_path: str, task: str, agent: str):
     """Analyze code file with specified AI agent."""
+
     async def _analyze():
         if not Path(file_path).exists():
             click.echo(f"File not found: {file_path}")
@@ -155,7 +160,9 @@ def analyze(file_path: str, task: str, agent: str):
             result = await ai_agent.analyze_code(code, task)
         else:
             ai_agent = DeepSeekAgent()
-            result = await ai_agent.generate_code(f"Analyze this code for: {task}\n\n```\n{code}\n```")
+            result = await ai_agent.generate_code(
+                f"Analyze this code for: {task}\n\n```\n{code}\n```"
+            )
 
         click.echo(result)
 
@@ -169,7 +176,7 @@ def install_models():
         "qwen2.5-coder:7b",
         "qwen2.5-coder:1.5b",
         "deepseek-coder:6.7b",
-        "deepseek-coder:1.3b"
+        "deepseek-coder:1.3b",
     ]
 
     click.echo("Installing AI coding models...")

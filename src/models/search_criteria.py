@@ -28,4 +28,3 @@ class SearchCriteria(BaseModel):
         if v is not None and (not v or not v.strip()):
             raise ValueError("title must be a non-empty string")
         return v.strip() if v else None
-

@@ -37,7 +37,9 @@ class CallbackServer:
         self.server_thread: threading.Thread | None = None
         self.is_running = False
         self._callback_handlers: dict[str, Callable[[PersonCallbackData], None]] = {}
-        self._request_handlers: dict[str, Callable[[str, PersonCallbackData], None]] = {}
+        self._request_handlers: dict[str, Callable[[str, PersonCallbackData], None]] = (
+            {}
+        )
 
     def create_app(self) -> FastAPI:
         """Create and configure the FastAPI application."""
@@ -52,13 +54,12 @@ class CallbackServer:
             title="SignalHire Callback Server",
             description="Receives webhooks from SignalHire Person API",
             version="1.0.0",
-            lifespan=lifespan
+            lifespan=lifespan,
         )
 
         @app.post("/signalhire/callback")
         async def handle_callback(
-            request: Request,
-            background_tasks: BackgroundTasks
+            request: Request, background_tasks: BackgroundTasks
         ) -> JSONResponse:
             """Handle SignalHire Person API callback."""
             try:
@@ -66,28 +67,40 @@ class CallbackServer:
                 request_id = request.headers.get("Request-Id")
                 if not request_id:
                     logger.warning("Callback received without Request-Id header")
-                    raise HTTPException(status_code=400, detail="Missing Request-Id header")
+                    raise HTTPException(
+                        status_code=400, detail="Missing Request-Id header"
+                    )
 
                 # Parse callback data
                 raw_data = await request.json()
-                callback_data = [PersonCallbackItem.model_validate(item) for item in raw_data]
+                callback_data = [
+                    PersonCallbackItem.model_validate(item) for item in raw_data
+                ]
 
-                logger.info(f"Received callback for request {request_id} with {len(callback_data)} items")
+                logger.info(
+                    f"Received callback for request {request_id} with {len(callback_data)} items"
+                )
 
                 # Process callback in background
-                background_tasks.add_task(self._process_callback, request_id, callback_data)
+                background_tasks.add_task(
+                    self._process_callback, request_id, callback_data
+                )
 
                 return JSONResponse(
                     status_code=200,
-                    content={"status": "accepted", "request_id": request_id}
+                    content={"status": "accepted", "request_id": request_id},
                 )
 
             except ValidationError as e:
                 logger.error(f"Invalid callback data: {e}")
-                raise HTTPException(status_code=422, detail=f"Invalid callback data: {e}") from e
+                raise HTTPException(
+                    status_code=422, detail=f"Invalid callback data: {e}"
+                ) from e
             except Exception as e:
                 logger.error(f"Error processing callback: {e}")
-                raise HTTPException(status_code=500, detail="Internal server error") from e
+                raise HTTPException(
+                    status_code=500, detail="Internal server error"
+                ) from e
 
         @app.get("/health")
         async def health_check() -> dict[str, str]:
@@ -100,22 +113,23 @@ class CallbackServer:
             return {
                 "service": "SignalHire Callback Server",
                 "version": "1.0.0",
-                "endpoints": {
-                    "callback": "/signalhire/callback",
-                    "health": "/health"
-                }
+                "endpoints": {"callback": "/signalhire/callback", "health": "/health"},
             }
 
         self.app = app
         return app
 
-    async def _process_callback(self, request_id: str, callback_data: PersonCallbackData) -> None:
+    async def _process_callback(
+        self, request_id: str, callback_data: PersonCallbackData
+    ) -> None:
         """Process callback data using registered handlers."""
         try:
             # Call request-specific handlers first
             if request_id in self._request_handlers:
                 handler = self._request_handlers[request_id]
-                await asyncio.create_task(asyncio.to_thread(handler, request_id, callback_data))
+                await asyncio.create_task(
+                    asyncio.to_thread(handler, request_id, callback_data)
+                )
                 # Remove one-time handler
                 del self._request_handlers[request_id]
 
@@ -123,27 +137,31 @@ class CallbackServer:
             for handler_name, handler in self._callback_handlers.items():
                 try:
                     await asyncio.create_task(asyncio.to_thread(handler, callback_data))
-                    logger.debug(f"Handler {handler_name} processed callback successfully")
+                    logger.debug(
+                        f"Handler {handler_name} processed callback successfully"
+                    )
                 except Exception as e:  # noqa: BLE001
                     logger.error(f"Handler {handler_name} failed: {e}")
 
             # Log callback statistics
             success_count = sum(1 for item in callback_data if item.status == "success")
             failed_count = len(callback_data) - success_count
-            logger.info(f"Callback {request_id}: {success_count} successful, {failed_count} failed")
+            logger.info(
+                f"Callback {request_id}: {success_count} successful, {failed_count} failed"
+            )
 
         except Exception as e:  # noqa: BLE001
             logger.error(f"Error in callback processing for {request_id}: {e}")
 
-    def register_handler(self, name: str, handler: Callable[[PersonCallbackData], None]) -> None:
+    def register_handler(
+        self, name: str, handler: Callable[[PersonCallbackData], None]
+    ) -> None:
         """Register a global callback handler."""
         self._callback_handlers[name] = handler
         logger.info(f"Registered global callback handler: {name}")
 
     def register_request_handler(
-        self,
-        request_id: str,
-        handler: Callable[[str, PersonCallbackData], None]
+        self, request_id: str, handler: Callable[[str, PersonCallbackData], None]
     ) -> None:
         """Register a one-time handler for a specific request ID."""
         self._request_handlers[request_id] = handler
@@ -167,10 +185,7 @@ class CallbackServer:
             self.create_app()
 
         if background:
-            self.server_thread = threading.Thread(
-                target=self._run_server,
-                daemon=True
-            )
+            self.server_thread = threading.Thread(target=self._run_server, daemon=True)
             self.server_thread.start()
         else:
             self._run_server()
@@ -186,7 +201,7 @@ class CallbackServer:
                 host=self.host,
                 port=self.port,
                 log_level="info",
-                access_log=False
+                access_log=False,
             )
         except Exception as e:  # noqa: BLE001
             logger.error(f"Server error: {e}")
@@ -200,7 +215,9 @@ class CallbackServer:
 
         # Note: uvicorn doesn't provide clean shutdown in thread mode
         # For production, consider using asyncio-based startup
-        logger.warning("Server stop requested - restart application to fully stop server")
+        logger.warning(
+            "Server stop requested - restart application to fully stop server"
+        )
         self.is_running = False
 
     def get_callback_url(self, external_host: str | None = None) -> str:
@@ -219,7 +236,7 @@ class CallbackServer:
             "port": self.port,
             "callback_url": self.get_callback_url(),
             "handlers": list(self._callback_handlers.keys()),
-            "pending_requests": list(self._request_handlers.keys())
+            "pending_requests": list(self._request_handlers.keys()),
         }
 
 
@@ -235,7 +252,9 @@ def get_server(host: str = "0.0.0.0", port: int = 8000) -> CallbackServer:
     return _default_server
 
 
-def start_server(host: str = "0.0.0.0", port: int = 8000, background: bool = True) -> CallbackServer:
+def start_server(
+    host: str = "0.0.0.0", port: int = 8000, background: bool = True
+) -> CallbackServer:
     """Start the default callback server."""
     server = get_server(host, port)
     if not server.is_running:
@@ -263,7 +282,9 @@ def log_callback_handler(callback_data: PersonCallbackData) -> None:
 def save_to_csv_handler(callback_data: PersonCallbackData) -> None:
     """Example handler that could save data to CSV."""
     # This would integrate with csv_exporter service
-    successful_items = [item for item in callback_data if item.status == "success" and item.candidate]
+    successful_items = [
+        item for item in callback_data if item.status == "success" and item.candidate
+    ]
     logger.info(f"Would save {len(successful_items)} contacts to CSV")
 
 

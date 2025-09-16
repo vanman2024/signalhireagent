@@ -10,4 +10,12 @@ from . import (
 )
 from .main import main
 
-__all__ = ['config_commands', 'export_commands', 'main', 'reveal_commands', 'search_commands', 'status_commands', 'workflow_commands']
+__all__ = [
+    'config_commands',
+    'export_commands',
+    'main',
+    'reveal_commands',
+    'search_commands',
+    'status_commands',
+    'workflow_commands',
+]

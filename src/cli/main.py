@@ -26,7 +26,7 @@ structlog.configure(
         structlog.processors.StackInfoRenderer(),
         structlog.processors.format_exc_info,
         structlog.processors.UnicodeDecoder(),
-        structlog.processors.JSONRenderer()
+        structlog.processors.JSONRenderer(),
     ],
     context_class=dict,
     logger_factory=structlog.stdlib.LoggerFactory(),
@@ -49,7 +49,9 @@ class CliConfig:
         self.password: str | None = os.getenv('SIGNALHIRE_PASSWORD')
         self.api_key: str | None = os.getenv('SIGNALHIRE_API_KEY')
         # API endpoint configuration
-        self.api_base_url: str = os.getenv('SIGNALHIRE_API_BASE_URL', 'https://api.signalhire.com')
+        self.api_base_url: str = os.getenv(
+            'SIGNALHIRE_API_BASE_URL', 'https://api.signalhire.com'
+        )
         self.api_prefix: str = os.getenv('SIGNALHIRE_API_PREFIX', '/api/v1')
 
         # Browser configuration
@@ -80,7 +82,9 @@ class CliConfig:
                     self.email = saved_config['email']
 
                 self.headless = saved_config.get('headless', self.headless)
-                self.output_format = saved_config.get('output_format', self.output_format)
+                self.output_format = saved_config.get(
+                    'output_format', self.output_format
+                )
 
             except (OSError, json.JSONDecodeError) as e:
                 logger.warning("Could not load saved configuration", error=str(e))
@@ -119,54 +123,51 @@ cli_config = CliConfig()
 
 
 @click.group()
+@click.option('--email', envvar='SIGNALHIRE_EMAIL', help='SignalHire login email')
 @click.option(
-    '--email',
-    envvar='SIGNALHIRE_EMAIL',
-    help='SignalHire login email'
-)
-@click.option(
-    '--password',
-    envvar='SIGNALHIRE_PASSWORD',
-    help='SignalHire login password'
+    '--password', envvar='SIGNALHIRE_PASSWORD', help='SignalHire login password'
 )
 @click.option(
     '--api-key',
     envvar='SIGNALHIRE_API_KEY',
-    help='SignalHire API key (alternative to email/password)'
+    help='SignalHire API key (alternative to email/password)',
 )
 @click.option(
     '--api-base-url',
     envvar='SIGNALHIRE_API_BASE_URL',
-    help='Override API base URL (default: https://api.signalhire.com)'
+    help='Override API base URL (default: https://api.signalhire.com)',
 )
 @click.option(
     '--api-prefix',
     envvar='SIGNALHIRE_API_PREFIX',
-    help='Override API path prefix (default: /api/v1)'
+    help='Override API path prefix (default: /api/v1)',
 )
 @click.option(
     '--api-only',
     is_flag=True,
-    help='Force API-only mode and disable any browser fallback'
+    help='Force API-only mode and disable any browser fallback',
 )
 @click.option(
     '--output-format',
     type=click.Choice(['human', 'json']),
     default='human',
-    help='Output format [default: human]'
+    help='Output format [default: human]',
 )
-@click.option(
-    '--verbose',
-    is_flag=True,
-    help='Enable verbose output'
-)
-@click.option(
-    '--debug',
-    is_flag=True,
-    help='Enable debug output'
-)
+@click.option('--verbose', is_flag=True, help='Enable verbose output')
+@click.option('--debug', is_flag=True, help='Enable debug output')
 @click.pass_context
-def main(ctx: Context, email, password, api_key, api_base_url, api_prefix, api_only, output_format, verbose, debug):
+def main(
+    ctx: Context,
+    email,
+    password,
+    api_key,
+    api_base_url,
+    api_prefix,
+    api_only,
+    output_format,
+    verbose,
+    debug,
+):
     """
     SignalHire Agent - API-First Lead Generation & Contact Revelation
     🚀 API-FIRST APPROACH: Uses SignalHire's API by default for reliable, fast contact reveals
@@ -237,9 +238,11 @@ def main(ctx: Context, email, password, api_key, api_base_url, api_prefix, api_o
     # Configure logging level
     if debug:
         import logging
+
         logging.getLogger().setLevel(logging.DEBUG)
     elif verbose:
         import logging
+
         logging.getLogger().setLevel(logging.INFO)
 
     # Store configuration in context
@@ -251,7 +254,9 @@ def main(ctx: Context, email, password, api_key, api_base_url, api_prefix, api_o
 
 
 @main.command()
-@click.option('--ping', is_flag=True, help='Perform live API ping checks to /credits and /search')
+@click.option(
+    '--ping', is_flag=True, help='Perform live API ping checks to /credits and /search'
+)
 @click.pass_context
 def doctor(ctx, ping):
     """
@@ -279,7 +284,7 @@ def doctor(ctx, ping):
         'uvicorn': 'uvicorn',
         'structlog': 'structlog',
         'python-dotenv': 'dotenv',
-        'email-validator': 'email_validator'
+        'email-validator': 'email_validator',
     }
 
     missing_packages = []
@@ -309,7 +314,9 @@ def doctor(ctx, ping):
     echo(f"  API Base URL: {config.api_base_url}")
     echo(f"  API Prefix: {config.api_prefix}")
     try:
-        sample_credits = f"{config.api_base_url.rstrip('/')}/{config.api_prefix.strip('/')}/credits"
+        sample_credits = (
+            f"{config.api_base_url.rstrip('/')}/{config.api_prefix.strip('/')}/credits"
+        )
         sample_search = f"{config.api_base_url.rstrip('/')}/{config.api_prefix.strip('/')}/candidate/searchByQuery"
     except TypeError:
         sample_credits = sample_search = "(could not build sample URL)"
@@ -335,9 +342,15 @@ def doctor(ctx, ping):
                         api_prefix=config.api_prefix,
                     )
                     credits_response = await client.check_credits()
-                    echo(f"  Credits: success={credits_response.success} status={credits_response.status_code} data={credits_response.data or credits_response.error}")
-                    search = await client.search_prospects({"title": "Engineer"}, limit=1)
-                    echo(f"  Search: success={search.success} status={search.status_code} keys={list((search.data or {}).keys())}")
+                    echo(
+                        f"  Credits: success={credits_response.success} status={credits_response.status_code} data={credits_response.data or credits_response.error}"
+                    )
+                    search = await client.search_prospects(
+                        {"title": "Engineer"}, limit=1
+                    )
+                    echo(
+                        f"  Search: success={search.success} status={search.status_code} keys={list((search.data or {}).keys())}"
+                    )
 
                 _asyncio.run(_do_ping())
             except Exception as e:  # noqa: BLE001
@@ -352,10 +365,14 @@ def doctor(ctx, ping):
 
     # Overall status
     if missing_packages:
-        echo(f"\n❌ Status: {style('Issues found - install missing packages', fg='red')}")
+        echo(
+            f"\n❌ Status: {style('Issues found - install missing packages', fg='red')}"
+        )
         ctx.exit(1)
     elif not (config.api_key or (config.email and config.password)):
-        echo(f"\n⚠️  Status: {style('Ready, but no credentials configured', fg='yellow')}")
+        echo(
+            f"\n⚠️  Status: {style('Ready, but no credentials configured', fg='yellow')}"
+        )
     else:
         echo(f"\n✅ Status: {style('All systems ready', fg='green')}")
 

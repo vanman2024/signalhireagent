@@ -46,7 +46,7 @@ class ProgressTracker:
             "daily_limit": daily_limit,
             "remaining_quota": remaining_quota,
             "quota_exceeded": revealed_today >= daily_limit,
-            "can_process_more": remaining_quota > 0
+            "can_process_more": remaining_quota > 0,
         }
 
     def add_reveal_result(self, uid: str, result_type: str, error: str = None):
@@ -58,7 +58,7 @@ class ProgressTracker:
             "uid": uid,
             "result_type": result_type,  # "success", "failed", "linkedin_only", "quota_exceeded"
             "timestamp": str(__import__('datetime').datetime.now()),
-            "error": error
+            "error": error,
         }
 
         self.progress["reveal_results"].append(result)
@@ -72,8 +72,12 @@ class ProgressTracker:
             "total_attempts": len(results),
             "successful": len([r for r in results if r["result_type"] == "success"]),
             "failed": len([r for r in results if r["result_type"] == "failed"]),
-            "linkedin_only": len([r for r in results if r["result_type"] == "linkedin_only"]),
-            "quota_exceeded": len([r for r in results if r["result_type"] == "quota_exceeded"])
+            "linkedin_only": len(
+                [r for r in results if r["result_type"] == "linkedin_only"]
+            ),
+            "quota_exceeded": len(
+                [r for r in results if r["result_type"] == "quota_exceeded"]
+            ),
         }
 
         if stats["total_attempts"] > 0:

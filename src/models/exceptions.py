@@ -67,11 +67,12 @@ class RateLimitExceededError(RateLimitError):
     """Explicit rate limit exceeded error variant."""
 
 
-
 class InsufficientCreditsError(SignalHireError):
     """Insufficient credits errors."""
 
-    def __init__(self, message: str, required_credits: int, available_credits: int) -> None:
+    def __init__(
+        self, message: str, required_credits: int, available_credits: int
+    ) -> None:
         super().__init__(message)
         if not isinstance(required_credits, int) or required_credits < 0:
             raise ValueError("required_credits must be a non-negative integer")
@@ -95,15 +96,18 @@ class BrowserError(BrowserAutomationError):
     """Alias/general browser error used by newer browser client implementations."""
 
 
-
 class NetworkTimeoutError(SignalHireError):
     """Network timeout errors."""
 
     def __init__(self, message: str, timeout_duration: float | None = None) -> None:
         super().__init__(message)
-        if timeout_duration is not None and not isinstance(timeout_duration, (int, float)):
+        if timeout_duration is not None and not isinstance(
+            timeout_duration, (int, float)
+        ):
             raise ValueError("timeout_duration must be numeric if provided")
-        self.timeout_duration = float(timeout_duration) if timeout_duration is not None else None
+        self.timeout_duration = (
+            float(timeout_duration) if timeout_duration is not None else None
+        )
 
 
 class AuthenticationError(SignalHireError):
@@ -138,10 +142,8 @@ class DataExtractionError(SignalHireError):
     """Errors while extracting or parsing data from browser/API responses."""
 
 
-
 class ConfigurationError(SignalHireError):
     """Configuration errors."""
-
 
 
 class FileOperationError(SignalHireError):

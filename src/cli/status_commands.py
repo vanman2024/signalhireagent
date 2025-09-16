@@ -17,7 +17,9 @@ from click import echo, style
 from ..services.signalhire_client import SignalHireClient
 
 
-def format_credits_info(credits_data: dict[str, Any], format_type: str = "human") -> str:
+def format_credits_info(
+    credits_data: dict[str, Any], format_type: str = "human"
+) -> str:
     """Format credits information for output display."""
     if format_type == "json":
         return json.dumps(credits_data, indent=2)
@@ -28,10 +30,14 @@ def format_credits_info(credits_data: dict[str, Any], format_type: str = "human"
 
     output = []
     output.append("💳 Credit Status")
-    output.append(f"Regular credits: {style(str(regular_credits), fg='green' if regular_credits > 100 else 'yellow' if regular_credits > 10 else 'red', bold=True)}")
+    output.append(
+        f"Regular credits: {style(str(regular_credits), fg='green' if regular_credits > 100 else 'yellow' if regular_credits > 10 else 'red', bold=True)}"
+    )
 
     if without_contacts_credits is not None:
-        output.append(f"Without contacts credits: {style(str(without_contacts_credits), fg='green' if without_contacts_credits > 100 else 'yellow', bold=True)}")
+        output.append(
+            f"Without contacts credits: {style(str(without_contacts_credits), fg='green' if without_contacts_credits > 100 else 'yellow', bold=True)}"
+        )
 
     # Credit usage guidelines
     output.append("\n📊 Credit Guidelines:")
@@ -43,12 +49,16 @@ def format_credits_info(credits_data: dict[str, Any], format_type: str = "human"
 
     # Enhanced credit warnings with daily limits
     if regular_credits <= 10:
-        output.append(f"\n🚨 {style('CRITICAL: Credits critically low!', fg='red', bold=True)}")
+        output.append(
+            f"\n🚨 {style('CRITICAL: Credits critically low!', fg='red', bold=True)}"
+        )
         output.append("   • Immediate action required")
         output.append("   • Consider switching to browser mode for bulk operations")
         output.append("   • Purchase additional credits if needed")
     elif regular_credits <= 50:
-        output.append(f"\n⚠️  {style('WARNING: Credits running low', fg='yellow', bold=True)}")
+        output.append(
+            f"\n⚠️  {style('WARNING: Credits running low', fg='yellow', bold=True)}"
+        )
         output.append("   • Monitor usage carefully")
         output.append("   • Plan remaining reveals strategically")
         output.append("   • Consider smaller batch sizes")
@@ -60,7 +70,9 @@ def format_credits_info(credits_data: dict[str, Any], format_type: str = "human"
     # API vs Browser mode guidance
     if regular_credits > 100:
         output.append(f"\n💡 {style('TIP: High credit balance detected', fg='green')}")
-        output.append("   • Consider using browser mode for bulk operations (>1000 contacts)")
+        output.append(
+            "   • Consider using browser mode for bulk operations (>1000 contacts)"
+        )
         output.append("   • Browser mode can handle larger volumes")
     else:
         output.append(f"\n💡 {style('RECOMMENDATION: API-first approach', fg='green')}")
@@ -70,7 +82,9 @@ def format_credits_info(credits_data: dict[str, Any], format_type: str = "human"
     return "\n".join(output)
 
 
-def format_operation_status(operation_data: dict[str, Any], format_type: str = "human") -> str:
+def format_operation_status(
+    operation_data: dict[str, Any], format_type: str = "human"
+) -> str:
     """Format operation status for output display."""
     if format_type == "json":
         return json.dumps(operation_data, indent=2)
@@ -86,7 +100,7 @@ def format_operation_status(operation_data: dict[str, Any], format_type: str = "
         'running': 'blue',
         'pending': 'yellow',
         'failed': 'red',
-        'cancelled': 'red'
+        'cancelled': 'red',
     }.get(status, 'white')
 
     output = []
@@ -106,7 +120,9 @@ def format_operation_status(operation_data: dict[str, Any], format_type: str = "
     # Progress information
     if operation_data.get('progress'):
         progress = operation_data['progress']
-        output.append(f"Progress: {progress.get('current', 0)}/{progress.get('total', 0)}")
+        output.append(
+            f"Progress: {progress.get('current', 0)}/{progress.get('total', 0)}"
+        )
 
     # Results summary
     if status == 'completed' and operation_data.get('results'):
@@ -117,7 +133,9 @@ def format_operation_status(operation_data: dict[str, Any], format_type: str = "
         elif operation_type == 'reveal':
             revealed = results.get('revealed_count', 0)
             credits_used = results.get('credits_used', 0)
-            output.append(f"Results: {revealed} contacts revealed ({credits_used} credits)")
+            output.append(
+                f"Results: {revealed} contacts revealed ({credits_used} credits)"
+            )
 
     # Error information
     if status == 'failed' and operation_data.get('error'):
@@ -126,7 +144,9 @@ def format_operation_status(operation_data: dict[str, Any], format_type: str = "
     return "\n".join(output)
 
 
-def format_operations_list(operations: list[dict[str, Any]], format_type: str = "human") -> str:
+def format_operations_list(
+    operations: list[dict[str, Any]], format_type: str = "human"
+) -> str:
     """Format list of operations for output display."""
     if format_type == "json":
         return json.dumps(operations, indent=2)
@@ -167,10 +187,12 @@ def format_operations_list(operations: list[dict[str, Any]], format_type: str = 
             'running': '🔄',
             'pending': '⏳',
             'failed': '❌',
-            'cancelled': '🛑'
+            'cancelled': '🛑',
         }.get(status, '❓')
 
-        output.append(f"{i:2}. {status_icon} {operation_id} | {operation_type:12} | {time_str:8} | {status}")
+        output.append(
+            f"{i:2}. {status_icon} {operation_id} | {operation_type:12} | {time_str:8} | {status}"
+        )
 
     if len(operations) > 10:
         output.append(f"\n... and {len(operations) - 10} more operations")
@@ -178,7 +200,9 @@ def format_operations_list(operations: list[dict[str, Any]], format_type: str = 
     return "\n".join(output)
 
 
-def format_system_status(system_data: dict[str, Any], format_type: str = "human") -> str:
+def format_system_status(
+    system_data: dict[str, Any], format_type: str = "human"
+) -> str:
     """Format system status information for output display."""
     if format_type == "json":
         return json.dumps(system_data, indent=2)
@@ -225,15 +249,22 @@ async def check_credits(config) -> dict[str, Any]:
             credits_response = await api_client.check_credits()
 
             if not credits_response.success:
-                return {'error': credits_response.error or 'Failed to check credits', 'credits': 0}
+                return {
+                    'error': credits_response.error or 'Failed to check credits',
+                    'credits': 0,
+                }
 
             credits_data = credits_response.data or {}
 
             # Also check without-contacts credits if supported
             try:
-                without_contacts_response = await api_client.check_credits(without_contacts=True)
+                without_contacts_response = await api_client.check_credits(
+                    without_contacts=True
+                )
                 if without_contacts_response.success and without_contacts_response.data:
-                    credits_data['without_contacts_credits'] = without_contacts_response.data.get('credits', 0)
+                    credits_data['without_contacts_credits'] = (
+                        without_contacts_response.data.get('credits', 0)
+                    )
             except Exception:  # noqa: BLE001
                 # Some accounts may not support this
                 pass
@@ -251,7 +282,9 @@ async def check_credits(config) -> dict[str, Any]:
 async def check_operation_status(operation_id: str, config) -> dict[str, Any]:
     """Check status of a specific operation."""
     # Try to load from local operation tracking first
-    operation_file = Path.home() / '.signalhire-agent' / 'operations' / f"{operation_id}.json"
+    operation_file = (
+        Path.home() / '.signalhire-agent' / 'operations' / f"{operation_id}.json"
+    )
 
     if operation_file.exists():
         try:
@@ -268,7 +301,11 @@ async def check_operation_status(operation_id: str, config) -> dict[str, Any]:
         except Exception as e:  # noqa: BLE001
             return {'operation_id': operation_id, 'status': 'unknown', 'error': str(e)}
 
-    return {'operation_id': operation_id, 'status': 'not_found', 'error': 'Operation not found'}
+    return {
+        'operation_id': operation_id,
+        'status': 'not_found',
+        'error': 'Operation not found',
+    }
 
 
 async def list_recent_operations(limit: int = 20) -> list[dict[str, Any]]:
@@ -279,7 +316,9 @@ async def list_recent_operations(limit: int = 20) -> list[dict[str, Any]]:
     operations_dir = Path.home() / '.signalhire-agent' / 'operations'
 
     if operations_dir.exists():
-        operation_files = sorted(operations_dir.glob('*.json'), key=lambda x: x.stat().st_mtime, reverse=True)
+        operation_files = sorted(
+            operations_dir.glob('*.json'), key=lambda x: x.stat().st_mtime, reverse=True
+        )
 
         for op_file in operation_files[:limit]:
             try:
@@ -297,7 +336,7 @@ async def check_system_status(config) -> dict[str, Any]:
         'api_status': 'unknown',
         'auth_status': 'unknown',
         'browser_status': 'unknown',
-        'config_status': 'unknown'
+        'config_status': 'unknown',
     }
 
     # Check API connectivity
@@ -348,12 +387,16 @@ def format_daily_usage(usage_data: dict[str, Any], format_type: str = "human") -
 
     # Enhanced usage warnings with actionable guidance
     if credits_used >= 90:
-        output.append(f"\n🚨 {style('CRITICAL: Approaching daily API limit!', fg='red', bold=True)}")
+        output.append(
+            f"\n🚨 {style('CRITICAL: Approaching daily API limit!', fg='red', bold=True)}"
+        )
         output.append("   • API mode limited to 100 reveals/day")
         output.append("   • Consider switching to browser mode for remaining reveals")
         output.append("   • Spread reveals across multiple days")
     elif credits_used >= 75:
-        output.append(f"\n⚠️  {style('WARNING: High daily usage', fg='yellow', bold=True)}")
+        output.append(
+            f"\n⚠️  {style('WARNING: High daily usage', fg='yellow', bold=True)}"
+        )
         output.append("   • 75% of daily API limit reached")
         output.append("   • Plan remaining reveals carefully")
         output.append("   • Consider smaller batch sizes")
@@ -381,12 +424,16 @@ def format_daily_usage(usage_data: dict[str, Any], format_type: str = "human") -
     return "\n".join(output)
 
 
-def format_credit_warnings(credits_data: dict[str, Any], planned_reveals: int = 0, format_type: str = "human") -> str:
+def format_credit_warnings(
+    credits_data: dict[str, Any], planned_reveals: int = 0, format_type: str = "human"
+) -> str:
     """Format proactive credit warnings for planned operations."""
     if format_type == "json":
         return json.dumps(credits_data, indent=2)
 
-    remaining_credits = max(0, 100 - credits_data.get('daily_used', 0))  # API limit is 100/day
+    remaining_credits = max(
+        0, 100 - credits_data.get('daily_used', 0)
+    )  # API limit is 100/day
 
     output = []
     output.append("⚠️  Credit Pre-Check")
@@ -396,10 +443,14 @@ def format_credit_warnings(credits_data: dict[str, Any], planned_reveals: int = 
             output.append(f"🚨 {style('INSUFFICIENT CREDITS!', fg='red', bold=True)}")
             output.append(f"   • Planned: {planned_reveals} reveals")
             output.append(f"   • Available: {remaining_credits} credits")
-            output.append(f"   • Shortfall: {planned_reveals - remaining_credits} credits")
+            output.append(
+                f"   • Shortfall: {planned_reveals - remaining_credits} credits"
+            )
             output.append("   • SOLUTION: Reduce batch size or use browser mode")
         elif planned_reveals > remaining_credits * 0.8:
-            output.append(f"⚠️  {style('HIGH RISK: Close to daily limit', fg='yellow', bold=True)}")
+            output.append(
+                f"⚠️  {style('HIGH RISK: Close to daily limit', fg='yellow', bold=True)}"
+            )
             output.append(f"   • Planned: {planned_reveals} reveals")
             output.append(f"   • Available: {remaining_credits} credits")
             output.append("   • RECOMMENDATION: Consider smaller batches")
@@ -407,7 +458,9 @@ def format_credit_warnings(credits_data: dict[str, Any], planned_reveals: int = 
             output.append(f"✅ {style('SUFFICIENT CREDITS', fg='green')}")
             output.append(f"   • Planned: {planned_reveals} reveals")
             output.append(f"   • Available: {remaining_credits} credits")
-            output.append(f"   • Remaining after: {remaining_credits - planned_reveals} credits")
+            output.append(
+                f"   • Remaining after: {remaining_credits - planned_reveals} credits"
+            )
 
     return "\n".join(output)
 
@@ -419,14 +472,18 @@ async def check_credit_sufficiency(config, planned_reveals: int = 0) -> dict[str
 
     credits_data['daily_used'] = daily_usage.get('credits_used', 0)
     credits_data['planned_reveals'] = planned_reveals
-    credits_data['sufficient'] = planned_reveals <= max(0, 100 - credits_data.get('daily_used', 0))
+    credits_data['sufficient'] = planned_reveals <= max(
+        0, 100 - credits_data.get('daily_used', 0)
+    )
 
     return credits_data
 
 
 async def check_daily_usage() -> dict[str, Any]:
     """Check API and browser usage for the last 24 hours."""
-    operations = await list_recent_operations(limit=1000)  # Get a large number of recent operations
+    operations = await list_recent_operations(
+        limit=1000
+    )  # Get a large number of recent operations
 
     usage_data = {
         "credits_used": 0,
@@ -440,7 +497,9 @@ async def check_daily_usage() -> dict[str, Any]:
 
     for op in operations:
         try:
-            created_time = datetime.fromisoformat(op.get('created_at', '').replace('Z', '+00:00'))
+            created_time = datetime.fromisoformat(
+                op.get('created_at', '').replace('Z', '+00:00')
+            )
             if created_time.replace(tzinfo=None) < one_day_ago:
                 continue
         except ValueError:
@@ -458,50 +517,25 @@ async def check_daily_usage() -> dict[str, Any]:
 
 
 @click.command()
+@click.option('--operation-id', help='Check specific operation status')
+@click.option('--credits', 'show_credits', is_flag=True, help='Show remaining credits')
+@click.option('--operations', is_flag=True, help='List recent operations')
 @click.option(
-    '--operation-id',
-    help='Check specific operation status'
+    '--daily-usage', is_flag=True, help='Show API and browser usage for today'
 )
-@click.option(
-    '--credits',
-    'show_credits',
-    is_flag=True,
-    help='Show remaining credits'
-)
-@click.option(
-    '--operations',
-    is_flag=True,
-    help='List recent operations'
-)
-@click.option(
-    '--daily-usage',
-    is_flag=True,
-    help='Show API and browser usage for today'
-)
-@click.option(
-    '--logs',
-    is_flag=True,
-    help='Show recent log entries'
-)
-@click.option(
-    '--system',
-    is_flag=True,
-    help='Show system status'
-)
-@click.option(
-    '--all',
-    'show_all',
-    is_flag=True,
-    help='Show all status information'
-)
+@click.option('--logs', is_flag=True, help='Show recent log entries')
+@click.option('--system', is_flag=True, help='Show system status')
+@click.option('--all', 'show_all', is_flag=True, help='Show all status information')
 @click.pass_context
-def status(ctx, operation_id, show_credits, operations, daily_usage, logs, system, show_all):
+def status(
+    ctx, operation_id, show_credits, operations, daily_usage, logs, system, show_all
+):
     """
     Check operation status and account information.
     Monitor your SignalHire agent operations, check remaining credits,
     and view system health status. Use various options to focus on
     specific information or get a complete overview.
-    
+
     \b
     Examples:
       # Check account credits
@@ -519,7 +553,9 @@ def status(ctx, operation_id, show_credits, operations, daily_usage, logs, syste
     config = ctx.obj['config']
 
     # If no specific option is provided, show a summary
-    if not any([operation_id, show_credits, operations, daily_usage, logs, system, show_all]):
+    if not any(
+        [operation_id, show_credits, operations, daily_usage, logs, system, show_all]
+    ):
         show_all = True
 
     try:
@@ -612,5 +648,6 @@ def status(ctx, operation_id, show_credits, operations, daily_usage, logs, syste
         echo(style(f"❌ Status check failed: {e}", fg='red'), err=True)
         if config.debug:
             import traceback
+
             echo(traceback.format_exc(), err=True)
         ctx.exit(1)

@@ -14,6 +14,7 @@ from src.services.search_analysis_service import (
 def analyze():
     """Analyze contact quality and job title distribution."""
 
+
 @analyze.command()
 @click.option('--input', required=True, help='Input JSON file')
 def job_titles(input):
@@ -39,7 +40,9 @@ def job_titles(input):
 
         click.echo(f"\n📊 Job Title Analysis for {input}")
         click.echo(f"Total contacts: {total_contacts}")
-        click.echo(f"Contacts with job titles: {total_with_titles} ({total_with_titles/total_contacts*100:.1f}%)")
+        click.echo(
+            f"Contacts with job titles: {total_with_titles} ({total_with_titles/total_contacts*100:.1f}%)"
+        )
 
         click.echo("\n🏆 Top Job Titles:")
         for title, count in title_counts.most_common(10):
@@ -54,16 +57,22 @@ def job_titles(input):
 
         # Identify potential low-quality titles
         low_quality_keywords = ['operator', 'driver', 'foreman', 'laborer', 'helper']
-        low_quality_count = sum(count for title, count in title_counts.items()
-                               if any(keyword in title for keyword in low_quality_keywords))
+        low_quality_count = sum(
+            count
+            for title, count in title_counts.items()
+            if any(keyword in title for keyword in low_quality_keywords)
+        )
 
         if low_quality_count > 0:
             click.echo("\n⚠️  Potential Low-Quality Contacts:")
-            click.echo(f"Contacts with operator/driver/foreman titles: {low_quality_count} ({low_quality_count/total_with_titles*100:.1f}%)")
+            click.echo(
+                f"Contacts with operator/driver/foreman titles: {low_quality_count} ({low_quality_count/total_with_titles*100:.1f}%)"
+            )
             click.echo("Consider filtering these before reveal to save credits.")
 
     except Exception as e:
         click.echo(f"Error analyzing job titles: {e}", err=True)
+
 
 @analyze.command()
 @click.option('--input', required=True, help='Input JSON file')
@@ -75,7 +84,9 @@ def geography(input):
 
         click.echo(f"\n🌍 Geographic Coverage Analysis for {input}")
         click.echo(f"Total unique locations: {analysis['total_locations']}")
-        click.echo(f"Geographic diversity score: {analysis['geographic_diversity_score']:.1f}%")
+        click.echo(
+            f"Geographic diversity score: {analysis['geographic_diversity_score']:.1f}%"
+        )
 
         if analysis['top_states']:
             click.echo("\n🏛️ Top States/Regions:")
@@ -95,8 +106,11 @@ def geography(input):
     except Exception as e:
         click.echo(f"Error analyzing geography: {e}", err=True)
 
+
 @analyze.command()
-@click.option('--files', required=True, help='Comma-separated list of JSON files to compare')
+@click.option(
+    '--files', required=True, help='Comma-separated list of JSON files to compare'
+)
 def overlap(files):
     """Identify search overlap between multiple contact files."""
     try:
@@ -115,7 +129,9 @@ def overlap(files):
 
         click.echo("\n🔄 Search Overlap Analysis")
         click.echo(f"Comparing {len(file_list)} contact sets:")
-        for i, (name, size) in enumerate(zip(analysis['set_names'], analysis['set_sizes'], strict=False)):
+        for i, (name, size) in enumerate(
+            zip(analysis['set_names'], analysis['set_sizes'], strict=False)
+        ):
             click.echo(f"  {i+1}. {name}: {size} contacts")
 
         if analysis['uid_overlaps']:
@@ -131,20 +147,25 @@ def overlap(files):
     except Exception as e:
         click.echo(f"Error analyzing overlap: {e}", err=True)
 
+
 @analyze.command()
 def search_templates():
     """Show Boolean search templates for Heavy Equipment Mechanics."""
     templates = create_heavy_equipment_search_templates()
 
     click.echo("\n🔍 Heavy Equipment Mechanic Search Templates")
-    click.echo("Use these with: signalhire search --title \"[TITLE]\" --keywords \"[KEYWORDS]\"")
+    click.echo(
+        "Use these with: signalhire search --title \"[TITLE]\" --keywords \"[KEYWORDS]\""
+    )
 
     for name, template in templates.items():
         click.echo(f"\n📋 {name.replace('_', ' ').title()}:")
         click.echo(f"  Title: {template['title']}")
         click.echo(f"  Keywords: {template['keywords']}")
         click.echo(f"  Description: {template['description']}")
-        click.echo(f"  Command: signalhire search --title \"{template['title']}\" --keywords \"{template['keywords']}\"")
+        click.echo(
+            f"  Command: signalhire search --title \"{template['title']}\" --keywords \"{template['keywords']}\""
+        )
 
     click.echo("\n💡 Pro Tips:")
     click.echo("  • Use AND NOT to exclude operators and drivers")

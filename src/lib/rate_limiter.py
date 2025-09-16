@@ -58,7 +58,8 @@ class AsyncTokenBucket:
                 elapsed = max(0.0, now - self._last)
                 if elapsed > 0:
                     self._tokens = min(
-                        float(self._capacity), self._tokens + elapsed * self._refill_rate
+                        float(self._capacity),
+                        self._tokens + elapsed * self._refill_rate,
                     )
                     self._last = now
                 if self._tokens >= n:

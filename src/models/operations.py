@@ -14,6 +14,7 @@ from typing import Any
 
 class OperationStatus(Enum):
     """Status of an operation."""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -24,6 +25,7 @@ class OperationStatus(Enum):
 
 class OperationType(Enum):
     """Types of operations."""
+
     SEARCH = "search"
     REVEAL = "reveal"
     BULK_REVEAL = "bulk_reveal"
@@ -34,6 +36,7 @@ class OperationType(Enum):
 @dataclass
 class BaseOperation:
     """Base class for all operations."""
+
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     type: OperationType = OperationType.SEARCH
     status: OperationStatus = OperationStatus.PENDING
@@ -87,12 +90,18 @@ class BaseOperation:
 
     def is_finished(self) -> bool:
         """Check if operation is finished (completed, failed, or cancelled)."""
-        return self.status in [OperationStatus.COMPLETED, OperationStatus.FAILED, OperationStatus.CANCELLED, OperationStatus.PARTIAL]
+        return self.status in [
+            OperationStatus.COMPLETED,
+            OperationStatus.FAILED,
+            OperationStatus.CANCELLED,
+            OperationStatus.PARTIAL,
+        ]
 
 
 @dataclass
 class SearchOp(BaseOperation):
     """Search operation for finding prospects on SignalHire."""
+
     type: OperationType = field(default=OperationType.SEARCH, init=False)
     search_criteria: dict[str, Any] | None = None
     results_count: int = 0
@@ -147,6 +156,7 @@ class SearchOp(BaseOperation):
 @dataclass
 class RevealOp(BaseOperation):
     """Reveal operation for getting contact info for prospects."""
+
     type: OperationType = field(default=OperationType.REVEAL, init=False)
     prospect_ids: list[str] = field(default_factory=list)
     revealed_contacts: dict[str, dict[str, Any]] = field(default_factory=dict)
@@ -175,7 +185,9 @@ class RevealOp(BaseOperation):
         if prospect_id and prospect_id not in self.prospect_ids:
             self.prospect_ids.append(prospect_id)
 
-    def reveal_success(self, prospect_id: str, contact_data: dict[str, Any], credits_used: int = 1) -> None:
+    def reveal_success(
+        self, prospect_id: str, contact_data: dict[str, Any], credits_used: int = 1
+    ) -> None:
         """Mark a prospect reveal as successful."""
         self.revealed_contacts[prospect_id] = contact_data
         self.credits_used += credits_used
@@ -219,16 +231,22 @@ class RevealOp(BaseOperation):
 
     def can_continue(self) -> bool:
         """Check if reveal operation can continue (has credits and prospects)."""
-        if self.credits_available is not None and self.credits_used >= self.credits_available:
+        if (
+            self.credits_available is not None
+            and self.credits_used >= self.credits_available
+        ):
             return False
 
-        remaining_prospects = len(self.prospect_ids) - self.get_success_count() - self.get_failure_count()
+        remaining_prospects = (
+            len(self.prospect_ids) - self.get_success_count() - self.get_failure_count()
+        )
         return remaining_prospects > 0
 
 
 @dataclass
 class WorkflowOp(BaseOperation):
     """Workflow operation combining multiple steps (search + reveal + export)."""
+
     type: OperationType = field(default=OperationType.WORKFLOW, init=False)
     search_op_id: str | None = None
     reveal_op_id: str | None = None
@@ -270,30 +288,34 @@ class WorkflowOp(BaseOperation):
 
 # Utility functions for operation management
 
-def create_search_operation(search_criteria: dict[str, Any], max_results: int | None = None) -> SearchOp:
+
+def create_search_operation(
+    search_criteria: dict[str, Any], max_results: int | None = None
+) -> SearchOp:
     """Create a new search operation."""
     return SearchOp(
         search_criteria=search_criteria,
         max_results=max_results,
-        metadata={"created_by": "signalhire_agent"}
+        metadata={"created_by": "signalhire_agent"},
     )
 
 
-def create_reveal_operation(prospect_ids: list[str], use_bulk_export: bool = False) -> RevealOp:
+def create_reveal_operation(
+    prospect_ids: list[str], use_bulk_export: bool = False
+) -> RevealOp:
     """Create a new reveal operation."""
     return RevealOp(
         prospect_ids=prospect_ids.copy(),
         use_bulk_export=use_bulk_export,
-        metadata={"created_by": "signalhire_agent"}
+        metadata={"created_by": "signalhire_agent"},
     )
 
 
-def create_workflow_operation(search_criteria: dict[str, Any], workflow_config: dict[str, Any]) -> WorkflowOp:
+def create_workflow_operation(
+    search_criteria: dict[str, Any], workflow_config: dict[str, Any]
+) -> WorkflowOp:
     """Create a new workflow operation."""
     return WorkflowOp(
         workflow_config=workflow_config,
-        metadata={
-            "created_by": "signalhire_agent",
-            "search_criteria": search_criteria
-        }
+        metadata={"created_by": "signalhire_agent", "search_criteria": search_criteria},
     )

@@ -25,6 +25,7 @@ from ..models.exceptions import ConfigurationError
 
 class ConfigValue(BaseModel):
     """Single configuration value with metadata."""
+
     value: str | int | float | bool
     description: str = ""
     secret: bool = False  # Whether to mask in output
@@ -32,6 +33,7 @@ class ConfigValue(BaseModel):
 
     class Config:
         """Pydantic config."""
+
         json_encoders: ClassVar[dict] = {
             # Custom encoders if needed
         }
@@ -42,18 +44,22 @@ class AgentConfig(BaseModel):
 
     # Authentication
     signalhire_email: str | None = Field(None, description="SignalHire account email")
-    signalhire_password: str | None = Field(None, description="SignalHire account password")
+    signalhire_password: str | None = Field(
+        None, description="SignalHire account password"
+    )
     api_key: str | None = Field(None, description="SignalHire API key (if available)")
 
     # Callback Server
     callback_url: str = Field(
         "http://localhost:8000/callback",
-        description="Callback URL for async operations"
+        description="Callback URL for async operations",
     )
     callback_port: int = Field(8000, description="Port for callback server")
 
     # API Settings
-    daily_reveal_limit: int = Field(100, description="Daily API reveal limit for tracking")
+    daily_reveal_limit: int = Field(
+        100, description="Daily API reveal limit for tracking"
+    )
     api_timeout: float = Field(30.0, description="API request timeout in seconds")
     api_retry_attempts: int = Field(3, description="Number of API retry attempts")
     batch_size: int = Field(10, description="Default batch size for API operations")
@@ -65,13 +71,19 @@ class AgentConfig(BaseModel):
     rate_limit_reveal_per_hour: int = Field(
         100, description="Contact reveals per hour limit"
     )
-    rate_limit_warnings: bool = Field(True, description="Show warnings at usage thresholds")
+    rate_limit_warnings: bool = Field(
+        True, description="Show warnings at usage thresholds"
+    )
 
     # Export Settings
     default_export_format: str = Field("csv", description="Default export format")
     default_output_dir: str = Field("./exports", description="Default output directory")
-    export_timestamps: bool = Field(True, description="Add timestamps to export filenames")
-    timestamp_format: str = Field("%Y%m%d_%H%M%S", description="Timestamp format for filenames")
+    export_timestamps: bool = Field(
+        True, description="Add timestamps to export filenames"
+    )
+    timestamp_format: str = Field(
+        "%Y%m%d_%H%M%S", description="Timestamp format for filenames"
+    )
 
     # Logging
     log_level: str = Field("INFO", description="Logging level")
@@ -93,13 +105,9 @@ class AgentConfig(BaseModel):
             raise ValueError(f"Invalid export format. Must be one of: {valid_formats}")
         return v.lower()
 
-
     def get_secret_fields(self) -> set[str]:
         """Get list of fields that should be masked in output."""
-        return {
-            "signalhire_password",
-            "api_key"
-        }
+        return {"signalhire_password", "api_key"}
 
     def to_display_dict(self) -> dict[str, Any]:
         """Convert to dictionary with secrets masked."""
@@ -290,11 +298,16 @@ def get_value_command(key: str):
 
 
 @config.command(name='list')
-@click.option('--format', 'output_format', default='table',
-              type=click.Choice(['table', 'json', 'yaml']),
-              help="Output format")
-@click.option('--show-secrets', is_flag=True,
-              help="Show secret values (not recommended)")
+@click.option(
+    '--format',
+    'output_format',
+    default='table',
+    type=click.Choice(['table', 'json', 'yaml']),
+    help="Output format",
+)
+@click.option(
+    '--show-secrets', is_flag=True, help="Show secret values (not recommended)"
+)
 def list_values_command(output_format: str, show_secrets: bool):
     """List all configuration values."""
     try:
@@ -310,6 +323,7 @@ def list_values_command(output_format: str, show_secrets: bool):
         elif output_format == 'yaml':
             try:
                 import yaml
+
                 click.echo(yaml.dump(data, default_flow_style=False))
             except ImportError as e:
                 click.echo("❌ PyYAML not installed. Install with: pip install pyyaml")
@@ -322,23 +336,29 @@ def list_values_command(output_format: str, show_secrets: bool):
             # Group by category
             categories = {
                 "Authentication": [
-                    "signalhire_email", "signalhire_password", "api_key"
+                    "signalhire_email",
+                    "signalhire_password",
+                    "api_key",
                 ],
-                "Callback Server": [
-                    "callback_url", "callback_port"
-                ],
+                "Callback Server": ["callback_url", "callback_port"],
                 "API Settings": [
-                    "daily_reveal_limit", "api_timeout", "api_retry_attempts", "batch_size"
+                    "daily_reveal_limit",
+                    "api_timeout",
+                    "api_retry_attempts",
+                    "batch_size",
                 ],
                 "Rate Limiting": [
-                    "rate_limit_requests_per_minute", "rate_limit_reveal_per_hour", "rate_limit_warnings"
+                    "rate_limit_requests_per_minute",
+                    "rate_limit_reveal_per_hour",
+                    "rate_limit_warnings",
                 ],
                 "Export Settings": [
-                    "default_export_format", "default_output_dir", "export_timestamps", "timestamp_format"
+                    "default_export_format",
+                    "default_output_dir",
+                    "export_timestamps",
+                    "timestamp_format",
                 ],
-                "Logging": [
-                    "log_level", "log_format"
-                ]
+                "Logging": ["log_level", "log_format"],
             }
 
             for category, keys in categories.items():
@@ -356,8 +376,7 @@ def list_values_command(output_format: str, show_secrets: bool):
 
 
 @config.command()
-@click.option('--confirm', is_flag=True,
-              help="Skip confirmation prompt")
+@click.option('--confirm', is_flag=True, help="Skip confirmation prompt")
 def reset(confirm: bool):
     """Reset configuration to defaults."""
     if not confirm:
@@ -397,7 +416,10 @@ def validate():
         warnings = []
 
         # Check authentication
-        if (not current_config.signalhire_email or not current_config.signalhire_password) and not current_config.api_key:
+        if (
+            not current_config.signalhire_email
+            or not current_config.signalhire_password
+        ) and not current_config.api_key:
             missing_required.append(
                 "Authentication: Either (email + password) or api_key required"
             )
@@ -447,6 +469,7 @@ def info():
         # Show file size and last modified
         stat = config_manager.config_file.stat()
         import datetime
+
         modified = datetime.datetime.fromtimestamp(stat.st_mtime)
         click.echo(f"📅 Last modified: {modified.strftime('%Y-%m-%d %H:%M:%S')}")
         click.echo(f"📊 File size: {stat.st_size} bytes")

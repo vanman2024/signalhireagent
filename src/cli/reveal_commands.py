@@ -39,7 +39,9 @@ def handle_api_error(error: str, status_code: int | None = None, logger=None) ->
     # Rate limit errors (429)
     if status_code == 429 or "rate limit" in error.lower():
         echo(style("🚦 Rate Limit Exceeded!", fg='yellow', bold=True))
-        echo("The SignalHire API has temporarily blocked requests due to high frequency.")
+        echo(
+            "The SignalHire API has temporarily blocked requests due to high frequency."
+        )
         echo()
         echo("💡 Solutions:")
         echo("  • Wait a few minutes before retrying")
@@ -54,7 +56,11 @@ def handle_api_error(error: str, status_code: int | None = None, logger=None) ->
         echo("  • Unlimited reveals with browser mode")
 
     # Insufficient credits (402)
-    elif status_code == 402 or "insufficient credits" in error.lower() or "credits" in error.lower():
+    elif (
+        status_code == 402
+        or "insufficient credits" in error.lower()
+        or "credits" in error.lower()
+    ):
         echo(style("💰 Insufficient Credits!", fg='red', bold=True))
         echo("Your account doesn't have enough credits for this operation.")
         echo()
@@ -65,7 +71,11 @@ def handle_api_error(error: str, status_code: int | None = None, logger=None) ->
         echo("  • Reduce the number of prospects to reveal")
 
     # Authentication errors (401, 403)
-    elif status_code in [401, 403] or "unauthorized" in error.lower() or "forbidden" in error.lower():
+    elif (
+        status_code in [401, 403]
+        or "unauthorized" in error.lower()
+        or "forbidden" in error.lower()
+    ):
         echo(style("🔐 Authentication Error!", fg='red', bold=True))
         echo("Unable to authenticate with SignalHire API.")
         echo()
@@ -76,7 +86,11 @@ def handle_api_error(error: str, status_code: int | None = None, logger=None) ->
         echo("  • Switch to browser mode: export SIGNALHIRE_EMAIL='your@email.com'")
 
     # Network errors
-    elif "timeout" in error.lower() or "connection" in error.lower() or status_code == 408:
+    elif (
+        "timeout" in error.lower()
+        or "connection" in error.lower()
+        or status_code == 408
+    ):
         echo(style("🌐 Network Error!", fg='yellow', bold=True))
         echo("Unable to connect to SignalHire servers.")
         echo()
@@ -152,7 +166,9 @@ def format_reveal_results(results: dict[str, Any], format_type: str = "human") -
     output.append("🔓 Contact Reveal Results")
     output.append(f"Operation ID: {style(operation_id, fg='blue')}")
     output.append(f"Total prospects: {total_prospects}")
-    output.append(f"Successfully revealed: {style(str(revealed_count), fg='green', bold=True)}")
+    output.append(
+        f"Successfully revealed: {style(str(revealed_count), fg='green', bold=True)}"
+    )
 
     if failed_count > 0:
         output.append(f"Failed: {style(str(failed_count), fg='red')}")
@@ -160,12 +176,16 @@ def format_reveal_results(results: dict[str, Any], format_type: str = "human") -
     output.append(f"Credits used: {style(str(credits_used), fg='yellow')}")
 
     # Success rate
-    success_rate = (revealed_count / total_prospects * 100) if total_prospects > 0 else 0
+    success_rate = (
+        (revealed_count / total_prospects * 100) if total_prospects > 0 else 0
+    )
     output.append(f"Success rate: {success_rate:.1f}%")
 
     # Show sample revealed contacts
     prospects = results.get('prospects', [])
-    revealed_prospects = [p for p in prospects if p.get('status') == 'success' and p.get('contacts')]
+    revealed_prospects = [
+        p for p in prospects if p.get('status') == 'success' and p.get('contacts')
+    ]
 
     if revealed_prospects:
         output.append("\n📧 Sample revealed contacts:")
@@ -183,14 +203,16 @@ def format_reveal_results(results: dict[str, Any], format_type: str = "human") -
     return "\n".join(output)
 
 
-def load_prospects_from_file(file_path: str, skip_existing_contacts: bool = True) -> list[str]:
+def load_prospects_from_file(
+    file_path: str, skip_existing_contacts: bool = True
+) -> list[str]:
     """
     Load prospect UIDs from a search results file.
-    
+
     Args:
         file_path: Path to the search results file
         skip_existing_contacts: If True, skip prospects that already have contactsFetched
-    
+
     Returns:
         List of prospect UIDs that need contact reveals
     """
@@ -227,13 +249,21 @@ def load_prospects_from_file(file_path: str, skip_existing_contacts: bool = True
                     uids.append(uid)
 
                 if skip_existing_contacts and skipped_count > 0:
-                    click.echo(f"ℹ️  Skipped {skipped_count} prospects that already have contacts")
-                    click.echo(f"🔍 Will reveal {len(uids)} prospects that need contacts")
+                    click.echo(
+                        f"ℹ️  Skipped {skipped_count} prospects that already have contacts"
+                    )
+                    click.echo(
+                        f"🔍 Will reveal {len(uids)} prospects that need contacts"
+                    )
 
                 return uids
             if 'prospects' in data:
                 prospects = data['prospects']
-                return [p.get('uid') or p.get('id') for p in prospects if p.get('uid') or p.get('id')]
+                return [
+                    p.get('uid') or p.get('id')
+                    for p in prospects
+                    if p.get('uid') or p.get('id')
+                ]
             if 'prospect_uids' in data:
                 return data['prospect_uids']
             raise click.ClickException(f"Unrecognized file format in {file_path}")
@@ -245,7 +275,9 @@ def load_prospects_from_file(file_path: str, skip_existing_contacts: bool = True
         raise click.ClickException(f"Error reading {file_path}: {e}") from e
 
 
-def save_reveal_results(results: dict[str, Any], output_file: str, format_type: str = "json"):
+def save_reveal_results(
+    results: dict[str, Any], output_file: str, format_type: str = "json"
+):
     """Save reveal results to a file."""
     output_path = Path(output_file)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -294,7 +326,7 @@ class RevealProgressCallback:
             TextColumn("•"),
             TimeRemainingColumn(),
             console=self.console,
-            refresh_per_second=2
+            refresh_per_second=2,
         )
 
         self.progress.start()
@@ -304,7 +336,7 @@ class RevealProgressCallback:
             completed=0,
             successful=0,
             failed=0,
-            credits_used=0
+            credits_used=0,
         )
 
         return self
@@ -349,7 +381,7 @@ class RevealProgressCallback:
             completed=self.processed,
             successful=self.successful,
             failed=self.failed,
-            credits_used=self.credits_used
+            credits_used=self.credits_used,
         )
 
         # Update description with additional info
@@ -359,7 +391,9 @@ class RevealProgressCallback:
         if remaining > 0:
             description = f"{self.description} • {success_rate:.1f}% success • {remaining} remaining"
         else:
-            description = f"{self.description} • {success_rate:.1f}% success • Complete!"
+            description = (
+                f"{self.description} • {success_rate:.1f}% success • Complete!"
+            )
 
         self.progress.update(self.task, description=description)
 
@@ -374,12 +408,13 @@ class RevealProgressCallback:
                     error_msg = error_msg[:57] + "..."
                 # Update description to show error
                 self.progress.update(
-                    self.task,
-                    description=f"{description} • ⚠️ {error_msg}"
+                    self.task, description=f"{description} • ⚠️ {error_msg}"
                 )
 
 
-async def execute_reveal_with_progress(prospect_uids: list[str], config, logger, **options) -> dict[str, Any]:
+async def execute_reveal_with_progress(
+    prospect_uids: list[str], config, logger, **options
+) -> dict[str, Any]:
     """
     Execute reveal operation with enhanced progress reporting.
     """
@@ -389,18 +424,23 @@ async def execute_reveal_with_progress(prospect_uids: list[str], config, logger,
 
     # Create progress callback
     progress_callback = RevealProgressCallback(
-        total_prospects=total_prospects,
-        description="🔓 Revealing contacts"
+        total_prospects=total_prospects, description="🔓 Revealing contacts"
     )
 
     with progress_callback:
         # API-only client
         api_client = SignalHireClient(api_key=config.api_key)
-        logger.info("Using API for reveal", has_api_key=bool(config.api_key), prospect_count=total_prospects)
+        logger.info(
+            "Using API for reveal",
+            has_api_key=bool(config.api_key),
+            prospect_count=total_prospects,
+        )
         echo("Using API for reveal")
 
         operation = RevealOp(prospect_ids=prospect_uids, batch_size=bulk_size)
-        return await api_client.bulk_reveal(operation, progress_callback=progress_callback.update_progress)
+        return await api_client.bulk_reveal(
+            operation, progress_callback=progress_callback.update_progress
+        )
 
 
 async def check_credits_and_confirm(config, total_prospects: int, logger) -> bool:
@@ -419,7 +459,12 @@ async def check_credits_and_confirm(config, total_prospects: int, logger) -> boo
         credits_response = await api_client.check_credits()
 
         if not credits_response.success:
-            echo(style(f"⚠️  Could not check credit balance: {credits_response.error}", fg='yellow'))
+            echo(
+                style(
+                    f"⚠️  Could not check credit balance: {credits_response.error}",
+                    fg='yellow',
+                )
+            )
             return click.confirm("Continue without credit check?", default=True)
 
         credits_data = credits_response.data or {}
@@ -430,31 +475,55 @@ async def check_credits_and_confirm(config, total_prospects: int, logger) -> boo
         daily_status = await api_client.rate_limiter.check_daily_limits()
 
         echo("\n💰 Credit & Daily Usage Status:")
-        echo(f"  Current balance: {style(str(current_credits), fg='green', bold=True)} credits")
+        echo(
+            f"  Current balance: {style(str(current_credits), fg='green', bold=True)} credits"
+        )
         echo(f"  Estimated cost: {style(str(estimated_cost), fg='yellow')} credits")
-        echo(f"  Daily usage: {daily_status['current_usage']}/{daily_status['daily_limit']} credits ({daily_status['percentage_used']:.1f}%)")
+        echo(
+            f"  Daily usage: {daily_status['current_usage']}/{daily_status['daily_limit']} credits ({daily_status['percentage_used']:.1f}%)"
+        )
 
         # Daily limit warnings
         if daily_status['warning_level'] == 'critical':
-            echo(style("  🚨 CRITICAL: Daily limit almost reached!", fg='red', bold=True))
+            echo(
+                style("  🚨 CRITICAL: Daily limit almost reached!", fg='red', bold=True)
+            )
             echo(f"     Only {daily_status['remaining']} credits left for today")
-            if not click.confirm("Continue despite approaching daily limit?", default=False):
+            if not click.confirm(
+                "Continue despite approaching daily limit?", default=False
+            ):
                 echo("Operation cancelled to avoid hitting daily limit.")
                 return False
         elif daily_status['warning_level'] == 'high':
-            echo(style(f"  ⚠️  WARNING: High daily usage ({daily_status['percentage_used']:.1f}%)", fg='yellow', bold=True))
+            echo(
+                style(
+                    f"  ⚠️  WARNING: High daily usage ({daily_status['percentage_used']:.1f}%)",
+                    fg='yellow',
+                    bold=True,
+                )
+            )
             echo(f"     {daily_status['remaining']} credits remaining today")
             if not click.confirm("Continue with high daily usage?", default=True):
                 echo("Operation cancelled by user.")
                 return False
         elif daily_status['warning_level'] == 'moderate':
-            echo(f"  INFO: Moderate usage: {daily_status['percentage_used']:.1f}% of daily limit")
+            echo(
+                f"  INFO: Moderate usage: {daily_status['percentage_used']:.1f}% of daily limit"
+            )
 
         if current_credits < estimated_cost:
             shortfall = estimated_cost - current_credits
-            echo(style(f"  ❌ Insufficient credits! Shortfall: {shortfall} credits", fg='red', bold=True))
+            echo(
+                style(
+                    f"  ❌ Insufficient credits! Shortfall: {shortfall} credits",
+                    fg='red',
+                    bold=True,
+                )
+            )
 
-            if click.confirm(f"Purchase {shortfall} additional credits?", default=False):
+            if click.confirm(
+                f"Purchase {shortfall} additional credits?", default=False
+            ):
                 echo("💳 Redirecting to SignalHire credit purchase...")
                 echo("Please visit: https://signalhire.com/credits")
                 return False
@@ -467,18 +536,32 @@ async def check_credits_and_confirm(config, total_prospects: int, logger) -> boo
         # Combined credit + daily limit check
         if estimated_cost > daily_status['remaining']:
             echo(style("  ❌ Operation would exceed daily limit!", fg='red', bold=True))
-            echo(f"     Need: {estimated_cost} credits, Available today: {daily_status['remaining']}")
+            echo(
+                f"     Need: {estimated_cost} credits, Available today: {daily_status['remaining']}"
+            )
             echo("     💡 Try again tomorrow or use browser mode for unlimited reveals")
             return False
 
         # Cost warning for expensive operations
         if estimated_cost >= 50:
-            echo(style(f"\n⚠️  This is a large operation costing {estimated_cost} credits!", fg='yellow', bold=True))
-            if not click.confirm("Are you sure you want to proceed with this expensive operation?", default=False):
+            echo(
+                style(
+                    f"\n⚠️  This is a large operation costing {estimated_cost} credits!",
+                    fg='yellow',
+                    bold=True,
+                )
+            )
+            if not click.confirm(
+                "Are you sure you want to proceed with this expensive operation?",
+                default=False,
+            ):
                 return False
 
         # Always confirm for any credit-using operation
-        if not click.confirm(f"Proceed with revealing {total_prospects} contacts for {estimated_cost} credits?", default=True):
+        if not click.confirm(
+            f"Proceed with revealing {total_prospects} contacts for {estimated_cost} credits?",
+            default=True,
+        ):
             echo("Operation cancelled by user.")
             return False
 
@@ -490,14 +573,20 @@ async def check_credits_and_confirm(config, total_prospects: int, logger) -> boo
         return click.confirm("Continue without credit verification?", default=True)
 
 
-async def execute_reveal(prospect_uids: list[str], config, logger, **options) -> dict[str, Any]:
+async def execute_reveal(
+    prospect_uids: list[str], config, logger, **options
+) -> dict[str, Any]:
     """Execute the reveal operation using appropriate client."""
 
     bulk_size = options.get('bulk_size', 1000)
 
     # API-only client
     api_client = SignalHireClient(api_key=config.api_key)
-    logger.info("Using API for reveal", has_api_key=bool(config.api_key), prospect_count=len(prospect_uids))
+    logger.info(
+        "Using API for reveal",
+        has_api_key=bool(config.api_key),
+        prospect_count=len(prospect_uids),
+    )
     echo("Using API for reveal")
     operation = RevealOp(prospect_ids=prospect_uids, batch_size=bulk_size)
     return await api_client.bulk_reveal(operation)
@@ -508,65 +597,73 @@ async def execute_reveal(prospect_uids: list[str], config, logger, **options) ->
 @click.option(
     '--search-file',
     type=click.Path(exists=True),
-    help='Load prospect UIDs from search results file'
+    help='Load prospect UIDs from search results file',
 )
 @click.option(
     '--bulk-size',
     type=click.IntRange(1, 1000),
     default=1000,
-    help='Prospects per bulk operation [default: 1000] [range: 1-1000]'
+    help='Prospects per bulk operation [default: 1000] [range: 1-1000]',
 )
 @click.option(
     '--use-native-export',
     is_flag=True,
-    help="Use SignalHire's native CSV export feature"
+    help="Use SignalHire's native CSV export feature",
 )
 @click.option(
     '--export-format',
     type=click.Choice(['csv', 'xlsx']),
     default='csv',
-    help='Native export format [default: csv]'
+    help='Native export format [default: csv]',
 )
 @click.option(
     '--timeout',
     type=int,
     default=600,
-    help='Timeout for reveal operation in seconds [default: 600]'
+    help='Timeout for reveal operation in seconds [default: 600]',
 )
 @click.option(
     '--output',
     type=click.Path(),
-    help='Save revealed contacts to file [default: stdout]'
+    help='Save revealed contacts to file [default: stdout]',
 )
 @click.option(
-    '--dry-run',
-    is_flag=True,
-    help='Check credits and show what would be revealed'
+    '--dry-run', is_flag=True, help='Check credits and show what would be revealed'
 )
-@click.option(
-    '--save-to-list',
-    help='Save results to SignalHire lead list'
-)
+@click.option('--save-to-list', help='Save results to SignalHire lead list')
 @click.option(
     '--browser-wait',
     type=int,
     default=2,
-    help='Wait time between browser actions in seconds [default: 2]'
+    help='Wait time between browser actions in seconds [default: 2]',
 )
 @click.option(
     '--api-only',
     is_flag=True,
-    help='Require API mode only - do not fallback to browser automation'
+    help='Require API mode only - do not fallback to browser automation',
 )
 @click.option(
     '--skip-existing',
     is_flag=True,
     default=True,
-    help='Skip prospects that already have contactsFetched (saves credits) [default: True]'
+    help='Skip prospects that already have contactsFetched (saves credits) [default: True]',
 )
 @click.pass_context
-def reveal(ctx, prospect_uids, search_file, bulk_size, use_native_export,
-          export_format, timeout, output, dry_run, save_to_list, browser_wait, api_only, skip_existing):
+def reveal(
+    ctx,
+    prospect_uids,
+    search_file,
+    bulk_size,
+    use_native_export,
+    export_format,
+    timeout,
+    output,
+    dry_run,
+    save_to_list,
+    browser_wait,
+    api_only,
+    skip_existing,
+):
     """
     Reveal contact information (API-first with browser fallback).
     🚀 API-FIRST: Uses SignalHire API by default (100 contacts/day limit)
@@ -606,7 +703,9 @@ def reveal(ctx, prospect_uids, search_file, bulk_size, use_native_export,
 
     if search_file:
         try:
-            file_uids = load_prospects_from_file(search_file, skip_existing_contacts=skip_existing)
+            file_uids = load_prospects_from_file(
+                search_file, skip_existing_contacts=skip_existing
+            )
             all_prospect_uids.extend(file_uids)
 
             if config.verbose:
@@ -641,25 +740,57 @@ def reveal(ctx, prospect_uids, search_file, bulk_size, use_native_export,
     if config.browser_mode:
         # Browser mode explicitly requested
         if not config.email or not config.password:
-            echo(style("Error: Browser mode requires email and password.", fg='red'), err=True)
-            echo("Set SIGNALHIRE_EMAIL and SIGNALHIRE_PASSWORD environment variables", err=True)
+            echo(
+                style("Error: Browser mode requires email and password.", fg='red'),
+                err=True,
+            )
+            echo(
+                "Set SIGNALHIRE_EMAIL and SIGNALHIRE_PASSWORD environment variables",
+                err=True,
+            )
             echo("or use --email and --password options", err=True)
             ctx.exit(1)
     else:
         # Default to API mode - check if we have API credentials
         if not config.api_key:
             if api_only:
-                echo(style("Error: --api-only specified but no API key available.", fg='red'), err=True)
-                echo("Set SIGNALHIRE_API_KEY environment variable for API-only mode", err=True)
+                echo(
+                    style(
+                        "Error: --api-only specified but no API key available.",
+                        fg='red',
+                    ),
+                    err=True,
+                )
+                echo(
+                    "Set SIGNALHIRE_API_KEY environment variable for API-only mode",
+                    err=True,
+                )
                 echo("Or remove --api-only to allow browser fallback", err=True)
                 ctx.exit(1)
             else:
-                echo(style("Warning: No API key provided, falling back to browser mode", fg='yellow'), err=True)
-                echo("For better reliability, consider setting SIGNALHIRE_API_KEY environment variable", err=True)
+                echo(
+                    style(
+                        "Warning: No API key provided, falling back to browser mode",
+                        fg='yellow',
+                    ),
+                    err=True,
+                )
+                echo(
+                    "For better reliability, consider setting SIGNALHIRE_API_KEY environment variable",
+                    err=True,
+                )
                 config.browser_mode = True
                 if not config.email or not config.password:
-                    echo(style("Error: No valid authentication method available.", fg='red'), err=True)
-                    echo("Set SIGNALHIRE_API_KEY for API mode, or SIGNALHIRE_EMAIL/SIGNALHIRE_PASSWORD for browser mode", err=True)
+                    echo(
+                        style(
+                            "Error: No valid authentication method available.", fg='red'
+                        ),
+                        err=True,
+                    )
+                    echo(
+                        "Set SIGNALHIRE_API_KEY for API mode, or SIGNALHIRE_EMAIL/SIGNALHIRE_PASSWORD for browser mode",
+                        err=True,
+                    )
                     ctx.exit(1)
 
     # Dry run mode
@@ -673,7 +804,9 @@ def reveal(ctx, prospect_uids, search_file, bulk_size, use_native_export,
             echo(f"  Export format: {export_format}")
         if save_to_list:
             echo(f"  Save to list: {save_to_list}")
-        echo(f"  Mode: {'Browser automation' if config.browser_mode else 'API (recommended)'}")
+        echo(
+            f"  Mode: {'Browser automation' if config.browser_mode else 'API (recommended)'}"
+        )
         echo(f"  Timeout: {timeout} seconds")
 
         # Enhanced credit information for dry run
@@ -688,36 +821,81 @@ def reveal(ctx, prospect_uids, search_file, bulk_size, use_native_export,
                     estimated_cost = total_prospects
 
                     # Check daily usage
-                    daily_status = asyncio.run(api_client.rate_limiter.check_daily_limits())
+                    daily_status = asyncio.run(
+                        api_client.rate_limiter.check_daily_limits()
+                    )
 
                     echo("\n💰 Credit & Daily Usage Analysis:")
-                    echo(f"  Current balance: {style(str(current_credits), fg='green', bold=True)} credits")
-                    echo(f"  Estimated cost: {style(str(estimated_cost), fg='yellow')} credits")
-                    echo(f"  Daily usage: {daily_status['current_usage']}/{daily_status['daily_limit']} credits ({daily_status['percentage_used']:.1f}%)")
+                    echo(
+                        f"  Current balance: {style(str(current_credits), fg='green', bold=True)} credits"
+                    )
+                    echo(
+                        f"  Estimated cost: {style(str(estimated_cost), fg='yellow')} credits"
+                    )
+                    echo(
+                        f"  Daily usage: {daily_status['current_usage']}/{daily_status['daily_limit']} credits ({daily_status['percentage_used']:.1f}%)"
+                    )
 
                     if current_credits >= estimated_cost:
                         remaining = current_credits - estimated_cost
-                        echo(f"  ✅ Sufficient credits - {remaining} remaining after operation")
+                        echo(
+                            f"  ✅ Sufficient credits - {remaining} remaining after operation"
+                        )
 
                         # Check daily limits
                         if estimated_cost <= daily_status['remaining']:
-                            echo(f"  ✅ Within daily limit - {daily_status['remaining'] - estimated_cost} remaining today")
+                            echo(
+                                f"  ✅ Within daily limit - {daily_status['remaining'] - estimated_cost} remaining today"
+                            )
                         else:
-                            echo(style(f"  ❌ Would exceed daily limit! Need {estimated_cost - daily_status['remaining']} more credits", fg='red', bold=True))
+                            echo(
+                                style(
+                                    f"  ❌ Would exceed daily limit! Need {estimated_cost - daily_status['remaining']} more credits",
+                                    fg='red',
+                                    bold=True,
+                                )
+                            )
                     else:
                         shortfall = estimated_cost - current_credits
-                        echo(style(f"  ❌ Insufficient credits - need {shortfall} more", fg='red', bold=True))
-                        echo("  💡 Consider purchasing credits or reducing prospect count")
+                        echo(
+                            style(
+                                f"  ❌ Insufficient credits - need {shortfall} more",
+                                fg='red',
+                                bold=True,
+                            )
+                        )
+                        echo(
+                            "  💡 Consider purchasing credits or reducing prospect count"
+                        )
 
                     # Daily usage warnings
                     if daily_status['warning_level'] == 'critical':
-                        echo(style(f"  🚨 CRITICAL: Daily limit almost reached ({daily_status['percentage_used']:.1f}%)", fg='red', bold=True))
+                        echo(
+                            style(
+                                f"  🚨 CRITICAL: Daily limit almost reached ({daily_status['percentage_used']:.1f}%)",
+                                fg='red',
+                                bold=True,
+                            )
+                        )
                     elif daily_status['warning_level'] == 'high':
-                        echo(style(f"  ⚠️  WARNING: High daily usage ({daily_status['percentage_used']:.1f}%)", fg='yellow', bold=True))
+                        echo(
+                            style(
+                                f"  ⚠️  WARNING: High daily usage ({daily_status['percentage_used']:.1f}%)",
+                                fg='yellow',
+                                bold=True,
+                            )
+                        )
                     elif daily_status['warning_level'] == 'moderate':
-                        echo(f"  INFO: Moderate usage: {daily_status['percentage_used']:.1f}% of daily limit")
+                        echo(
+                            f"  INFO: Moderate usage: {daily_status['percentage_used']:.1f}% of daily limit"
+                        )
                 else:
-                    echo(style(f"  ⚠️  Could not check credits: {credits_response.error}", fg='yellow'))
+                    echo(
+                        style(
+                            f"  ⚠️  Could not check credits: {credits_response.error}",
+                            fg='yellow',
+                        )
+                    )
 
             except Exception as e:  # noqa: BLE001
                 echo(style(f"  ⚠️  Credit check failed: {e}", fg='yellow'))
@@ -737,7 +915,9 @@ def reveal(ctx, prospect_uids, search_file, bulk_size, use_native_export,
         if total_prospects > 5:
             echo(f"  ... and {total_prospects - 5} more")
 
-        echo(f"\n💰 Estimated cost: {total_prospects} credits (1 per successful reveal)")
+        echo(
+            f"\n💰 Estimated cost: {total_prospects} credits (1 per successful reveal)"
+        )
         echo("\n✅ Reveal parameters validated. Remove --dry-run to execute.")
         return
 
@@ -745,7 +925,9 @@ def reveal(ctx, prospect_uids, search_file, bulk_size, use_native_export,
     echo("🔓 Revealing contact information...")
 
     if config.verbose:
-        echo(f"Mode: {'Browser automation' if config.browser_mode else 'API (recommended)'}")
+        echo(
+            f"Mode: {'Browser automation' if config.browser_mode else 'API (recommended)'}"
+        )
         echo(f"Bulk size: {bulk_size}")
         echo(f"Native export: {use_native_export}")
         if config.debug:
@@ -753,22 +935,28 @@ def reveal(ctx, prospect_uids, search_file, bulk_size, use_native_export,
 
     # Interactive credit confirmation (skip for dry-run which already showed estimates)
     if not config.browser_mode and not dry_run:
-        confirmed = asyncio.run(check_credits_and_confirm(config, total_prospects, logger))
+        confirmed = asyncio.run(
+            check_credits_and_confirm(config, total_prospects, logger)
+        )
         if not confirmed:
             echo("Operation cancelled.")
             return
 
     try:
         # Run async reveal with progress bar
-        results = asyncio.run(execute_reveal_with_progress(
-            unique_uids, config, logger,
-            bulk_size=bulk_size,
-            use_native_export=use_native_export,
-            export_format=export_format,
-            timeout=timeout,
-            save_to_list=save_to_list,
-            browser_wait=browser_wait
-        ))
+        results = asyncio.run(
+            execute_reveal_with_progress(
+                unique_uids,
+                config,
+                logger,
+                bulk_size=bulk_size,
+                use_native_export=use_native_export,
+                export_format=export_format,
+                timeout=timeout,
+                save_to_list=save_to_list,
+                browser_wait=browser_wait,
+            )
+        )
 
         # Display results
         if config.output_format == 'json':
@@ -790,7 +978,9 @@ def reveal(ctx, prospect_uids, search_file, bulk_size, use_native_export,
         credits_used = results.get('credits_used', 0)
 
         if revealed_count > 0:
-            echo(f"\n✅ Successfully revealed {revealed_count} contacts using {credits_used} credits")
+            echo(
+                f"\n✅ Successfully revealed {revealed_count} contacts using {credits_used} credits"
+            )
         else:
             echo("\n⚠️  No contacts revealed")
 
@@ -816,6 +1006,7 @@ def reveal(ctx, prospect_uids, search_file, bulk_size, use_native_export,
 
         if config.debug:
             import traceback
+
             echo("\n🔧 Debug information:")
             echo(traceback.format_exc())
 

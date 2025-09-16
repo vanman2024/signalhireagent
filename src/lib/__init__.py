@@ -114,4 +114,3 @@ __all__ = [
     "validate_signalhire_uid",
     "validate_string_length",
 ]
-

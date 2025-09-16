@@ -15,8 +15,13 @@ from src.services.deduplication_service import (
 def dedupe():
     """Deduplication operations for SignalHire contacts."""
 
+
 @dedupe.command()
-@click.option('--input', required=True, help='Input JSON file(s) or directory (comma-separated or dir)')
+@click.option(
+    '--input',
+    required=True,
+    help='Input JSON file(s) or directory (comma-separated or dir)',
+)
 @click.option('--output', required=True, help='Output deduplicated JSON file')
 @click.option('--no-backup', is_flag=True, help='Skip creating backup files')
 def merge(input, output, no_backup):
@@ -45,4 +50,6 @@ def merge(input, output, no_backup):
     deduped = deduplicate_contacts(contacts)
     save_contacts_to_file(deduped, output)
     duplicates_removed = len(contacts) - len(deduped)
-    click.echo(f"Deduplicated {len(contacts)} contacts to {len(deduped)} unique contacts ({duplicates_removed} duplicates removed). Output: {output}")
+    click.echo(
+        f"Deduplicated {len(contacts)} contacts to {len(deduped)} unique contacts ({duplicates_removed} duplicates removed). Output: {output}"
+    )

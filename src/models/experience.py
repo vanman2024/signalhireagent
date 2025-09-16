@@ -12,6 +12,7 @@ from enum import Enum
 
 class EmploymentType(Enum):
     """Types of employment."""
+
     FULL_TIME = "full_time"
     PART_TIME = "part_time"
     CONTRACT = "contract"
@@ -24,10 +25,11 @@ class EmploymentType(Enum):
 @dataclass
 class ExperienceEntry:
     """Individual work experience entry for a prospect."""
+
     company_name: str
     job_title: str
     start_date: str | None = None  # ISO format or partial like "2023" or "2023-06"
-    end_date: str | None = None    # None means current position
+    end_date: str | None = None  # None means current position
     employment_type: EmploymentType = EmploymentType.FULL_TIME
     location: str | None = None
     description: str | None = None
@@ -65,7 +67,9 @@ class ExperienceEntry:
             self.skills = []
 
         # Clean up skills
-        self.skills = [skill.strip() for skill in self.skills if skill and skill.strip()]
+        self.skills = [
+            skill.strip() for skill in self.skills if skill and skill.strip()
+        ]
 
         # Set is_current based on end_date
         if self.end_date is None:
@@ -81,11 +85,7 @@ class ExperienceEntry:
             return
 
         # Accept formats: "2023", "2023-06", "2023-06-15"
-        valid_formats = [
-            "%Y",           # 2023
-            "%Y-%m",        # 2023-06
-            "%Y-%m-%d"      # 2023-06-15
-        ]
+        valid_formats = ["%Y", "%Y-%m", "%Y-%m-%d"]  # 2023  # 2023-06  # 2023-06-15
 
         for fmt in valid_formats:
             try:
@@ -94,7 +94,9 @@ class ExperienceEntry:
             except ValueError:
                 continue
 
-        raise ValueError(f"Invalid {field_name} format: {date_str}. Use YYYY, YYYY-MM, or YYYY-MM-DD")
+        raise ValueError(
+            f"Invalid {field_name} format: {date_str}. Use YYYY, YYYY-MM, or YYYY-MM-DD"
+        )
 
     def get_duration_months(self) -> int | None:
         """Calculate duration in months (approximate)."""
@@ -143,6 +145,7 @@ class ExperienceEntry:
             else:
                 next_month = datetime(int(year), int(month) + 1, 1)
             from datetime import timedelta
+
             return next_month - timedelta(days=1)
         # "2023-06-15"
         return datetime.strptime(date_str, "%Y-%m-%d")
@@ -193,7 +196,7 @@ class ExperienceEntry:
             "skills": self.skills,
             "is_current": self.is_current,
             "duration_months": self.get_duration_months(),
-            "formatted_duration": self.get_formatted_duration()
+            "formatted_duration": self.get_formatted_duration(),
         }
 
     @classmethod
@@ -210,11 +213,13 @@ class ExperienceEntry:
             company_size=data.get("company_size"),
             industry=data.get("industry"),
             skills=data.get("skills", []),
-            is_current=data.get("is_current", False)
+            is_current=data.get("is_current", False),
         )
 
     def __str__(self) -> str:
         """String representation of experience entry."""
         duration = self.get_formatted_duration()
         current_indicator = " (Current)" if self.is_current else ""
-        return f"{self.job_title} at {self.company_name} ({duration}){current_indicator}"
+        return (
+            f"{self.job_title} at {self.company_name} ({duration}){current_indicator}"
+        )

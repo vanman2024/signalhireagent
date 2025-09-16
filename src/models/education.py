@@ -12,6 +12,7 @@ from enum import Enum
 
 class DegreeType(Enum):
     """Types of degrees/education levels."""
+
     HIGH_SCHOOL = "high_school"
     ASSOCIATE = "associate"
     BACHELOR = "bachelor"
@@ -25,6 +26,7 @@ class DegreeType(Enum):
 
 class EducationStatus(Enum):
     """Status of education."""
+
     COMPLETED = "completed"
     IN_PROGRESS = "in_progress"
     INCOMPLETE = "incomplete"
@@ -34,17 +36,18 @@ class EducationStatus(Enum):
 @dataclass
 class EducationEntry:
     """Individual education entry for a prospect."""
+
     institution_name: str
     degree_type: DegreeType
     field_of_study: str | None = None
     degree_name: str | None = None  # e.g., "Bachelor of Science"
-    start_date: str | None = None   # ISO format or partial like "2018" or "2018-09"
-    end_date: str | None = None     # Graduation date or expected graduation
+    start_date: str | None = None  # ISO format or partial like "2018" or "2018-09"
+    end_date: str | None = None  # Graduation date or expected graduation
     status: EducationStatus = EducationStatus.COMPLETED
     gpa: str | None = None
-    honors: str | None = None       # e.g., "Magna Cum Laude", "Dean's List"
+    honors: str | None = None  # e.g., "Magna Cum Laude", "Dean's List"
     location: str | None = None
-    activities: list[str] = None       # Clubs, organizations, etc.
+    activities: list[str] = None  # Clubs, organizations, etc.
     relevant_courses: list[str] = None
     description: str | None = None
 
@@ -82,8 +85,16 @@ class EducationEntry:
             self.relevant_courses = []
 
         # Clean up lists
-        self.activities = [activity.strip() for activity in self.activities if activity and activity.strip()]
-        self.relevant_courses = [course.strip() for course in self.relevant_courses if course and course.strip()]
+        self.activities = [
+            activity.strip()
+            for activity in self.activities
+            if activity and activity.strip()
+        ]
+        self.relevant_courses = [
+            course.strip()
+            for course in self.relevant_courses
+            if course and course.strip()
+        ]
 
         # Validate date format (basic check)
         self._validate_date_format(self.start_date, "start_date")
@@ -105,11 +116,7 @@ class EducationEntry:
             return
 
         # Accept formats: "2023", "2023-06", "2023-06-15"
-        valid_formats = [
-            "%Y",           # 2023
-            "%Y-%m",        # 2023-06
-            "%Y-%m-%d"      # 2023-06-15
-        ]
+        valid_formats = ["%Y", "%Y-%m", "%Y-%m-%d"]  # 2023  # 2023-06  # 2023-06-15
 
         for fmt in valid_formats:
             try:
@@ -118,7 +125,9 @@ class EducationEntry:
             except ValueError:
                 continue
 
-        raise ValueError(f"Invalid {field_name} format: {date_str}. Use YYYY, YYYY-MM, or YYYY-MM-DD")
+        raise ValueError(
+            f"Invalid {field_name} format: {date_str}. Use YYYY, YYYY-MM, or YYYY-MM-DD"
+        )
 
     def get_duration_years(self) -> float | None:
         """Calculate duration in years (approximate)."""
@@ -195,7 +204,7 @@ class EducationEntry:
             DegreeType.CERTIFICATE: "Certificate",
             DegreeType.DIPLOMA: "Diploma",
             DegreeType.PROFESSIONAL: "Professional Degree",
-            DegreeType.OTHER: "Degree"
+            DegreeType.OTHER: "Degree",
         }
 
         base_name = type_names.get(self.degree_type, "Degree")
@@ -224,7 +233,7 @@ class EducationEntry:
             "duration_years": self.get_duration_years(),
             "graduation_year": self.get_graduation_year(),
             "is_current": self.is_current_education(),
-            "degree_display_name": self.get_degree_display_name()
+            "degree_display_name": self.get_degree_display_name(),
         }
 
     @classmethod
@@ -243,7 +252,7 @@ class EducationEntry:
             location=data.get("location"),
             activities=data.get("activities", []),
             relevant_courses=data.get("relevant_courses", []),
-            description=data.get("description")
+            description=data.get("description"),
         )
 
     def __str__(self) -> str:

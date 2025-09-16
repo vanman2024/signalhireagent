@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ExportServiceConfig:
     """Configuration for the export service."""
+
     validate_data: bool = True
     sanitize_data: bool = True
     skip_invalid_records: bool = True
@@ -40,6 +41,7 @@ class ExportServiceConfig:
 @dataclass
 class ExportServiceResult:
     """Result from an export service operation."""
+
     file_path: str
     records_processed: int
     valid_records: int
@@ -78,7 +80,7 @@ class ExportService:
             output_path=output_path,
             include_headers=self.config.include_headers,
             encoding=self.config.encoding,
-            chunk_size=self.config.chunk_size
+            chunk_size=self.config.chunk_size,
         )
         return CSVExporter(export_config)
 
@@ -90,7 +92,7 @@ class ExportService:
         education: dict[str, list[dict[str, Any] | EducationEntry]] | None = None,
         output_file: str = "export.csv",
         include_contacts: bool = True,
-        input_file: str | None = None
+        input_file: str | None = None,
     ) -> ExportServiceResult:
         """
         Export prospect data to CSV format.
@@ -118,13 +120,23 @@ class ExportService:
 
             # Convert pydantic models to dictionaries if needed
             prospects_data = await self._convert_to_dicts(prospects)
-            contacts_data = await self._convert_contacts_to_dicts(contacts) if contacts else None
-            experiences_data = await self._convert_experiences_to_dicts(experiences) if experiences else None
-            education_data = await self._convert_education_to_dicts(education) if education else None
+            contacts_data = (
+                await self._convert_contacts_to_dicts(contacts) if contacts else None
+            )
+            experiences_data = (
+                await self._convert_experiences_to_dicts(experiences)
+                if experiences
+                else None
+            )
+            education_data = (
+                await self._convert_education_to_dicts(education) if education else None
+            )
 
             # Validate and sanitize data if configured
             if self.config.validate_data:
-                prospects_data = await self._validate_and_sanitize_prospects(prospects_data)
+                prospects_data = await self._validate_and_sanitize_prospects(
+                    prospects_data
+                )
 
             # Retry logic for file system errors
             for attempt in range(self.config.max_fs_retries):
@@ -139,7 +151,7 @@ class ExportService:
                         prospects_data,
                         contacts_data,
                         experiences_data,
-                        education_data
+                        education_data,
                     )
 
                     # Convert to ExportServiceResult
@@ -147,7 +159,7 @@ class ExportService:
                         export_result,
                         len(prospects_data),
                         len(prospects_data),  # All valid after validation
-                        0  # No invalid after validation
+                        0,  # No invalid after validation
                     )
 
                 except (PermissionError, OSError) as e:
@@ -156,14 +168,19 @@ class ExportService:
                     if attempt < self.config.max_fs_retries - 1:
                         # Try fallback directory if configured
                         if self.config.fallback_directory:
-                            fallback_path = Path(self.config.fallback_directory) / Path(output_file).name
+                            fallback_path = (
+                                Path(self.config.fallback_directory)
+                                / Path(output_file).name
+                            )
                             output_file = str(fallback_path)
                             logger.info(f"Retrying with fallback path: {output_file}")
                         else:
                             # Wait before retry
                             await asyncio.sleep(1.0 * (attempt + 1))
                     else:
-                        raise ExportServiceError(f"Failed to export after {self.config.max_fs_retries} attempts: {e}") from e
+                        raise ExportServiceError(
+                            f"Failed to export after {self.config.max_fs_retries} attempts: {e}"
+                        ) from e
 
         except Exception as e:
             logger.error(f"Export failed: {e}")
@@ -176,13 +193,13 @@ class ExportService:
                 file_size_bytes=0,
                 export_duration_seconds=0.0,
                 success=False,
-                error_message=str(e)
+                error_message=str(e),
             )
 
     async def export_operations_to_csv(
         self,
         operations: list[dict[str, Any] | SearchOp | RevealOp],
-        output_file: str = "operations_export.csv"
+        output_file: str = "operations_export.csv",
     ) -> ExportServiceResult:
         """
         Export operation results to CSV format.
@@ -202,16 +219,11 @@ class ExportService:
             csv_exporter = self._get_csv_exporter(output_file)
 
             export_result = await asyncio.get_event_loop().run_in_executor(
-                None,
-                csv_exporter.export_operation_results,
-                operations_data
+                None, csv_exporter.export_operation_results, operations_data
             )
 
             return self._convert_export_result(
-                export_result,
-                len(operations_data),
-                len(operations_data),
-                0
+                export_result, len(operations_data), len(operations_data), 0
             )
 
         except Exception as e:
@@ -225,14 +237,14 @@ class ExportService:
                 file_size_bytes=0,
                 export_duration_seconds=0.0,
                 success=False,
-                error_message=str(e)
+                error_message=str(e),
             )
 
     async def process_signalhire_csv(
         self,
         input_csv_path: str,
         output_csv_path: str,
-        enhanced_data: dict[str, dict[str, Any]] | None = None
+        enhanced_data: dict[str, dict[str, Any]] | None = None,
     ) -> ExportServiceResult:
         """
         Process and enhance a CSV file exported from SignalHire's web interface.
@@ -249,17 +261,11 @@ class ExportService:
             csv_exporter = self._get_csv_exporter(output_csv_path)
 
             export_result = await asyncio.get_event_loop().run_in_executor(
-                None,
-                csv_exporter.export_signalhire_csv,
-                input_csv_path,
-                enhanced_data
+                None, csv_exporter.export_signalhire_csv, input_csv_path, enhanced_data
             )
 
             return self._convert_export_result(
-                export_result,
-                export_result.total_rows,
-                export_result.total_rows,
-                0
+                export_result, export_result.total_rows, export_result.total_rows, 0
             )
 
         except Exception as e:
@@ -273,7 +279,7 @@ class ExportService:
                 file_size_bytes=0,
                 export_duration_seconds=0.0,
                 success=False,
-                error_message=str(e)
+                error_message=str(e),
             )
 
     async def export_to_excel(
@@ -299,6 +305,7 @@ class ExportService:
             )
 
         import time
+
         start = time.time()
         try:
             try:
@@ -350,19 +357,27 @@ class ExportService:
                 error_message=str(e),
             )
 
-    async def _export_from_file(self, input_file: str, output_file: str) -> ExportServiceResult:
+    async def _export_from_file(
+        self, input_file: str, output_file: str
+    ) -> ExportServiceResult:
         """Export data from a JSON input file."""
         try:
             with open(input_file) as f:
                 data = json.load(f)
 
             prospects = data.get('prospects', [])
-            return await self.export_to_csv(prospects=prospects, output_file=output_file)
+            return await self.export_to_csv(
+                prospects=prospects, output_file=output_file
+            )
 
         except (OSError, json.JSONDecodeError) as e:
-            raise ExportServiceError(f"Failed to process input file {input_file}: {e}") from e
+            raise ExportServiceError(
+                f"Failed to process input file {input_file}: {e}"
+            ) from e
 
-    async def _convert_to_dicts(self, items: list[dict[str, Any] | Any]) -> list[dict[str, Any]]:
+    async def _convert_to_dicts(
+        self, items: list[dict[str, Any] | Any]
+    ) -> list[dict[str, Any]]:
         """Convert a list of items (dicts or pydantic models) to dictionaries."""
         result = []
         for item in items:
@@ -374,7 +389,9 @@ class ExportService:
                 result.append(item)
         return result
 
-    async def _convert_contacts_to_dicts(self, contacts: dict[str, dict[str, Any] | ContactInfo]) -> dict[str, dict[str, Any]]:
+    async def _convert_contacts_to_dicts(
+        self, contacts: dict[str, dict[str, Any] | ContactInfo]
+    ) -> dict[str, dict[str, Any]]:
         """Convert contacts mapping to dictionaries."""
         result = {}
         for prospect_id, contact in contacts.items():
@@ -386,21 +403,27 @@ class ExportService:
                 result[prospect_id] = contact
         return result
 
-    async def _convert_experiences_to_dicts(self, experiences: dict[str, list[dict[str, Any] | ExperienceEntry]]) -> dict[str, list[dict[str, Any]]]:
+    async def _convert_experiences_to_dicts(
+        self, experiences: dict[str, list[dict[str, Any] | ExperienceEntry]]
+    ) -> dict[str, list[dict[str, Any]]]:
         """Convert experiences mapping to dictionaries."""
         result = {}
         for prospect_id, exp_list in experiences.items():
             result[prospect_id] = await self._convert_to_dicts(exp_list)
         return result
 
-    async def _convert_education_to_dicts(self, education: dict[str, list[dict[str, Any] | EducationEntry]]) -> dict[str, list[dict[str, Any]]]:
+    async def _convert_education_to_dicts(
+        self, education: dict[str, list[dict[str, Any] | EducationEntry]]
+    ) -> dict[str, list[dict[str, Any]]]:
         """Convert education mapping to dictionaries."""
         result = {}
         for prospect_id, edu_list in education.items():
             result[prospect_id] = await self._convert_to_dicts(edu_list)
         return result
 
-    async def _validate_and_sanitize_prospects(self, prospects: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    async def _validate_and_sanitize_prospects(
+        self, prospects: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
         """Validate and sanitize prospect data."""
         if not self.config.validate_data:
             return prospects
@@ -412,12 +435,19 @@ class ExportService:
                 # Basic validation
                 if not prospect.get('uid') or not str(prospect.get('uid')).strip():
                     if not self.config.skip_invalid_records:
-                        raise ExportServiceError("Invalid prospect: missing or empty UID")
+                        raise ExportServiceError(
+                            "Invalid prospect: missing or empty UID"
+                        )
                     continue
 
-                if not prospect.get('full_name') or not str(prospect.get('full_name')).strip():
+                if (
+                    not prospect.get('full_name')
+                    or not str(prospect.get('full_name')).strip()
+                ):
                     if not self.config.skip_invalid_records:
-                        raise ExportServiceError("Invalid prospect: missing or empty name")
+                        raise ExportServiceError(
+                            "Invalid prospect: missing or empty name"
+                        )
                     continue
 
                 # Sanitize data if configured
@@ -441,7 +471,11 @@ class ExportService:
         for key, value in sanitized.items():
             if isinstance(value, str):
                 sanitized[key] = value.strip()
-                if sanitized[key] == '' or sanitized[key].lower() in ['null', 'none', 'n/a']:
+                if sanitized[key] == '' or sanitized[key].lower() in [
+                    'null',
+                    'none',
+                    'n/a',
+                ]:
                     sanitized[key] = None
 
         # Validate email format
@@ -458,7 +492,7 @@ class ExportService:
         csv_result: ExportResult,
         records_processed: int,
         valid_records: int,
-        invalid_records: int
+        invalid_records: int,
     ) -> ExportServiceResult:
         """Convert CSVExporter result to ExportServiceResult."""
         return ExportServiceResult(
@@ -470,15 +504,15 @@ class ExportService:
             file_size_bytes=csv_result.file_size_bytes,
             export_duration_seconds=csv_result.export_duration_seconds,
             success=csv_result.success,
-            error_message=csv_result.error_message
+            error_message=csv_result.error_message,
         )
 
 
 # Utility functions
 
+
 async def quick_export_to_csv(
-    prospects: list[dict[str, Any]],
-    output_file: str = "quick_export.csv"
+    prospects: list[dict[str, Any]], output_file: str = "quick_export.csv"
 ) -> ExportServiceResult:
     """Quick export of prospect data to CSV."""
     service = ExportService()
@@ -488,7 +522,7 @@ async def quick_export_to_csv(
 async def process_signalhire_export(
     input_csv: str,
     output_csv: str,
-    enhanced_data: dict[str, dict[str, Any]] | None = None
+    enhanced_data: dict[str, dict[str, Any]] | None = None,
 ) -> ExportServiceResult:
     """Process and enhance a SignalHire CSV export."""
     service = ExportService()

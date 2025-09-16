@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 
 class CreditUsage(BaseModel):
     """Credit usage information."""
+
     credits_used: int = Field(..., description="Number of credits used")
     timestamp: datetime = Field(..., description="When credits were used")
     operation_type: str = Field(..., description="Type of operation that used credits")
@@ -17,6 +18,7 @@ class CreditUsage(BaseModel):
 
 class CreditBalance(BaseModel):
     """Current credit balance information."""
+
     available_credits: int = Field(..., description="Available credits")
     total_credits: int = Field(..., description="Total credits in plan")
     usage_this_month: int = Field(..., description="Credits used this month")

@@ -2,13 +2,21 @@ from collections import Counter, defaultdict
 from typing import Any
 
 
-def analyze_search_parameters(contacts: list[dict[str, Any]], search_metadata: dict[str, Any] = None) -> dict[str, Any]:
+def analyze_search_parameters(
+    contacts: list[dict[str, Any]], search_metadata: dict[str, Any] = None
+) -> dict[str, Any]:
     """Track which search parameters yield the most unique contacts (FR-015)."""
     analysis = {
         "total_contacts": len(contacts),
-        "unique_companies": len(set(c.get('company', '') for c in contacts if c.get('company'))),
-        "unique_locations": len(set(c.get('location', '') for c in contacts if c.get('location'))),
-        "job_title_diversity": len(set(c.get('job_title', '') for c in contacts if c.get('job_title'))),
+        "unique_companies": len(
+            set(c.get('company', '') for c in contacts if c.get('company'))
+        ),
+        "unique_locations": len(
+            set(c.get('location', '') for c in contacts if c.get('location'))
+        ),
+        "job_title_diversity": len(
+            set(c.get('job_title', '') for c in contacts if c.get('job_title'))
+        ),
     }
 
     # Add search metadata if provided
@@ -53,7 +61,9 @@ def analyze_geographic_coverage(contacts: list[dict[str, Any]]) -> dict[str, Any
         "top_states": dict(Counter(state_counts).most_common(10)),
         "top_countries": dict(Counter(country_counts).most_common(5)),
         "geographic_diversity_score": len(state_counts) / max(len(contacts), 1) * 100,
-        "suggestions": generate_geographic_suggestions(dict(state_counts), dict(city_counts))
+        "suggestions": generate_geographic_suggestions(
+            dict(state_counts), dict(city_counts)
+        ),
     }
 
 
@@ -62,7 +72,14 @@ def generate_geographic_suggestions(state_counts: dict, city_counts: dict) -> li
     suggestions = []
 
     # Suggest underrepresented major markets
-    major_markets = ["California", "Texas", "Florida", "New York", "Illinois", "Pennsylvania"]
+    major_markets = [
+        "California",
+        "Texas",
+        "Florida",
+        "New York",
+        "Illinois",
+        "Pennsylvania",
+    ]
     for market in major_markets:
         if state_counts.get(market, 0) < 10:
             suggestions.append(f"Consider additional searches in {market}")
@@ -75,7 +92,9 @@ def generate_geographic_suggestions(state_counts: dict, city_counts: dict) -> li
     return suggestions
 
 
-def identify_search_overlap(contact_sets: list[list[dict[str, Any]]], set_names: list[str] = None) -> dict[str, Any]:
+def identify_search_overlap(
+    contact_sets: list[list[dict[str, Any]]], set_names: list[str] = None
+) -> dict[str, Any]:
     """Identify search overlap and recommend optimization strategies (FR-017)."""
     if not contact_sets or len(contact_sets) < 2:
         return {"error": "Need at least 2 contact sets to analyze overlap"}
@@ -89,7 +108,9 @@ def identify_search_overlap(contact_sets: list[list[dict[str, Any]]], set_names:
 
     for contacts in contact_sets:
         uids = set(c.get('uid') for c in contacts if c.get('uid'))
-        linkedin_urls = set(c.get('linkedin_url') for c in contacts if c.get('linkedin_url'))
+        linkedin_urls = set(
+            c.get('linkedin_url') for c in contacts if c.get('linkedin_url')
+        )
         uid_sets.append(uids)
         linkedin_sets.append(linkedin_urls)
 
@@ -99,7 +120,7 @@ def identify_search_overlap(contact_sets: list[list[dict[str, Any]]], set_names:
         "set_names": set_names,
         "uid_overlaps": {},
         "linkedin_overlaps": {},
-        "recommendations": []
+        "recommendations": [],
     }
 
     # Pairwise overlaps
@@ -113,7 +134,9 @@ def identify_search_overlap(contact_sets: list[list[dict[str, Any]]], set_names:
             overlap_analysis["linkedin_overlaps"][pair_name] = linkedin_overlap
 
             # Generate recommendations
-            overlap_percentage = (uid_overlap / min(len(uid_sets[i]), len(uid_sets[j]))) * 100
+            overlap_percentage = (
+                uid_overlap / min(len(uid_sets[i]), len(uid_sets[j]))
+            ) * 100
             if overlap_percentage > 50:
                 overlap_analysis["recommendations"].append(
                     f"High overlap ({overlap_percentage:.1f}%) between {set_names[i]} and {set_names[j]} - consider refining search terms"
@@ -132,21 +155,21 @@ def create_heavy_equipment_search_templates() -> dict[str, dict[str, str]]:
         "heavy_equipment_mechanic_basic": {
             "title": "Heavy Equipment Mechanic",
             "keywords": "diesel OR hydraulic OR CAT OR Caterpillar OR Komatsu OR excavator",
-            "description": "Basic heavy equipment mechanic search"
+            "description": "Basic heavy equipment mechanic search",
         },
         "heavy_equipment_mechanic_exclude_operators": {
             "title": "(Heavy Equipment Mechanic) AND NOT (Operator OR Driver)",
             "keywords": "mechanic OR technician OR repair OR maintenance",
-            "description": "Heavy equipment mechanics excluding operators and drivers"
+            "description": "Heavy equipment mechanics excluding operators and drivers",
         },
         "diesel_technician_focused": {
             "title": "(Diesel Technician) OR (Heavy Equipment Technician) OR (Equipment Mechanic)",
             "keywords": "diesel OR hydraulic OR troubleshoot OR repair OR CAT OR Caterpillar",
-            "description": "Focused on diesel and equipment technicians"
+            "description": "Focused on diesel and equipment technicians",
         },
         "construction_equipment_specialist": {
             "title": "(Construction Equipment) AND (Mechanic OR Technician OR Specialist)",
             "keywords": "bulldozer OR excavator OR loader OR grader OR crane",
-            "description": "Construction equipment specialists"
-        }
+            "description": "Construction equipment specialists",
+        },
     }

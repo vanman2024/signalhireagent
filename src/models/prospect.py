@@ -14,4 +14,3 @@ class Prospect(BaseModel):
     company: str | None = Field(None, description="Current company")
     location: str | None = Field(None, description="Location")
     contact: ContactInfo | None = Field(None, description="Contact details")
-

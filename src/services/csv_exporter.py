@@ -15,6 +15,7 @@ from typing import Any
 # NOTE: This implementation uses pandas for better performance and features
 try:
     import pandas as pd
+
     HAS_PANDAS = True
 except ImportError:
     HAS_PANDAS = False
@@ -25,6 +26,7 @@ from src.models.prospect import Prospect
 @dataclass
 class ExportConfig:
     """Configuration for CSV export operations."""
+
     output_path: str
     include_headers: bool = True
     delimiter: str = ","
@@ -39,6 +41,7 @@ class ExportConfig:
 @dataclass
 class ExportResult:
     """Result from a CSV export operation."""
+
     file_path: str
     total_rows: int
     total_columns: int
@@ -64,7 +67,9 @@ class CSVExporter:
         self._column_mappings = self._init_column_mappings()
         self._data_validators = self._init_data_validators()
 
-    def _generate_timestamped_filename(self, base_path: str, timestamp: datetime | None = None) -> str:
+    def _generate_timestamped_filename(
+        self, base_path: str, timestamp: datetime | None = None
+    ) -> str:
         """
         Generate a filename with timestamp if configured.
         Args:
@@ -101,12 +106,10 @@ class CSVExporter:
             "location": "Location",
             "linkedin_url": "LinkedIn URL",
             "profile_url": "Profile URL",
-
             # Legacy fields for backward compatibility
             "name": "Full Name",
             "title": "Job Title",
             "company": "Company",
-
             # Contact fields
             "primary_email": "Email",
             "all_emails": "All Emails",
@@ -115,20 +118,17 @@ class CSVExporter:
             "email": "Email",
             "phone": "Phone",
             "linkedin": "LinkedIn",
-
             # Experience fields
             "total_experience_years": "Years of Experience",
-
             # Education fields
             "education_level": "Education Level",
             "university": "University",
             "degree": "Degree",
             "field_of_study": "Field of Study",
-
             # Metadata fields
             "reveal_timestamp": "Revealed Date",
             "credits_used": "Credits Used",
-            "data_quality_score": "Data Quality"
+            "data_quality_score": "Data Quality",
         }
 
     def _init_data_validators(self) -> dict[str, callable]:
@@ -137,7 +137,7 @@ class CSVExporter:
             "email": self._validate_email,
             "phone": self._validate_phone,
             "url": self._validate_url,
-            "date": self._validate_date
+            "date": self._validate_date,
         }
 
     def export_to_csv(self, prospects: list[Prospect], output_path: Path):
@@ -158,17 +158,25 @@ class CSVExporter:
 
         # Define the order of columns in the CSV file
         column_order = [
-            "name", "title", "company", "location",
-            "email", "phone", "linkedin"
+            "name",
+            "title",
+            "company",
+            "location",
+            "email",
+            "phone",
+            "linkedin",
         ]
         df = df.reindex(columns=column_order)
 
         df.to_csv(output_path, index=False)
 
-    def export_prospects(self, prospects: list[dict[str, Any]],
-                        contacts: dict[str, dict[str, Any]] | None = None,
-                        experiences: dict[str, list[dict[str, Any]]] | None = None,
-                        education: dict[str, list[dict[str, Any]]] | None = None) -> ExportResult:
+    def export_prospects(
+        self,
+        prospects: list[dict[str, Any]],
+        contacts: dict[str, dict[str, Any]] | None = None,
+        experiences: dict[str, list[dict[str, Any]]] | None = None,
+        education: dict[str, list[dict[str, Any]]] | None = None,
+    ) -> ExportResult:
         """
         Export prospect data to CSV with optional contact and experience data.
         Args:
@@ -183,8 +191,12 @@ class CSVExporter:
 
         try:
             if HAS_PANDAS:
-                return self._export_prospects_pandas(prospects, contacts, experiences, education, start_time)
-            return self._export_prospects_native(prospects, contacts, experiences, education, start_time)
+                return self._export_prospects_pandas(
+                    prospects, contacts, experiences, education, start_time
+                )
+            return self._export_prospects_native(
+                prospects, contacts, experiences, education, start_time
+            )
 
         except (OSError, csv.Error) as e:
             duration = (datetime.now() - start_time).total_seconds()
@@ -195,10 +207,12 @@ class CSVExporter:
                 file_size_bytes=0,
                 export_duration_seconds=duration,
                 success=False,
-                error_message=str(e)
+                error_message=str(e),
             )
 
-    def export_operation_results(self, operations: list[dict[str, Any]]) -> ExportResult:
+    def export_operation_results(
+        self, operations: list[dict[str, Any]]
+    ) -> ExportResult:
         """
         Export operation results and statistics to CSV.
         Args:
@@ -222,11 +236,14 @@ class CSVExporter:
                 file_size_bytes=0,
                 export_duration_seconds=duration,
                 success=False,
-                error_message=str(e)
+                error_message=str(e),
             )
 
-    def export_signalhire_csv(self, signalhire_csv_path: str,
-                             enhanced_data: dict[str, dict[str, Any]] | None = None) -> ExportResult:
+    def export_signalhire_csv(
+        self,
+        signalhire_csv_path: str,
+        enhanced_data: dict[str, dict[str, Any]] | None = None,
+    ) -> ExportResult:
         """
         Process and enhance a CSV file exported from SignalHire's web interface.
         Args:
@@ -239,8 +256,12 @@ class CSVExporter:
 
         try:
             if HAS_PANDAS:
-                return self._export_signalhire_csv_pandas(signalhire_csv_path, enhanced_data, start_time)
-            return self._export_signalhire_csv_native(signalhire_csv_path, enhanced_data, start_time)
+                return self._export_signalhire_csv_pandas(
+                    signalhire_csv_path, enhanced_data, start_time
+                )
+            return self._export_signalhire_csv_native(
+                signalhire_csv_path, enhanced_data, start_time
+            )
 
         except (OSError, csv.Error) as e:
             duration = (datetime.now() - start_time).total_seconds()
@@ -251,17 +272,22 @@ class CSVExporter:
                 file_size_bytes=0,
                 export_duration_seconds=duration,
                 success=False,
-                error_message=str(e)
+                error_message=str(e),
             )
 
-    def _export_prospects_pandas(self, prospects: list[dict[str, Any]],
-                                contacts: dict[str, dict[str, Any]] | None,
-                                experiences: dict[str, list[dict[str, Any]]] | None,
-                                education: dict[str, list[dict[str, Any]]] | None,
-                                start_time: datetime) -> ExportResult:
+    def _export_prospects_pandas(
+        self,
+        prospects: list[dict[str, Any]],
+        contacts: dict[str, dict[str, Any]] | None,
+        experiences: dict[str, list[dict[str, Any]]] | None,
+        education: dict[str, list[dict[str, Any]]] | None,
+        start_time: datetime,
+    ) -> ExportResult:
         """Export prospects using pandas DataFrame."""
         # Convert to DataFrame
-        df = self._create_prospects_dataframe(prospects, contacts, experiences, education)
+        df = self._create_prospects_dataframe(
+            prospects, contacts, experiences, education
+        )
 
         # Apply column mappings
         df = self._apply_column_mappings(df)
@@ -277,7 +303,9 @@ class CSVExporter:
         # Export to CSV
         return self._write_dataframe_to_csv(df, start_time)
 
-    def _export_operations_pandas(self, operations: list[dict[str, Any]], start_time: datetime) -> ExportResult:
+    def _export_operations_pandas(
+        self, operations: list[dict[str, Any]], start_time: datetime
+    ) -> ExportResult:
         """Export operations using pandas DataFrame."""
         # Convert operations to DataFrame
         df = pd.DataFrame(operations)
@@ -285,7 +313,9 @@ class CSVExporter:
         # Add computed fields
         if 'created_at' in df.columns and 'completed_at' in df.columns:
             with suppress(Exception):  # Handle invalid date formats gracefully
-                df['duration_minutes'] = pd.to_datetime(df['completed_at']) - pd.to_datetime(df['created_at'])
+                df['duration_minutes'] = pd.to_datetime(
+                    df['completed_at']
+                ) - pd.to_datetime(df['created_at'])
                 df['duration_minutes'] = df['duration_minutes'].dt.total_seconds() / 60
 
         # Format timestamp columns
@@ -298,9 +328,12 @@ class CSVExporter:
         # Export to CSV
         return self._write_dataframe_to_csv(df, start_time)
 
-    def _export_signalhire_csv_pandas(self, signalhire_csv_path: str,
-                                     enhanced_data: dict[str, dict[str, Any]] | None,
-                                     start_time: datetime) -> ExportResult:
+    def _export_signalhire_csv_pandas(
+        self,
+        signalhire_csv_path: str,
+        enhanced_data: dict[str, dict[str, Any]] | None,
+        start_time: datetime,
+    ) -> ExportResult:
         """Process SignalHire CSV using pandas."""
         # Read the SignalHire CSV
         df = pd.read_csv(signalhire_csv_path, encoding='utf-8')
@@ -315,10 +348,13 @@ class CSVExporter:
         # Export processed data
         return self._write_dataframe_to_csv(df, start_time)
 
-    def _create_prospects_dataframe(self, prospects: list[dict[str, Any]],
-                                  contacts: dict[str, dict[str, Any]] | None,
-                                  experiences: dict[str, list[dict[str, Any]]] | None,
-                                  education: dict[str, list[dict[str, Any]]] | None) -> pd.DataFrame:
+    def _create_prospects_dataframe(
+        self,
+        prospects: list[dict[str, Any]],
+        contacts: dict[str, dict[str, Any]] | None,
+        experiences: dict[str, list[dict[str, Any]]] | None,
+        education: dict[str, list[dict[str, Any]]] | None,
+    ) -> pd.DataFrame:
         """Create a comprehensive DataFrame from prospect data."""
         rows = []
 
@@ -374,7 +410,9 @@ class CSVExporter:
 
         return flattened
 
-    def _flatten_experience_info(self, experience_list: list[dict[str, Any]]) -> dict[str, Any]:
+    def _flatten_experience_info(
+        self, experience_list: list[dict[str, Any]]
+    ) -> dict[str, Any]:
         """Flatten experience information for CSV export."""
         if not experience_list:
             return {}
@@ -396,6 +434,7 @@ class CSVExporter:
             if 'year' in duration.lower():
                 # Extract number from duration string like "3+ years" or "2 years"
                 import re
+
                 years_match = re.search(r'(\d+)', duration)
                 if years_match:
                     total_years += int(years_match.group(1))
@@ -405,7 +444,9 @@ class CSVExporter:
 
         return flattened
 
-    def _flatten_education_info(self, education_list: list[dict[str, Any]]) -> dict[str, Any]:
+    def _flatten_education_info(
+        self, education_list: list[dict[str, Any]]
+    ) -> dict[str, Any]:
         """Flatten education information for CSV export."""
         if not education_list:
             return {}
@@ -437,16 +478,22 @@ class CSVExporter:
         mappings = {k: v for k, v in self._column_mappings.items() if k in df.columns}
         return df.rename(columns=mappings)
 
-    def _merge_enhanced_data(self, df: pd.DataFrame, enhanced_data: dict[str, dict[str, Any]]) -> pd.DataFrame:
+    def _merge_enhanced_data(
+        self, df: pd.DataFrame, enhanced_data: dict[str, dict[str, Any]]
+    ) -> pd.DataFrame:
         """Merge additional enhanced data into the DataFrame."""
         # This is a simplified implementation
         # In a full implementation, you'd match on various keys and merge carefully
         return df
 
-    def _write_dataframe_to_csv(self, df: pd.DataFrame, start_time: datetime) -> ExportResult:
+    def _write_dataframe_to_csv(
+        self, df: pd.DataFrame, start_time: datetime
+    ) -> ExportResult:
         """Write DataFrame to CSV and return export result."""
         # Generate timestamped filename if configured
-        output_path = Path(self._generate_timestamped_filename(self.config.output_path, start_time))
+        output_path = Path(
+            self._generate_timestamped_filename(self.config.output_path, start_time)
+        )
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
         # Write to CSV
@@ -454,7 +501,7 @@ class CSVExporter:
             output_path,
             index=False,
             encoding=self.config.encoding,
-            sep=self.config.delimiter
+            sep=self.config.delimiter,
         )
 
         # Get file statistics
@@ -467,15 +514,18 @@ class CSVExporter:
             total_columns=len(df.columns),
             file_size_bytes=file_size,
             export_duration_seconds=duration,
-            success=True
+            success=True,
         )
 
     # Native CSV implementations (fallback when pandas not available)
-    def _export_prospects_native(self, prospects: list[dict[str, Any]],
-                                contacts: dict[str, dict[str, Any]] | None,
-                                experiences: dict[str, list[dict[str, Any]]] | None,
-                                education: dict[str, list[dict[str, Any]]] | None,
-                                start_time: datetime) -> ExportResult:
+    def _export_prospects_native(
+        self,
+        prospects: list[dict[str, Any]],
+        contacts: dict[str, dict[str, Any]] | None,
+        experiences: dict[str, list[dict[str, Any]]] | None,
+        education: dict[str, list[dict[str, Any]]] | None,
+        start_time: datetime,
+    ) -> ExportResult:
         """Export prospects using native Python CSV module."""
         # Simplified native implementation
         rows = []
@@ -498,13 +548,20 @@ class CSVExporter:
 
         return self._write_rows_to_csv(rows, list(all_columns), start_time)
 
-    def _export_operations_native(self, operations: list[dict[str, Any]], start_time: datetime) -> ExportResult:
+    def _export_operations_native(
+        self, operations: list[dict[str, Any]], start_time: datetime
+    ) -> ExportResult:
         """Export operations using native CSV approach."""
-        return self._write_rows_to_csv(operations, list(operations[0].keys()) if operations else [], start_time)
+        return self._write_rows_to_csv(
+            operations, list(operations[0].keys()) if operations else [], start_time
+        )
 
-    def _export_signalhire_csv_native(self, signalhire_csv_path: str,
-                                     enhanced_data: dict[str, dict[str, Any]] | None,
-                                     start_time: datetime) -> ExportResult:
+    def _export_signalhire_csv_native(
+        self,
+        signalhire_csv_path: str,
+        enhanced_data: dict[str, dict[str, Any]] | None,
+        start_time: datetime,
+    ) -> ExportResult:
         """Process SignalHire CSV using native Python CSV module."""
         rows = []
 
@@ -526,15 +583,21 @@ class CSVExporter:
             mapped_row[mapped_key] = value
         return mapped_row
 
-    def _write_rows_to_csv(self, rows: list[dict[str, Any]], columns: list[str], start_time: datetime) -> ExportResult:
+    def _write_rows_to_csv(
+        self, rows: list[dict[str, Any]], columns: list[str], start_time: datetime
+    ) -> ExportResult:
         """Write rows to CSV using native CSV module."""
         # Generate timestamped filename if configured
-        output_path = Path(self._generate_timestamped_filename(self.config.output_path, start_time))
+        output_path = Path(
+            self._generate_timestamped_filename(self.config.output_path, start_time)
+        )
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
         with open(output_path, 'w', newline='', encoding=self.config.encoding) as f:
             if columns:
-                writer = csv.DictWriter(f, fieldnames=columns, delimiter=self.config.delimiter)
+                writer = csv.DictWriter(
+                    f, fieldnames=columns, delimiter=self.config.delimiter
+                )
                 if self.config.include_headers:
                     writer.writeheader()
                 writer.writerows(rows)
@@ -549,7 +612,7 @@ class CSVExporter:
             total_columns=len(columns),
             file_size_bytes=file_size,
             export_duration_seconds=duration,
-            success=True
+            success=True,
         )
 
     def _prospect_to_dict(self, prospect: Prospect) -> dict:
@@ -605,9 +668,9 @@ def create_csv_exporter(output_path: str, **kwargs) -> CSVExporter:
     return CSVExporter(config)
 
 
-def create_timestamped_csv_exporter(base_filename: str = "export.csv",
-                                   timestamp_format: str = "%Y%m%d_%H%M%S",
-                                   **kwargs) -> CSVExporter:
+def create_timestamped_csv_exporter(
+    base_filename: str = "export.csv", timestamp_format: str = "%Y%m%d_%H%M%S", **kwargs
+) -> CSVExporter:
     """
     Create a CSV exporter with automatic timestamp naming.
     Args:
@@ -626,14 +689,16 @@ def create_timestamped_csv_exporter(base_filename: str = "export.csv",
         output_path=base_filename,
         add_timestamp_to_filename=True,
         timestamp_format=timestamp_format,
-        **kwargs
+        **kwargs,
     )
     return CSVExporter(config)
 
 
-def quick_export_prospects(prospects: list[dict[str, Any]],
-                         output_path: str = "prospects_export.csv",
-                         include_timestamp: bool = True) -> ExportResult:
+def quick_export_prospects(
+    prospects: list[dict[str, Any]],
+    output_path: str = "prospects_export.csv",
+    include_timestamp: bool = True,
+) -> ExportResult:
     """
     Quick export of prospect data to CSV with optional timestamping.
     Args:
@@ -657,8 +722,9 @@ def quick_export_prospects(prospects: list[dict[str, Any]],
     return exporter.export_prospects(prospects)
 
 
-def quick_export_contacts(contacts_data: dict[str, dict[str, Any]],
-                         output_path: str = "contacts_export.csv") -> ExportResult:
+def quick_export_contacts(
+    contacts_data: dict[str, dict[str, Any]], output_path: str = "contacts_export.csv"
+) -> ExportResult:
     """
     Quick export of contact reveal data to timestamped CSV.
     Args:
@@ -674,18 +740,19 @@ def quick_export_contacts(contacts_data: dict[str, dict[str, Any]],
     # Convert contacts dict to prospects format for export
     prospects = []
     for prospect_id, contact_info in contacts_data.items():
-        prospect = {
-            "uid": prospect_id,
-            **contact_info
-        }
+        prospect = {"uid": prospect_id, **contact_info}
         prospects.append(prospect)
 
     exporter = create_timestamped_csv_exporter(output_path)
     return exporter.export_prospects(prospects, contacts=contacts_data)
 
 
-def generate_export_filename(base_name: str, operation_type: str | None = None,
-                            timestamp: datetime | None = None, format_str: str = "%Y%m%d_%H%M%S") -> str:
+def generate_export_filename(
+    base_name: str,
+    operation_type: str | None = None,
+    timestamp: datetime | None = None,
+    format_str: str = "%Y%m%d_%H%M%S",
+) -> str:
     """
     Generate a timestamped export filename following SignalHire agent conventions.
     Args:

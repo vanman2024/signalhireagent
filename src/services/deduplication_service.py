@@ -17,15 +17,21 @@ def load_contacts_from_files(file_paths: list[str]) -> list[dict[str, Any]]:
                     if isinstance(value, list) and value and isinstance(value[0], dict):
                         # Check if this looks like contact data (has name or uid or linkedin_url)
                         first_item = value[0]
-                        if any(field in first_item for field in ['name', 'uid', 'linkedin_url', 'job_title']):
+                        if any(
+                            field in first_item
+                            for field in ['name', 'uid', 'linkedin_url', 'job_title']
+                        ):
                             contacts.extend(value)
                             break
                 else:
                     # No contact-like data found, log warning but continue
-                    print(f"Warning: No recognizable contact data found in {path}, skipping file")
+                    print(
+                        f"Warning: No recognizable contact data found in {path}, skipping file"
+                    )
             else:
                 print(f"Warning: Unrecognized JSON format in {path}, skipping file")
     return contacts
+
 
 def deduplicate_contacts(contacts: list[dict[str, Any]]) -> list[dict[str, Any]]:
     seen_uids = set()
@@ -43,9 +49,11 @@ def deduplicate_contacts(contacts: list[dict[str, Any]]) -> list[dict[str, Any]]
         # else: duplicate, skip
     return deduped
 
+
 def save_contacts_to_file(contacts: list[dict[str, Any]], output_path: str):
     with open(output_path, 'w') as f:
         json.dump(contacts, f, indent=2)
+
 
 def create_backup_files(file_paths: list[str]) -> list[str]:
     """Create backup copies of input files before processing."""

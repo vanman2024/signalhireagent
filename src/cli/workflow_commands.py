@@ -30,17 +30,23 @@ class WorkflowRunner:
         self.logger = logger
         self.export_service = ExportService()
 
-    async def run_lead_generation(self, search_criteria: SearchCriteria,
-                                output_dir: Path, list_name: str | None = None,
-                                max_prospects: int = 10000) -> dict[str, Any]:
+    async def run_lead_generation(
+        self,
+        search_criteria: SearchCriteria,
+        output_dir: Path,
+        list_name: str | None = None,
+        max_prospects: int = 10000,
+    ) -> dict[str, Any]:
         """Run complete lead generation workflow: search → reveal → export."""
 
         workflow_start = datetime.now()
         workflow_id = f"workflow_{int(workflow_start.timestamp())}"
 
-        self.logger.info("Starting lead generation workflow",
-                        workflow_id=workflow_id,
-                        max_prospects=max_prospects)
+        self.logger.info(
+            "Starting lead generation workflow",
+            workflow_id=workflow_id,
+            max_prospects=max_prospects,
+        )
 
         results = {
             'workflow_id': workflow_id,
@@ -52,7 +58,7 @@ class WorkflowRunner:
             'total_prospects_found': 0,
             'total_contacts_revealed': 0,
             'credits_used': 0,
-            'output_files': []
+            'output_files': [],
         }
 
         try:
@@ -63,7 +69,11 @@ class WorkflowRunner:
             results['total_prospects_found'] = search_results.get('total_count', 0)
 
             prospects = search_results.get('prospects', [])
-            prospect_uids = [p.get('uid') or p.get('id') for p in prospects if p.get('uid') or p.get('id')]
+            prospect_uids = [
+                p.get('uid') or p.get('id')
+                for p in prospects
+                if p.get('uid') or p.get('id')
+            ]
 
             if not prospect_uids:
                 echo(style("⚠️  No prospects found to reveal", fg='yellow'))
@@ -78,7 +88,9 @@ class WorkflowRunner:
             results['total_contacts_revealed'] = reveal_results.get('revealed_count', 0)
             results['credits_used'] = reveal_results.get('credits_used', 0)
 
-            echo(f"✅ Revealed {results['total_contacts_revealed']} contacts using {results['credits_used']} credits")
+            echo(
+                f"✅ Revealed {results['total_contacts_revealed']} contacts using {results['credits_used']} credits"
+            )
 
             # Step 3: Export data
             echo("📁 Step 3: Exporting data...")
@@ -102,16 +114,19 @@ class WorkflowRunner:
             results['completed_at'] = datetime.now().isoformat()
             raise
 
-    async def run_prospect_enrichment(self, prospect_list_file: str,
-                                    output_dir: Path) -> dict[str, Any]:
+    async def run_prospect_enrichment(
+        self, prospect_list_file: str, output_dir: Path
+    ) -> dict[str, Any]:
         """Enrich existing prospect list with contact information."""
 
         workflow_start = datetime.now()
         workflow_id = f"enrichment_{int(workflow_start.timestamp())}"
 
-        self.logger.info("Starting prospect enrichment workflow",
-                        workflow_id=workflow_id,
-                        prospect_file=prospect_list_file)
+        self.logger.info(
+            "Starting prospect enrichment workflow",
+            workflow_id=workflow_id,
+            prospect_file=prospect_list_file,
+        )
 
         results = {
             'workflow_id': workflow_id,
@@ -121,7 +136,7 @@ class WorkflowRunner:
             'prospects_loaded': 0,
             'contacts_revealed': 0,
             'credits_used': 0,
-            'output_files': []
+            'output_files': [],
         }
 
         try:
@@ -155,7 +170,9 @@ class WorkflowRunner:
             return results
 
         except Exception as e:
-            self.logger.error("Enrichment workflow failed", error=str(e), workflow_id=workflow_id)
+            self.logger.error(
+                "Enrichment workflow failed", error=str(e), workflow_id=workflow_id
+            )
             results['status'] = 'failed'
             results['error'] = str(e)
             results['completed_at'] = datetime.now().isoformat()
@@ -167,9 +184,11 @@ class WorkflowRunner:
         workflow_start = datetime.now()
         workflow_id = f"export_{int(workflow_start.timestamp())}"
 
-        self.logger.info("Starting bulk export workflow",
-                        workflow_id=workflow_id,
-                        list_name=list_name)
+        self.logger.info(
+            "Starting bulk export workflow",
+            workflow_id=workflow_id,
+            list_name=list_name,
+        )
 
         results = {
             'workflow_id': workflow_id,
@@ -177,12 +196,14 @@ class WorkflowRunner:
             'started_at': workflow_start.isoformat(),
             'list_name': list_name,
             'records_exported': 0,
-            'output_files': []
+            'output_files': [],
         }
 
         try:
             # In API-only mode, bulk export via UI is not supported
-            raise click.ClickException("Bulk export of existing UI lists is not supported in API-only mode.")
+            raise click.ClickException(
+                "Bulk export of existing UI lists is not supported in API-only mode."
+            )
 
             results['status'] = 'completed'
             results['completed_at'] = datetime.now().isoformat()
@@ -190,13 +211,17 @@ class WorkflowRunner:
             return results
 
         except Exception as e:
-            self.logger.error("Bulk export workflow failed", error=str(e), workflow_id=workflow_id)
+            self.logger.error(
+                "Bulk export workflow failed", error=str(e), workflow_id=workflow_id
+            )
             results['status'] = 'failed'
             results['error'] = str(e)
             results['completed_at'] = datetime.now().isoformat()
             raise
 
-    async def _execute_search(self, search_criteria: SearchCriteria, max_prospects: int) -> dict[str, Any]:
+    async def _execute_search(
+        self, search_criteria: SearchCriteria, max_prospects: int
+    ) -> dict[str, Any]:
         """Execute search operation (API-only)."""
         api_client = SignalHireClient(api_key=self.config.api_key)
         # Convert SearchCriteria to dict for API call
@@ -209,7 +234,7 @@ class WorkflowRunner:
             "name": getattr(search_criteria, 'name', None),
             "experience_from": getattr(search_criteria, 'experience_from', None),
             "experience_to": getattr(search_criteria, 'experience_to', None),
-            "open_to_work": getattr(search_criteria, 'open_to_work', None)
+            "open_to_work": getattr(search_criteria, 'open_to_work', None),
         }
         search_dict = {k: v for k, v in search_dict.items() if v is not None}
 
@@ -224,15 +249,23 @@ class WorkflowRunner:
             return api_response.data
         raise Exception(f"API search failed: {api_response.error}")
 
-    async def _execute_reveal(self, prospect_uids: list[str], list_name: str | None = None) -> dict[str, Any]:
+    async def _execute_reveal(
+        self, prospect_uids: list[str], list_name: str | None = None
+    ) -> dict[str, Any]:
         """Execute reveal operation."""
         api_client = SignalHireClient(api_key=self.config.api_key)
         from ..models.operations import RevealOp
+
         operation = RevealOp(prospect_ids=prospect_uids, batch_size=100)
         return await api_client.bulk_reveal(operation)
 
-    async def _execute_export(self, search_results: dict, reveal_results: dict,
-                            output_dir: Path, workflow_id: str) -> dict[str, Any]:
+    async def _execute_export(
+        self,
+        search_results: dict,
+        reveal_results: dict,
+        output_dir: Path,
+        workflow_id: str,
+    ) -> dict[str, Any]:
         """Execute export operation."""
         output_dir.mkdir(parents=True, exist_ok=True)
         files = []
@@ -256,10 +289,16 @@ class WorkflowRunner:
         summary_file = output_dir / f"{workflow_id}_summary.json"
         summary = {
             'workflow_id': workflow_id,
-            'total_prospects': len(search_results.get('prospects', [])) if search_results else 0,
-            'revealed_contacts': reveal_results.get('revealed_count', 0) if reveal_results else 0,
-            'credits_used': reveal_results.get('credits_used', 0) if reveal_results else 0,
-            'files': files
+            'total_prospects': (
+                len(search_results.get('prospects', [])) if search_results else 0
+            ),
+            'revealed_contacts': (
+                reveal_results.get('revealed_count', 0) if reveal_results else 0
+            ),
+            'credits_used': (
+                reveal_results.get('credits_used', 0) if reveal_results else 0
+            ),
+            'files': files,
         }
 
         with open(summary_file, 'w') as f:
@@ -282,7 +321,11 @@ class WorkflowRunner:
             if isinstance(data, list):
                 return data
             if isinstance(data, dict) and 'prospects' in data:
-                return [p.get('uid') or p.get('id') for p in data['prospects'] if p.get('uid') or p.get('id')]
+                return [
+                    p.get('uid') or p.get('id')
+                    for p in data['prospects']
+                    if p.get('uid') or p.get('id')
+                ]
 
         elif file_path.endswith('.csv'):
             uids = []
@@ -311,7 +354,9 @@ def format_workflow_results(results: dict[str, Any], format_type: str = "human")
     output.append("🔄 Workflow Results")
     output.append(f"ID: {style(workflow_id, fg='blue')}")
     output.append(f"Type: {workflow_type}")
-    output.append(f"Status: {style(status, fg='green' if status == 'completed' else 'red')}")
+    output.append(
+        f"Status: {style(status, fg='green' if status == 'completed' else 'red')}"
+    )
 
     if workflow_type == 'lead-generation':
         prospects_found = results.get('total_prospects_found', 0)
@@ -319,7 +364,9 @@ def format_workflow_results(results: dict[str, Any], format_type: str = "human")
         credits_used = results.get('credits_used', 0)
 
         output.append(f"Prospects found: {style(str(prospects_found), bold=True)}")
-        output.append(f"Contacts revealed: {style(str(contacts_revealed), fg='green', bold=True)}")
+        output.append(
+            f"Contacts revealed: {style(str(contacts_revealed), fg='green', bold=True)}"
+        )
         output.append(f"Credits used: {style(str(credits_used), fg='yellow')}")
 
     elif workflow_type == 'prospect-enrichment':
@@ -328,7 +375,9 @@ def format_workflow_results(results: dict[str, Any], format_type: str = "human")
         credits_used = results.get('credits_used', 0)
 
         output.append(f"Prospects loaded: {style(str(prospects_loaded), bold=True)}")
-        output.append(f"Contacts revealed: {style(str(contacts_revealed), fg='green', bold=True)}")
+        output.append(
+            f"Contacts revealed: {style(str(contacts_revealed), fg='green', bold=True)}"
+        )
         output.append(f"Credits used: {style(str(credits_used), fg='yellow')}")
 
     elif workflow_type == 'bulk-export':
@@ -336,7 +385,9 @@ def format_workflow_results(results: dict[str, Any], format_type: str = "human")
         list_name = results.get('list_name', 'N/A')
 
         output.append(f"List: {list_name}")
-        output.append(f"Records exported: {style(str(records_exported), fg='green', bold=True)}")
+        output.append(
+            f"Records exported: {style(str(records_exported), fg='green', bold=True)}"
+        )
 
     # Output files
     output_files = results.get('output_files', [])
@@ -355,7 +406,7 @@ def format_workflow_results(results: dict[str, Any], format_type: str = "human")
 @click.group()
 def workflow():
     """Complete lead generation workflows (API-first by default).
-    
+
     Execute end-to-end workflows that combine search and contact revelation.
     Uses API mode by default for reliability, with browser fallback for large volumes.
     Perfect for automated lead generation pipelines.
@@ -366,55 +417,49 @@ def workflow():
 @click.option(
     '--search-criteria',
     type=click.Path(exists=True),
-    help='JSON file with search parameters'
+    help='JSON file with search parameters',
 )
-@click.option(
-    '--title',
-    help='Job title (alternative to search criteria file)'
-)
-@click.option(
-    '--location',
-    help='Location (alternative to search criteria file)'
-)
-@click.option(
-    '--company',
-    help='Company (alternative to search criteria file)'
-)
-@click.option(
-    '--keywords',
-    help='Keywords (alternative to search criteria file)'
-)
+@click.option('--title', help='Job title (alternative to search criteria file)')
+@click.option('--location', help='Location (alternative to search criteria file)')
+@click.option('--company', help='Company (alternative to search criteria file)')
+@click.option('--keywords', help='Keywords (alternative to search criteria file)')
 @click.option(
     '--output-dir',
     type=click.Path(),
     default='./output',
-    help='Directory for output files [default: ./output]'
+    help='Directory for output files [default: ./output]',
 )
-@click.option(
-    '--list-name',
-    help='Name for SignalHire lead list'
-)
+@click.option('--list-name', help='Name for SignalHire lead list')
 @click.option(
     '--max-prospects',
     type=int,
     default=10000,
-    help='Maximum prospects to process [default: 10000]'
+    help='Maximum prospects to process [default: 10000]',
 )
 @click.pass_context
-def lead_generation(ctx, search_criteria, title, location, company, keywords,
-                   output_dir, list_name, max_prospects):
+def lead_generation(
+    ctx,
+    search_criteria,
+    title,
+    location,
+    company,
+    keywords,
+    output_dir,
+    list_name,
+    max_prospects,
+):
     """
     Complete lead generation workflow: search → reveal → export.
-    
+
     Executes a full lead generation workflow including prospect search,
     contact revelation, and data export. Results are saved to the specified
-    output directory with organized file structure. 
-    
+    output directory with organized file structure.
+
     \b
     Examples:
       # Using search criteria file
-      signalhire-agent workflow lead-generation --search-criteria search.json --list-name "Q4 Leads" 
-      
+      signalhire-agent workflow lead-generation --search-criteria search.json --list-name "Q4 Leads"
+
       # Using inline search parameters
       signalhire-agent workflow lead-generation --title "Product Manager" --location "New York" --company "Tech"
     """
@@ -429,13 +474,16 @@ def lead_generation(ctx, search_criteria, title, location, company, keywords,
         search_criteria_obj = SearchCriteria(**criteria_data)
     elif any([title, location, company, keywords]):
         search_criteria_obj = SearchCriteria(
-            title=title,
-            location=location,
-            company=company,
-            keywords=keywords
+            title=title, location=location, company=company, keywords=keywords
         )
     else:
-        echo(style("Error: Either --search-criteria file or search parameters required", fg='red'), err=True)
+        echo(
+            style(
+                "Error: Either --search-criteria file or search parameters required",
+                fg='red',
+            ),
+            err=True,
+        )
         ctx.exit(1)
 
     # Validate credentials
@@ -449,9 +497,11 @@ def lead_generation(ctx, search_criteria, title, location, company, keywords,
         echo("🚀 Starting lead generation workflow...")
 
         runner = WorkflowRunner(config, logger)
-        results = asyncio.run(runner.run_lead_generation(
-            search_criteria_obj, output_path, list_name, max_prospects
-        ))
+        results = asyncio.run(
+            runner.run_lead_generation(
+                search_criteria_obj, output_path, list_name, max_prospects
+            )
+        )
 
         # Display results
         if config.output_format == 'json':
@@ -481,6 +531,7 @@ def lead_generation(ctx, search_criteria, title, location, company, keywords,
 
         if config.debug:
             import traceback
+
             echo("\n🔧 Debug information:")
             echo(traceback.format_exc())
 
@@ -492,22 +543,22 @@ def lead_generation(ctx, search_criteria, title, location, company, keywords,
     '--prospect-list',
     required=True,
     type=click.Path(exists=True),
-    help='Existing prospect list file (CSV or JSON)'
+    help='Existing prospect list file (CSV or JSON)',
 )
 @click.option(
     '--output-dir',
     type=click.Path(),
     default='./enriched',
-    help='Directory for output files [default: ./enriched]'
+    help='Directory for output files [default: ./enriched]',
 )
 @click.pass_context
 def prospect_enrichment(ctx, prospect_list, output_dir):
     """
     Enrich existing prospect list with contact information.
-    
+
     Takes an existing list of prospects and enriches them with contact
     information using SignalHire's database.
-    
+
     \b
     Examples:
       signalhire-agent workflow prospect-enrichment --prospect-list leads.csv --output-dir ./enriched
@@ -519,10 +570,16 @@ def prospect_enrichment(ctx, prospect_list, output_dir):
     # Validate credentials
     if config.browser_mode:
         if not config.email or not config.password:
-            echo(style("Error: Browser mode requires email and password", fg='red'), err=True)
+            echo(
+                style("Error: Browser mode requires email and password", fg='red'),
+                err=True,
+            )
             ctx.exit(1)
     elif not config.api_key:
-        echo(style("Warning: No API key, falling back to browser mode", fg='yellow'), err=True)
+        echo(
+            style("Warning: No API key, falling back to browser mode", fg='yellow'),
+            err=True,
+        )
         config.browser_mode = True
         if not config.email or not config.password:
             echo(style("Error: No valid authentication available", fg='red'), err=True)
@@ -534,7 +591,9 @@ def prospect_enrichment(ctx, prospect_list, output_dir):
         echo("🔄 Starting prospect enrichment workflow...")
 
         runner = WorkflowRunner(config, logger)
-        results = asyncio.run(runner.run_prospect_enrichment(prospect_list, output_path))
+        results = asyncio.run(
+            runner.run_prospect_enrichment(prospect_list, output_path)
+        )
 
         # Display results
         if config.output_format == 'json':
@@ -552,6 +611,7 @@ def prospect_enrichment(ctx, prospect_list, output_dir):
         echo(style(f"❌ Enrichment failed: {e}", fg='red'), err=True)
         if config.debug:
             import traceback
+
             echo(traceback.format_exc(), err=True)
         ctx.exit(1)
 
@@ -560,22 +620,22 @@ def prospect_enrichment(ctx, prospect_list, output_dir):
 @click.option(
     '--export-existing',
     required=True,
-    help='Name of existing SignalHire list to export'
+    help='Name of existing SignalHire list to export',
 )
 @click.option(
     '--output-dir',
     type=click.Path(),
     default='./exports',
-    help='Directory for output files [default: ./exports]'
+    help='Directory for output files [default: ./exports]',
 )
 @click.pass_context
 def bulk_export(ctx, export_existing, output_dir):
     """
     Export existing SignalHire lists/projects.
-    
+
     Exports data from existing SignalHire lists or projects using
     browser automation to access the native export functionality.
-    
+
     \b
     Examples:
       signalhire-agent workflow bulk-export --export-existing "Q3 Campaign Results" --output-dir ./exports
@@ -588,7 +648,9 @@ def bulk_export(ctx, export_existing, output_dir):
 
     # Validate credentials
     if not config.email or not config.password:
-        echo(style("Error: Browser mode requires email and password", fg='red'), err=True)
+        echo(
+            style("Error: Browser mode requires email and password", fg='red'), err=True
+        )
         ctx.exit(1)
 
     output_path = Path(output_dir)
@@ -615,5 +677,6 @@ def bulk_export(ctx, export_existing, output_dir):
         echo(style(f"❌ Export failed: {e}", fg='red'), err=True)
         if config.debug:
             import traceback
+
             echo(traceback.format_exc(), err=True)
         ctx.exit(1)

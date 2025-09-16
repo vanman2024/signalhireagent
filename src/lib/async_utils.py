@@ -25,9 +25,7 @@ T = TypeVar('T')
 
 
 async def with_timeout(
-    coro: Awaitable[T],
-    timeout_seconds: float,
-    timeout_message: str | None = None
+    coro: Awaitable[T], timeout_seconds: float, timeout_message: str | None = None
 ) -> T:
     """
     Execute a coroutine with a timeout.
@@ -44,7 +42,9 @@ async def with_timeout(
         return await asyncio.wait_for(coro, timeout=timeout_seconds)
     except TimeoutError as e:
         message = timeout_message or f"Operation timed out after {timeout_seconds}s"
-        logger.warning("Async operation timeout", timeout_seconds=timeout_seconds, message=message)
+        logger.warning(
+            "Async operation timeout", timeout_seconds=timeout_seconds, message=message
+        )
         raise TimeoutError(message) from e
 
 
@@ -53,7 +53,7 @@ async def retry_async(
     max_attempts: int = 3,
     delay_seconds: float = 1.0,
     exponential_backoff: bool = True,
-    exceptions: tuple = (Exception,)
+    exceptions: tuple = (Exception,),
 ) -> T:
     """
     Retry an async function with exponential backoff.
@@ -81,13 +81,13 @@ async def retry_async(
                     "All retry attempts failed",
                     function=func.__name__,
                     attempts=max_attempts,
-                    error=str(e)
+                    error=str(e),
                 )
                 raise e
 
             delay = delay_seconds
             if exponential_backoff:
-                delay *= (2 ** attempt)
+                delay *= 2**attempt
 
             logger.warning(
                 "Async operation failed, retrying",
@@ -95,7 +95,7 @@ async def retry_async(
                 attempt=attempt + 1,
                 max_attempts=max_attempts,
                 delay_seconds=delay,
-                error=str(e)
+                error=str(e),
             )
 
             await asyncio.sleep(delay)
@@ -107,8 +107,7 @@ async def retry_async(
 
 
 async def gather_with_concurrency(
-    awaitables: list[Awaitable[T]],
-    concurrency_limit: int = 10
+    awaitables: list[Awaitable[T]], concurrency_limit: int = 10
 ) -> list[T]:
     """
     Execute awaitables with concurrency limit.
@@ -131,7 +130,7 @@ async def gather_with_concurrency(
 async def run_with_progress(
     awaitables: list[Awaitable[T]],
     progress_callback: Callable[[int, int], None] | None = None,
-    concurrency_limit: int = 10
+    concurrency_limit: int = 10,
 ) -> list[T]:
     """
     Run awaitables with progress tracking.
@@ -202,14 +201,14 @@ class AsyncContextTimer:
                 "Async operation completed",
                 operation=self.operation_name,
                 duration_seconds=round(duration, 3),
-                duration_formatted=format_duration(duration)
+                duration_formatted=format_duration(duration),
             )
         else:
             self.logger.error(
                 "Async operation failed",
                 operation=self.operation_name,
                 duration_seconds=round(duration, 3),
-                error=str(exc_val)
+                error=str(exc_val),
             )
 
     @property
@@ -249,7 +248,8 @@ def async_cache(ttl_seconds: float = 300):
             # Clean up expired entries periodically
             if len(cache) > 100:  # Arbitrary limit
                 expired_keys = [
-                    k for k, (_, cached_time) in cache.items()
+                    k
+                    for k, (_, cached_time) in cache.items()
                     if current_time - cached_time >= ttl_seconds
                 ]
                 for k in expired_keys:
@@ -270,11 +270,7 @@ class AsyncQueue:
     def __init__(self, maxsize: int = 0):
         self._queue = asyncio.Queue(maxsize=maxsize)
         self._finished = False
-        self._stats = {
-            'items_added': 0,
-            'items_processed': 0,
-            'processing_errors': 0
-        }
+        self._stats = {'items_added': 0, 'items_processed': 0, 'processing_errors': 0}
 
     async def put(self, item: T) -> None:
         """Add item to queue."""
@@ -325,9 +321,7 @@ class AsyncQueue:
 
 
 async def async_map(
-    func: Callable[[T], Awaitable[Any]],
-    items: list[T],
-    concurrency: int = 10
+    func: Callable[[T], Awaitable[Any]], items: list[T], concurrency: int = 10
 ) -> list[Any]:
     """
     Async version of map() with concurrency control.
@@ -343,9 +337,7 @@ async def async_map(
 
 
 async def async_filter(
-    predicate: Callable[[T], Awaitable[bool]],
-    items: list[T],
-    concurrency: int = 10
+    predicate: Callable[[T], Awaitable[bool]], items: list[T], concurrency: int = 10
 ) -> list[T]:
     """
     Async version of filter() with concurrency control.
@@ -375,7 +367,11 @@ class AsyncRateLimiter:
             now = time.time()
 
             # Remove old calls outside the time window
-            self.calls = [call_time for call_time in self.calls if now - call_time < self.time_window]
+            self.calls = [
+                call_time
+                for call_time in self.calls
+                if now - call_time < self.time_window
+            ]
 
             # If we're at the limit, wait
             if len(self.calls) >= self.max_calls:

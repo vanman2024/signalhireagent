@@ -24,16 +24,25 @@ logger = structlog.get_logger(__name__)
 # Common regex patterns
 EMAIL_PATTERN = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
 LINKEDIN_PROFILE_PATTERN = re.compile(r'^https?://(?:www\.)?linkedin\.com/in/[\w-]+/?$')
-LINKEDIN_COMPANY_PATTERN = re.compile(r'^https?://(?:www\.)?linkedin\.com/company/[\w-]+/?$')
+LINKEDIN_COMPANY_PATTERN = re.compile(
+    r'^https?://(?:www\.)?linkedin\.com/company/[\w-]+/?$'
+)
 PHONE_PATTERN = re.compile(r'^[\\+]?[1-9][\\d\\s\\-\(\)]{7,15}$')
-UUID_PATTERN = re.compile(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', re.IGNORECASE)
+UUID_PATTERN = re.compile(
+    r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', re.IGNORECASE
+)
 SIGNALHIRE_UID_PATTERN = re.compile(r'^[0-9a-f]{32}$', re.IGNORECASE)
 
 
 class ValidationResult:
     """Result of a validation operation."""
 
-    def __init__(self, is_valid: bool, error_message: str | None = None, cleaned_value: Any = None):
+    def __init__(
+        self,
+        is_valid: bool,
+        error_message: str | None = None,
+        cleaned_value: Any = None,
+    ):
         self.is_valid = is_valid
         self.error_message = error_message
         self.cleaned_value = cleaned_value
@@ -47,7 +56,9 @@ class ValidationResult:
             raise DataValidationError(
                 self.error_message or "Validation failed",
                 field_name=field_name,
-                field_value=str(self.cleaned_value) if self.cleaned_value is not None else None
+                field_value=(
+                    str(self.cleaned_value) if self.cleaned_value is not None else None
+                ),
             )
         return self.cleaned_value
 
@@ -217,7 +228,9 @@ def validate_signalhire_uid(uid: str | None) -> ValidationResult:
     cleaned_uid = uid.strip().lower()
 
     if not SIGNALHIRE_UID_PATTERN.match(cleaned_uid):
-        return ValidationResult(False, "Invalid SignalHire UID format (must be 32 hex characters)")
+        return ValidationResult(
+            False, "Invalid SignalHire UID format (must be 32 hex characters)"
+        )
 
     return ValidationResult(True, cleaned_value=cleaned_uid)
 
@@ -248,7 +261,7 @@ def validate_string_length(
     text: str | None,
     min_length: int = 0,
     max_length: int | None = None,
-    field_name: str = "Text"
+    field_name: str = "Text",
 ) -> ValidationResult:
     """
     Validate string length constraints.
@@ -272,18 +285,20 @@ def validate_string_length(
     length = len(cleaned_text)
 
     if length < min_length:
-        return ValidationResult(False, f"{field_name} must be at least {min_length} characters")
+        return ValidationResult(
+            False, f"{field_name} must be at least {min_length} characters"
+        )
 
     if max_length is not None and length > max_length:
-        return ValidationResult(False, f"{field_name} must be at most {max_length} characters")
+        return ValidationResult(
+            False, f"{field_name} must be at most {max_length} characters"
+        )
 
     return ValidationResult(True, cleaned_value=cleaned_text)
 
 
 def validate_choice(
-    value: Any,
-    valid_choices: list[Any],
-    field_name: str = "Value"
+    value: Any, valid_choices: list[Any], field_name: str = "Value"
 ) -> ValidationResult:
     """
     Validate that value is in list of valid choices.
@@ -296,10 +311,7 @@ def validate_choice(
     """
     if value not in valid_choices:
         choices_str = ", ".join(str(choice) for choice in valid_choices)
-        return ValidationResult(
-            False,
-            f"{field_name} must be one of: {choices_str}"
-        )
+        return ValidationResult(False, f"{field_name} must be one of: {choices_str}")
 
     return ValidationResult(True, cleaned_value=value)
 
@@ -308,7 +320,7 @@ def validate_integer_range(
     value: int | str | None,
     min_value: int | None = None,
     max_value: int | None = None,
-    field_name: str = "Value"
+    field_name: str = "Value",
 ) -> ValidationResult:
     """
     Validate integer within range.
@@ -341,7 +353,7 @@ def validate_file_path(
     path: str | Path | None,
     must_exist: bool = False,
     allowed_extensions: list[str] | None = None,
-    field_name: str = "File path"
+    field_name: str = "File path",
 ) -> ValidationResult:
     """
     Validate file path.
@@ -369,8 +381,7 @@ def validate_file_path(
         if extension not in allowed_extensions:
             ext_str = ", ".join(allowed_extensions)
             return ValidationResult(
-                False,
-                f"{field_name} must have one of these extensions: {ext_str}"
+                False, f"{field_name} must have one of these extensions: {ext_str}"
             )
 
     return ValidationResult(True, cleaned_value=path_obj)
@@ -379,7 +390,7 @@ def validate_file_path(
 def validate_json_data(
     data: Any,
     required_keys: list[str] | None = None,
-    schema_validator: Callable[[dict], bool] | None = None
+    schema_validator: Callable[[dict], bool] | None = None,
 ) -> ValidationResult:
     """
     Validate JSON data structure.
@@ -396,7 +407,9 @@ def validate_json_data(
     if required_keys and isinstance(data, dict):
         missing_keys = [key for key in required_keys if key not in data]
         if missing_keys:
-            return ValidationResult(False, f"Missing required keys: {', '.join(missing_keys)}")
+            return ValidationResult(
+                False, f"Missing required keys: {', '.join(missing_keys)}"
+            )
 
     if schema_validator:
         try:
@@ -487,14 +500,18 @@ def sanitize_for_json(data: Any) -> Any:
 def email_validator(email: str) -> ValidationResult:
     return validate_email(email)
 
+
 def linkedin_validator(url: str) -> ValidationResult:
     return validate_linkedin_profile(url)
+
 
 def phone_validator(phone: str) -> ValidationResult:
     return validate_phone(phone)
 
+
 def url_validator(url: str) -> ValidationResult:
     return validate_url(url)
+
 
 def uid_validator(uid: str) -> ValidationResult:
     return validate_signalhire_uid(uid)

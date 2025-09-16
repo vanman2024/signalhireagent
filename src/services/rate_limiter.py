@@ -21,7 +21,9 @@ class RateLimiterService:
         refill_rate: float,
         time_fn: Callable[[], float] | None = None,
     ) -> None:
-        self._bucket = AsyncTokenBucket(capacity=capacity, refill_rate=refill_rate, time_fn=time_fn)
+        self._bucket = AsyncTokenBucket(
+            capacity=capacity, refill_rate=refill_rate, time_fn=time_fn
+        )
 
     @property
     def available(self) -> float:
@@ -29,4 +31,3 @@ class RateLimiterService:
 
     async def acquire(self, n: float = 1.0) -> None:
         await self._bucket.acquire(n)
-

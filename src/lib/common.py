@@ -56,7 +56,7 @@ def safe_get_nested(data: dict[str, Any], keys: str, default: Any = None) -> Any
 def safe_format_datetime(
     dt: datetime | str | None,
     format_str: str = "%Y-%m-%d %H:%M:%S",
-    default: str = "N/A"
+    default: str = "N/A",
 ) -> str:
     """
     Safely format a datetime object or string.
@@ -83,7 +83,9 @@ def safe_format_datetime(
     return default
 
 
-def truncate_string(text: str | None, max_length: int = 100, suffix: str = "...") -> str:
+def truncate_string(
+    text: str | None, max_length: int = 100, suffix: str = "..."
+) -> str:
     """
     Truncate a string to a maximum length with optional suffix.
     Args:
@@ -99,7 +101,7 @@ def truncate_string(text: str | None, max_length: int = 100, suffix: str = "..."
     if len(text) <= max_length:
         return text
 
-    return text[:max_length - len(suffix)] + suffix
+    return text[: max_length - len(suffix)] + suffix
 
 
 def sanitize_filename(filename: str, max_length: int = 255) -> str:
@@ -188,6 +190,7 @@ def debounce(wait_seconds: float):
     Args:
         wait_seconds: Minimum time between calls
     """
+
     def decorator(func: Callable[..., T]) -> Callable[..., T | None]:
         last_called = {'time': 0.0}
 
@@ -200,15 +203,15 @@ def debounce(wait_seconds: float):
             return None
 
         return wrapper
-    return decorator
 
+    return decorator
 
 
 async def batch_process(
     items: list[T],
     process_func: Callable[[T], Any],
     batch_size: int = 10,
-    delay_between_batches: float = 0.1
+    delay_between_batches: float = 0.1,
 ) -> list[Any]:
     """
     Process items in batches to avoid overwhelming systems.
@@ -223,10 +226,12 @@ async def batch_process(
     results = []
 
     for i in range(0, len(items), batch_size):
-        batch = items[i:i + batch_size]
+        batch = items[i : i + batch_size]
 
         if asyncio.iscoroutinefunction(process_func):
-            batch_results = await asyncio.gather(*[process_func(item) for item in batch])
+            batch_results = await asyncio.gather(
+                *[process_func(item) for item in batch]
+            )
         else:
             batch_results = [process_func(item) for item in batch]
 
@@ -262,14 +267,14 @@ class TimingContext:
                 "Operation completed",
                 operation=self.operation_name,
                 duration_seconds=round(duration, 3),
-                duration_formatted=format_duration(duration)
+                duration_formatted=format_duration(duration),
             )
         else:
             self.logger.error(
                 "Operation failed",
                 operation=self.operation_name,
                 duration_seconds=round(duration, 3),
-                error=str(exc_val)
+                error=str(exc_val),
             )
 
     @property
@@ -287,7 +292,7 @@ class CircuitBreaker:
         self,
         failure_threshold: int = 5,
         recovery_timeout: float = 60.0,
-        expected_exception: type = Exception
+        expected_exception: type = Exception,
     ):
         self.failure_threshold = failure_threshold
         self.recovery_timeout = recovery_timeout
@@ -336,8 +341,9 @@ class CircuitBreaker:
             logger.warning(
                 "Circuit breaker opened",
                 failure_count=self.failure_count,
-                threshold=self.failure_threshold
+                threshold=self.failure_threshold,
             )
+
 
 def validate_url(url: str) -> bool:
     """
@@ -355,8 +361,9 @@ def validate_url(url: str) -> bool:
         r'localhost|'
         r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'
         r'(?::\d+)?'
-        r'(?:/?|[/?]\S+)'
-, re.IGNORECASE)
+        r'(?:/?|[/?]\S+)',
+        re.IGNORECASE,
+    )
 
     return url_pattern.match(url) is not None
 
@@ -370,7 +377,7 @@ def chunk_list(items: list[T], chunk_size: int) -> list[list[T]]:
     Returns:
         List of chunks
     """
-    return [items[i:i + chunk_size] for i in range(0, len(items), chunk_size)]
+    return [items[i : i + chunk_size] for i in range(0, len(items), chunk_size)]
 
 
 def flatten_dict(data: dict[str, Any], separator: str = '.') -> dict[str, Any]:
@@ -382,6 +389,7 @@ def flatten_dict(data: dict[str, Any], separator: str = '.') -> dict[str, Any]:
     Returns:
         Flattened dictionary
     """
+
     def _flatten(obj: Any, parent_key: str = '', sep: str = '.') -> dict[str, Any]:
         items = []
         if isinstance(obj, dict):

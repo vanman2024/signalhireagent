@@ -24,6 +24,7 @@ import structlog
 @dataclass
 class APIResponse:
     """Wrapper for API responses."""
+
     success: bool
     data: dict[str, Any] | None = None
     error: str | None = None
@@ -34,7 +35,13 @@ class APIResponse:
 
 class SignalHireAPIError(Exception):
     """Custom exception for SignalHire API errors."""
-    def __init__(self, message: str, status_code: int | None = None, response_data: dict | None = None):
+
+    def __init__(
+        self,
+        message: str,
+        status_code: int | None = None,
+        response_data: dict | None = None,
+    ):
         super().__init__(message)
         self.status_code = status_code
         self.response_data = response_data
@@ -42,13 +49,27 @@ class SignalHireAPIError(Exception):
 
 class RateLimiter:
     """Enhanced rate limiter with daily usage tracking and API limit enforcement."""
-    def __init__(self, max_requests: int = 600, time_window: int = 60, daily_limit: int = 5000, search_profile_limit: int = 5000):
+
+    def __init__(
+        self,
+        max_requests: int = 600,
+        time_window: int = 60,
+        daily_limit: int = 5000,
+        search_profile_limit: int = 5000,
+    ):
         self.max_requests = max_requests
         self.time_window = time_window
         self.daily_limit = daily_limit  # API daily limit (5000 reveals/day)
-        self.search_profile_limit = search_profile_limit  # Search profile daily limit (5000/day)
+        self.search_profile_limit = (
+            search_profile_limit  # Search profile daily limit (5000/day)
+        )
         self.requests = []
-        self.daily_usage = {"credits_used": 0, "reveals": 0, "search_profiles": 0, "last_reset": datetime.now().date()}
+        self.daily_usage = {
+            "credits_used": 0,
+            "reveals": 0,
+            "search_profiles": 0,
+            "last_reset": datetime.now().date(),
+        }
 
     async def _check_daily_usage(self) -> dict:
         """Check current daily usage from operation tracking."""
@@ -64,21 +85,36 @@ class RateLimiter:
                 for op_file in operations_dir.glob("*.json"):
                     try:
                         import json
+
                         with open(op_file) as f:
                             op_data = json.load(f)
 
-                        created_time = datetime.fromisoformat(op_data.get('created_at', '').replace('Z', '+00:00'))
+                        created_time = datetime.fromisoformat(
+                            op_data.get('created_at', '').replace('Z', '+00:00')
+                        )
                         if created_time.replace(tzinfo=None) < one_day_ago:
                             continue
 
-                        if op_data.get("type") == "reveal" and op_data.get("status") == "completed":
+                        if (
+                            op_data.get("type") == "reveal"
+                            and op_data.get("status") == "completed"
+                        ):
                             usage_data["reveals"] += 1
                             if op_data.get("results"):
-                                usage_data["credits_used"] += op_data["results"].get("credits_used", 0)
-                        elif op_data.get("type") == "search" and op_data.get("status") == "completed":
+                                usage_data["credits_used"] += op_data["results"].get(
+                                    "credits_used", 0
+                                )
+                        elif (
+                            op_data.get("type") == "search"
+                            and op_data.get("status") == "completed"
+                        ):
                             if op_data.get("results"):
                                 # Count search profiles from API response
-                                profiles = op_data["results"].get("profiles") or op_data["results"].get("prospects") or []
+                                profiles = (
+                                    op_data["results"].get("profiles")
+                                    or op_data["results"].get("prospects")
+                                    or []
+                                )
                                 usage_data["search_profiles"] += len(profiles)
                     except (ValueError, TypeError, json.JSONDecodeError):
                         continue
@@ -93,7 +129,9 @@ class RateLimiter:
         """Check if daily limits are approaching or exceeded."""
         current_usage = await self._check_daily_usage()
         remaining_daily = max(0, self.daily_limit - current_usage["credits_used"])
-        remaining_search_profiles = max(0, self.search_profile_limit - current_usage["search_profiles"])
+        remaining_search_profiles = max(
+            0, self.search_profile_limit - current_usage["search_profiles"]
+        )
 
         result = {
             "current_usage": current_usage["credits_used"],
@@ -102,15 +140,25 @@ class RateLimiter:
             "search_profiles_used": current_usage["search_profiles"],
             "search_profile_limit": self.search_profile_limit,
             "search_profiles_remaining": remaining_search_profiles,
-            "percentage_used": (current_usage["credits_used"] / self.daily_limit) * 100 if self.daily_limit > 0 else 0,
-            "search_percentage_used": (current_usage["search_profiles"] / self.search_profile_limit) * 100 if self.search_profile_limit > 0 else 0,
+            "percentage_used": (
+                (current_usage["credits_used"] / self.daily_limit) * 100
+                if self.daily_limit > 0
+                else 0
+            ),
+            "search_percentage_used": (
+                (current_usage["search_profiles"] / self.search_profile_limit) * 100
+                if self.search_profile_limit > 0
+                else 0
+            ),
             "can_proceed": remaining_daily > 0,
             "can_search": remaining_search_profiles > 0,
-            "warning_level": "none"
+            "warning_level": "none",
         }
 
         # Set warning levels based on the higher usage percentage
-        max_percentage = max(result["percentage_used"], result["search_percentage_used"])
+        max_percentage = max(
+            result["percentage_used"], result["search_percentage_used"]
+        )
         if max_percentage >= 90:
             result["warning_level"] = "critical"
         elif max_percentage >= 75:
@@ -120,32 +168,50 @@ class RateLimiter:
 
         return result
 
-    async def wait_if_needed(self, credits_needed: int = 1, search_profiles_needed: int = 0) -> dict:
+    async def wait_if_needed(
+        self, credits_needed: int = 1, search_profiles_needed: int = 0
+    ) -> dict:
         """Wait if rate limit would be exceeded, with daily limit checking."""
         now = datetime.now()
 
         # Reset daily counter if it's a new day
         if now.date() != self.daily_usage["last_reset"]:
-            self.daily_usage = {"credits_used": 0, "reveals": 0, "search_profiles": 0, "last_reset": now.date()}
+            self.daily_usage = {
+                "credits_used": 0,
+                "reveals": 0,
+                "search_profiles": 0,
+                "last_reset": now.date(),
+            }
 
         # Check daily limits first
         daily_status = await self.check_daily_limits()
 
         if credits_needed > daily_status["remaining"]:
-            raise SignalHireAPIError(f"Insufficient daily credits. Need {credits_needed}, have {daily_status['remaining']} remaining")
+            raise SignalHireAPIError(
+                f"Insufficient daily credits. Need {credits_needed}, have {daily_status['remaining']} remaining"
+            )
 
         if search_profiles_needed > daily_status["search_profiles_remaining"]:
-            raise SignalHireAPIError(f"Insufficient daily search profile quota. Need {search_profiles_needed}, have {daily_status['search_profiles_remaining']} remaining")
+            raise SignalHireAPIError(
+                f"Insufficient daily search profile quota. Need {search_profiles_needed}, have {daily_status['search_profiles_remaining']} remaining"
+            )
 
         if not daily_status["can_proceed"]:
-            raise SignalHireAPIError(f"Daily API limit exceeded ({self.daily_limit} credits/day). Current usage: {daily_status['current_usage']}")
+            raise SignalHireAPIError(
+                f"Daily API limit exceeded ({self.daily_limit} credits/day). Current usage: {daily_status['current_usage']}"
+            )
 
         if search_profiles_needed > 0 and not daily_status["can_search"]:
-            raise SignalHireAPIError(f"Daily search profile limit exceeded ({self.search_profile_limit} profiles/day). Current usage: {daily_status['search_profiles_used']}")
+            raise SignalHireAPIError(
+                f"Daily search profile limit exceeded ({self.search_profile_limit} profiles/day). Current usage: {daily_status['search_profiles_used']}"
+            )
 
         # Check per-minute rate limiting
-        self.requests = [req_time for req_time in self.requests
-                        if now - req_time < timedelta(seconds=self.time_window)]
+        self.requests = [
+            req_time
+            for req_time in self.requests
+            if now - req_time < timedelta(seconds=self.time_window)
+        ]
 
         if len(self.requests) >= self.max_requests:
             oldest_request = min(self.requests)
@@ -169,6 +235,7 @@ class RateLimiter:
 @dataclass
 class QueueItem:
     """Represents an item in the processing queue."""
+
     id: str
     prospect_id: str
     priority: int = 1  # 1=normal, 2=high, 3=urgent
@@ -197,7 +264,7 @@ class RetryStrategy:
         backoff_factor: float = 2.0,
         jitter_range: float = 0.1,
         circuit_breaker_threshold: int = 5,
-        circuit_breaker_timeout: float = 60.0
+        circuit_breaker_timeout: float = 60.0,
     ):
         self.max_retries = max_retries
         self.base_delay = base_delay
@@ -223,7 +290,7 @@ class RetryStrategy:
             "successful_retries": 0,
             "failed_retries": 0,
             "circuit_breaker_trips": 0,
-            "error_counts": {}
+            "error_counts": {},
         }
 
     def classify_error(self, status_code: int | None, error_message: str | None) -> str:
@@ -242,20 +309,35 @@ class RetryStrategy:
         # Check error message for known patterns
         if error_message:
             error_lower = error_message.lower()
-            if any(keyword in error_lower for keyword in ["timeout", "connection", "network"]) or any(keyword in error_lower for keyword in ["rate limit", "too many requests"]):
+            if any(
+                keyword in error_lower
+                for keyword in ["timeout", "connection", "network"]
+            ) or any(
+                keyword in error_lower
+                for keyword in ["rate limit", "too many requests"]
+            ):
                 return "transient"
-            if any(keyword in error_lower for keyword in ["unauthorized", "forbidden", "not found"]):
+            if any(
+                keyword in error_lower
+                for keyword in ["unauthorized", "forbidden", "not found"]
+            ):
                 return "client"
 
         return "unknown"
 
-    def should_retry(self, attempt: int, status_code: int | None, error_message: str | None) -> bool:
+    def should_retry(
+        self, attempt: int, status_code: int | None, error_message: str | None
+    ) -> bool:
         """
         Determine if a request should be retried based on error classification.
         """
         # Check circuit breaker
         if self.circuit_open:
-            if self.last_failure_time and (datetime.now() - self.last_failure_time).total_seconds() > self.circuit_breaker_timeout:
+            if (
+                self.last_failure_time
+                and (datetime.now() - self.last_failure_time).total_seconds()
+                > self.circuit_breaker_timeout
+            ):
                 # Try to close the circuit
                 self.circuit_open = False
                 self.failure_count = 0
@@ -285,7 +367,7 @@ class RetryStrategy:
         Calculate delay for next retry attempt with exponential backoff and jitter.
         """
         # Exponential backoff
-        delay = self.base_delay * (self.backoff_factor ** attempt)
+        delay = self.base_delay * (self.backoff_factor**attempt)
 
         # Cap at max delay
         delay = min(delay, self.max_delay)
@@ -297,7 +379,12 @@ class RetryStrategy:
         # Ensure minimum delay
         return max(delay, 0.1)
 
-    def record_attempt(self, success: bool, status_code: int | None = None, error_message: str | None = None):
+    def record_attempt(
+        self,
+        success: bool,
+        status_code: int | None = None,
+        error_message: str | None = None,
+    ):
         """
         Record the result of a retry attempt for analytics.
         """
@@ -320,7 +407,9 @@ class RetryStrategy:
 
             # Track error types
             error_type = self.classify_error(status_code, error_message)
-            self.retry_stats["error_counts"][error_type] = self.retry_stats["error_counts"].get(error_type, 0) + 1
+            self.retry_stats["error_counts"][error_type] = (
+                self.retry_stats["error_counts"].get(error_type, 0) + 1
+            )
 
     def get_stats(self) -> dict[str, Any]:
         """
@@ -331,16 +420,20 @@ class RetryStrategy:
             "circuit_breaker": {
                 "open": self.circuit_open,
                 "failure_count": self.failure_count,
-                "last_failure": self.last_failure_time.isoformat() if self.last_failure_time else None,
+                "last_failure": (
+                    self.last_failure_time.isoformat()
+                    if self.last_failure_time
+                    else None
+                ),
                 "threshold": self.circuit_breaker_threshold,
-                "timeout": self.circuit_breaker_timeout
+                "timeout": self.circuit_breaker_timeout,
             },
             "configuration": {
                 "max_retries": self.max_retries,
                 "base_delay": self.base_delay,
                 "max_delay": self.max_delay,
-                "backoff_factor": self.backoff_factor
-            }
+                "backoff_factor": self.backoff_factor,
+            },
         }
 
     def reset_stats(self):
@@ -350,7 +443,7 @@ class RetryStrategy:
             "successful_retries": 0,
             "failed_retries": 0,
             "circuit_breaker_trips": 0,
-            "error_counts": {}
+            "error_counts": {},
         }
 
 
@@ -380,7 +473,12 @@ class BatchQueue:
             self.day_start = today
             self.logger.info("Daily contact count reset", new_day=today.isoformat())
 
-    def add_item(self, prospect_id: str, priority: int = 1, metadata: dict[str, Any] | None = None) -> str:
+    def add_item(
+        self,
+        prospect_id: str,
+        priority: int = 1,
+        metadata: dict[str, Any] | None = None,
+    ) -> str:
         """
         Add a prospect to the processing queue.
         Returns the queue item ID for tracking.
@@ -390,7 +488,7 @@ class BatchQueue:
             id=item_id,
             prospect_id=prospect_id,
             priority=priority,
-            metadata=metadata or {}
+            metadata=metadata or {},
         )
 
         # Insert based on priority (higher priority = processed first)
@@ -414,12 +512,17 @@ class BatchQueue:
             item_id=item_id,
             prospect_id=prospect_id,
             priority=priority,
-            queue_size=len(self.queue)
+            queue_size=len(self.queue),
         )
 
         return item_id
 
-    def add_batch(self, prospect_ids: list[str], priority: int = 1, metadata: dict[str, Any] | None = None) -> list[str]:
+    def add_batch(
+        self,
+        prospect_ids: list[str],
+        priority: int = 1,
+        metadata: dict[str, Any] | None = None,
+    ) -> list[str]:
         """
         Add multiple prospects to the queue.
         Returns list of queue item IDs.
@@ -433,7 +536,7 @@ class BatchQueue:
             "Batch added to queue",
             batch_size=len(prospect_ids),
             priority=priority,
-            total_queue_size=len(self.queue)
+            total_queue_size=len(self.queue),
         )
 
         return item_ids
@@ -454,7 +557,7 @@ class BatchQueue:
             self.logger.warning(
                 "Daily contact limit reached",
                 daily_count=self.daily_count,
-                max_daily=self.max_daily_contacts
+                max_daily=self.max_daily_contacts,
             )
             return []
 
@@ -475,7 +578,7 @@ class BatchQueue:
                     "Item exceeded max retries",
                     item_id=item.id,
                     prospect_id=item.prospect_id,
-                    retry_count=item.retry_count
+                    retry_count=item.retry_count,
                 )
                 continue
 
@@ -487,7 +590,7 @@ class BatchQueue:
                 "Batch prepared for processing",
                 batch_size=len(batch),
                 remaining_queue=len(self.queue),
-                daily_count=self.daily_count
+                daily_count=self.daily_count,
             )
 
         return batch
@@ -501,7 +604,11 @@ class BatchQueue:
 
             if success:
                 # Find the item and move to completed
-                for item in list(self.queue) + list(self.completed.values()) + list(self.failed.values()):
+                for item in (
+                    list(self.queue)
+                    + list(self.completed.values())
+                    + list(self.failed.values())
+                ):
                     if item.id == item_id:
                         self.completed[item_id] = item
                         self.daily_count += 1
@@ -532,8 +639,10 @@ class BatchQueue:
             "daily_limit": self.max_daily_contacts,
             "daily_remaining": max(0, self.max_daily_contacts - self.daily_count),
             "total_processed": len(self.completed) + len(self.failed),
-            "success_rate": len(self.completed) / max(1, len(self.completed) + len(self.failed)) * 100,
-            "timestamp": datetime.now().isoformat()
+            "success_rate": len(self.completed)
+            / max(1, len(self.completed) + len(self.failed))
+            * 100,
+            "timestamp": datetime.now().isoformat(),
         }
 
     def clear_completed(self) -> int:
@@ -585,7 +694,7 @@ class SignalHireClient:
             base_delay=self.retry_backoff_base,
             max_delay=30.0,
             circuit_breaker_threshold=10,
-            circuit_breaker_timeout=120.0
+            circuit_breaker_timeout=120.0,
         )
         # Search API concurrency limit (max 3 concurrent requests)
         self._search_semaphore = asyncio.Semaphore(3)
@@ -611,9 +720,7 @@ class SignalHireClient:
                 headers["apikey"] = self.api_key
 
             self.session = httpx.AsyncClient(
-                base_url=self.base_url,
-                headers=headers,
-                timeout=30.0
+                base_url=self.base_url, headers=headers, timeout=30.0
             )
 
     async def close_session(self) -> None:
@@ -635,15 +742,21 @@ class SignalHireClient:
             search_profiles_needed = json_data.get('size', 25)  # Default size is 25
 
         # Apply rate limiting with daily usage tracking
-        daily_status = await self.rate_limiter.wait_if_needed(search_profiles_needed=search_profiles_needed)
+        daily_status = await self.rate_limiter.wait_if_needed(
+            search_profiles_needed=search_profiles_needed
+        )
 
         # Log warnings for high daily usage
         if daily_status["warning_level"] in ["high", "critical"]:
             logger = logging.getLogger(__name__)
             if daily_status["warning_level"] == "critical":
-                logger.warning(f"CRITICAL: Daily API limit nearly exceeded (Credits: {daily_status['percentage_used']:.1f}%, Search: {daily_status['search_percentage_used']:.1f}%)")
+                logger.warning(
+                    f"CRITICAL: Daily API limit nearly exceeded (Credits: {daily_status['percentage_used']:.1f}%, Search: {daily_status['search_percentage_used']:.1f}%)"
+                )
             else:
-                logger.info(f"High daily usage: Credits: {daily_status['percentage_used']:.1f}%, Search: {daily_status['search_percentage_used']:.1f}%")
+                logger.info(
+                    f"High daily usage: Credits: {daily_status['percentage_used']:.1f}%, Search: {daily_status['search_percentage_used']:.1f}%"
+                )
 
         endpoint_path = "/" + endpoint.lstrip("/")
         url = f"{self.base_url}{self.api_prefix}{endpoint_path}"
@@ -662,7 +775,9 @@ class SignalHireClient:
                 # Extract credits info if available
                 credits_used = data.get("credits_used", 0)
                 # Prefer header X-Credits-Left when present
-                credits_remaining_header = response.headers.get("X-Credits-Left") or response.headers.get("x-credits-left")
+                credits_remaining_header = response.headers.get(
+                    "X-Credits-Left"
+                ) or response.headers.get("x-credits-left")
                 credits_remaining = (
                     int(credits_remaining_header)
                     if credits_remaining_header and credits_remaining_header.isdigit()
@@ -674,9 +789,14 @@ class SignalHireClient:
                     data=data,
                     status_code=response.status_code,
                     credits_used=credits_used,
-                    credits_remaining=credits_remaining
+                    credits_remaining=credits_remaining,
                 )
-            error_message = data.get("error") or data.get("message") or response.text or f"HTTP {response.status_code}"
+            error_message = (
+                data.get("error")
+                or data.get("message")
+                or response.text
+                or f"HTTP {response.status_code}"
+            )
 
             # Enhance error messages for specific HTTP status codes
             if response.status_code == 429:
@@ -687,7 +807,9 @@ class SignalHireClient:
                         retry_seconds = int(retry_after)
                         error_message = f"Rate limit exceeded. Please wait {retry_seconds} seconds before retrying."
                     except ValueError:
-                        error_message = "Rate limit exceeded. Please wait before retrying."
+                        error_message = (
+                            "Rate limit exceeded. Please wait before retrying."
+                        )
                 else:
                     error_message = "Rate limit exceeded. Please reduce request frequency or wait before retrying."
 
@@ -701,13 +823,17 @@ class SignalHireClient:
             elif response.status_code == 403:
                 # Forbidden - could be authentication or permissions
                 if "api" in error_message.lower():
-                    error_message = "API access denied. Please check your API key and permissions."
+                    error_message = (
+                        "API access denied. Please check your API key and permissions."
+                    )
                 else:
                     error_message = "Access forbidden. Please check your credentials and account status."
 
             elif response.status_code == 404:
                 # Not found
-                error_message = "Resource not found. Please check the prospect ID or endpoint URL."
+                error_message = (
+                    "Resource not found. Please check the prospect ID or endpoint URL."
+                )
 
             elif response.status_code >= 500:
                 # Server errors
@@ -717,20 +843,20 @@ class SignalHireClient:
                 success=False,
                 error=error_message,
                 status_code=response.status_code,
-                data=data
+                data=data,
             )
 
         except httpx.TimeoutException:
             return APIResponse(
                 success=False,
                 error="Request timed out. This may be due to network issues or high server load. Please try again.",
-                status_code=408
+                status_code=408,
             )
         except httpx.ConnectError:
             return APIResponse(
                 success=False,
                 error="Connection failed. Please check your internet connection and try again.",
-                status_code=None
+                status_code=None,
             )
         except httpx.RequestError as e:
             error_msg = str(e)
@@ -741,21 +867,18 @@ class SignalHireClient:
             else:
                 enhanced_error = f"Network request failed: {error_msg}. Please check your connection and try again."
 
-            return APIResponse(
-                success=False,
-                error=enhanced_error,
-                status_code=None
-            )
+            return APIResponse(success=False, error=enhanced_error, status_code=None)
 
     async def check_credits(self) -> APIResponse:
         """Check current credit balance and usage."""
         # Check cache first
-        if (self._credits_cache and self._cache_timestamp and
-            datetime.now() - self._cache_timestamp < timedelta(seconds=self._cache_ttl)):
-            return APIResponse(
-                success=True,
-                data=self._credits_cache
-            )
+        if (
+            self._credits_cache
+            and self._cache_timestamp
+            and datetime.now() - self._cache_timestamp
+            < timedelta(seconds=self._cache_ttl)
+        ):
+            return APIResponse(success=True, data=self._credits_cache)
 
         response = await self._make_request("GET", "/credits")
 
@@ -766,8 +889,9 @@ class SignalHireClient:
 
         return response
 
-    async def search_prospects(self, search_criteria: dict[str, Any],
-                             size: int = 25) -> APIResponse:
+    async def search_prospects(
+        self, search_criteria: dict[str, Any], size: int = 25
+    ) -> APIResponse:
         """
         Search for prospects using the SignalHire Search API.
         Supports filtering by currentTitle, location, keywords, and other criteria.
@@ -782,14 +906,13 @@ class SignalHireClient:
         size = max(1, min(size, 100))
 
         # Prepare search data
-        search_data = {
-            "size": size,
-            **search_criteria
-        }
+        search_data = {"size": size, **search_criteria}
 
         # Enforce single-concurrency per client for Search API
         async with self._search_semaphore:
-            return await self._make_request("POST", "/candidate/searchByQuery", json=search_data)
+            return await self._make_request(
+                "POST", "/candidate/searchByQuery", json=search_data
+            )
 
     async def scroll_search(self, request_id: int, scroll_id: str) -> APIResponse:
         """Fetch next batch using POST /candidate/scrollSearch/{requestId} with JSON body {scrollId}."""
@@ -802,7 +925,9 @@ class SignalHireClient:
         """Get detailed information for a specific prospect."""
         return await self._make_request("GET", f"/prospects/{prospect_id}")
 
-    async def reveal_contact_by_identifier(self, identifier: str, callback_url: str) -> APIResponse:
+    async def reveal_contact_by_identifier(
+        self, identifier: str, callback_url: str
+    ) -> APIResponse:
         """
         Reveal contact information using SignalHire's Person API.
         Args:
@@ -811,10 +936,7 @@ class SignalHireClient:
         Returns:
             APIResponse with request ID if successful
         """
-        data = {
-            "items": [identifier],
-            "callbackUrl": callback_url
-        }
+        data = {"items": [identifier], "callbackUrl": callback_url}
 
         return await self._make_request("POST", "/candidate/search", json=data)
 
@@ -824,25 +946,59 @@ class SignalHireClient:
         while True:
             # Circuit breaker check
             if self.retry_strategy.circuit_open:
-                self.logger.warning("Circuit breaker open, skipping request", prospect_id=prospect_id, attempt=attempt)
-                return APIResponse(success=False, error="Circuit breaker open - too many recent failures", status_code=503)
+                self.logger.warning(
+                    "Circuit breaker open, skipping request",
+                    prospect_id=prospect_id,
+                    attempt=attempt,
+                )
+                return APIResponse(
+                    success=False,
+                    error="Circuit breaker open - too many recent failures",
+                    status_code=503,
+                )
 
             resp = await self._make_request("POST", f"/prospects/{prospect_id}/reveal")
             attempt += 1
-            self.retry_strategy.record_attempt(resp.success, resp.status_code, resp.error)
+            self.retry_strategy.record_attempt(
+                resp.success, resp.status_code, resp.error
+            )
 
             if resp.success:
                 if attempt > 1:
-                    self.logger.info("Request succeeded after retry", prospect_id=prospect_id, attempts=attempt, final_status=resp.status_code)
+                    self.logger.info(
+                        "Request succeeded after retry",
+                        prospect_id=prospect_id,
+                        attempts=attempt,
+                        final_status=resp.status_code,
+                    )
                 return resp
 
-            if not self.retry_strategy.should_retry(attempt, resp.status_code, resp.error):
-                error_type = self.retry_strategy.classify_error(resp.status_code, resp.error)
-                self.logger.warning("Request failed permanently", prospect_id=prospect_id, attempts=attempt, status_code=resp.status_code, error_type=error_type, error=resp.error)
+            if not self.retry_strategy.should_retry(
+                attempt, resp.status_code, resp.error
+            ):
+                error_type = self.retry_strategy.classify_error(
+                    resp.status_code, resp.error
+                )
+                self.logger.warning(
+                    "Request failed permanently",
+                    prospect_id=prospect_id,
+                    attempts=attempt,
+                    status_code=resp.status_code,
+                    error_type=error_type,
+                    error=resp.error,
+                )
                 return resp
 
             delay = self.retry_strategy.calculate_delay(attempt)
-            self.logger.info("Retrying request", prospect_id=prospect_id, attempt=attempt, max_retries=self.retry_strategy.max_retries, delay=round(delay, 2), status_code=resp.status_code, error=resp.error)
+            self.logger.info(
+                "Retrying request",
+                prospect_id=prospect_id,
+                attempt=attempt,
+                max_retries=self.retry_strategy.max_retries,
+                delay=round(delay, 2),
+                status_code=resp.status_code,
+                error=resp.error,
+            )
             await asyncio.sleep(delay)
 
     async def batch_reveal_contacts(
@@ -857,7 +1013,9 @@ class SignalHireClient:
         use browser automation service.
         """
         # Validate inputs
-        if not isinstance(prospect_ids, list) or any(not isinstance(p, str) for p in prospect_ids):
+        if not isinstance(prospect_ids, list) or any(
+            not isinstance(p, str) for p in prospect_ids
+        ):
             raise SignalHireAPIError("prospect_ids must be a list of strings")
         if not isinstance(batch_size, int) or batch_size <= 0:
             raise SignalHireAPIError("batch_size must be a positive integer")
@@ -871,7 +1029,11 @@ class SignalHireClient:
         # Credit pre-check (assume 1 credit per reveal)
         try:
             credits_response = await self.check_credits()
-            remaining = (credits_response.data or {}).get("credits_remaining") if credits_response.success else None
+            remaining = (
+                (credits_response.data or {}).get("credits_remaining")
+                if credits_response.success
+                else None
+            )
             if isinstance(remaining, int) and remaining < total:
                 raise SignalHireAPIError(
                     f"Insufficient credits: need {total}, have {remaining}",
@@ -900,7 +1062,7 @@ class SignalHireClient:
             "last_update": start_time,
             "batch_size": batch_size,
             "errors": [],
-            "estimated_completion": None
+            "estimated_completion": None,
         }
 
         async def wrapped_reveal(pid: str) -> APIResponse:
@@ -915,22 +1077,32 @@ class SignalHireClient:
                     else:
                         stats["failed"] += 1
                         if result.error:
-                            stats["errors"].append({
-                                "prospect_id": pid,
-                                "error": result.error,
-                                "status_code": result.status_code
-                            })
+                            stats["errors"].append(
+                                {
+                                    "prospect_id": pid,
+                                    "error": result.error,
+                                    "status_code": result.status_code,
+                                }
+                            )
 
                     # Calculate progress metrics
                     elapsed = (datetime.now() - start_time).total_seconds()
-                    success_rate = stats["successful"] / stats["processed"] if stats["processed"] > 0 else 0
-                    avg_time_per_contact = elapsed / stats["processed"] if stats["processed"] > 0 else 0
+                    success_rate = (
+                        stats["successful"] / stats["processed"]
+                        if stats["processed"] > 0
+                        else 0
+                    )
+                    avg_time_per_contact = (
+                        elapsed / stats["processed"] if stats["processed"] > 0 else 0
+                    )
                     remaining_contacts = total - stats["processed"]
 
                     # Estimate completion time
                     if avg_time_per_contact > 0:
                         estimated_remaining = remaining_contacts * avg_time_per_contact
-                        stats["estimated_completion"] = datetime.now() + timedelta(seconds=estimated_remaining)
+                        stats["estimated_completion"] = datetime.now() + timedelta(
+                            seconds=estimated_remaining
+                        )
 
                     # Enhanced progress report
                     progress_data = {
@@ -941,12 +1113,18 @@ class SignalHireClient:
                         "success_rate": round(success_rate * 100, 1),
                         "elapsed_seconds": round(elapsed, 1),
                         "avg_time_per_contact": round(avg_time_per_contact, 2),
-                        "estimated_completion": stats["estimated_completion"].isoformat() if stats["estimated_completion"] else None,
+                        "estimated_completion": (
+                            stats["estimated_completion"].isoformat()
+                            if stats["estimated_completion"]
+                            else None
+                        ),
                         "remaining_contacts": remaining_contacts,
                         "batch_size": batch_size,
-                        "recent_errors": stats["errors"][-3:] if stats["errors"] else [],  # Last 3 errors
+                        "recent_errors": (
+                            stats["errors"][-3:] if stats["errors"] else []
+                        ),  # Last 3 errors
                         "credits_used": stats["successful"],
-                        "credits_remaining": remaining
+                        "credits_remaining": remaining,
                     }
 
                     # Call progress callback if provided
@@ -960,19 +1138,21 @@ class SignalHireClient:
                     # Update failure statistics
                     stats["processed"] += 1
                     stats["failed"] += 1
-                    stats["errors"].append({
-                        "prospect_id": pid,
-                        "error": str(ex),
-                        "status_code": None
-                    })
+                    stats["errors"].append(
+                        {"prospect_id": pid, "error": str(ex), "status_code": None}
+                    )
 
                     # Return error response
-                    return APIResponse(success=False, error=str(ex), data={"prospect_id": pid})
+                    return APIResponse(
+                        success=False, error=str(ex), data={"prospect_id": pid}
+                    )
 
         # Process in smaller batches to respect rate limits
         for i in range(0, total, batch_size):
             batch = prospect_ids[i : i + batch_size]
-            batch_results = await asyncio.gather(*(wrapped_reveal(pid) for pid in batch))
+            batch_results = await asyncio.gather(
+                *(wrapped_reveal(pid) for pid in batch)
+            )
             results.extend(batch_results)
 
             # Log batch completion
@@ -983,7 +1163,7 @@ class SignalHireClient:
                 batch=batch_num,
                 total_batches=total_batches,
                 batch_successful=sum(1 for r in batch_results if r.success),
-                batch_failed=sum(1 for r in batch_results if not r.success)
+                batch_failed=sum(1 for r in batch_results if not r.success),
             )
 
         # Final progress report
@@ -998,7 +1178,7 @@ class SignalHireClient:
             success_rate=round(final_success_rate * 100, 1),
             total_time=round(total_elapsed, 1),
             avg_time_per_contact=round(total_elapsed / total, 2) if total > 0 else 0,
-            credits_used=stats["successful"]
+            credits_used=stats["successful"],
         )
 
         return results
@@ -1033,14 +1213,24 @@ class SignalHireClient:
 
     # Queue Management Methods
 
-    def queue_prospect(self, prospect_id: str, priority: int = 1, metadata: dict[str, Any] | None = None) -> str:
+    def queue_prospect(
+        self,
+        prospect_id: str,
+        priority: int = 1,
+        metadata: dict[str, Any] | None = None,
+    ) -> str:
         """
         Add a single prospect to the processing queue.
         Returns queue item ID for tracking.
         """
         return self.batch_queue.add_item(prospect_id, priority, metadata)
 
-    def queue_batch(self, prospect_ids: list[str], priority: int = 1, metadata: dict[str, Any] | None = None) -> list[str]:
+    def queue_batch(
+        self,
+        prospect_ids: list[str],
+        priority: int = 1,
+        metadata: dict[str, Any] | None = None,
+    ) -> list[str]:
         """
         Add multiple prospects to the processing queue.
         Returns list of queue item IDs.
@@ -1050,7 +1240,7 @@ class SignalHireClient:
     async def process_queue_batch(
         self,
         batch_size: int | None = None,
-        progress_callback: Callable[[dict[str, Any]], Awaitable[None]] | None = None
+        progress_callback: Callable[[dict[str, Any]], Awaitable[None]] | None = None,
     ) -> dict[str, Any]:
         """
         Process the next batch from the queue.
@@ -1062,7 +1252,7 @@ class SignalHireClient:
             return {
                 "processed": 0,
                 "message": "No items available for processing",
-                "queue_stats": self.batch_queue.get_queue_stats()
+                "queue_stats": self.batch_queue.get_queue_stats(),
             }
 
         # Extract prospect IDs for processing
@@ -1073,14 +1263,14 @@ class SignalHireClient:
             "Processing queue batch",
             batch_size=len(batch),
             prospect_ids=prospect_ids[:5],  # Log first 5 for debugging
-            total_in_batch=len(prospect_ids)
+            total_in_batch=len(prospect_ids),
         )
 
         # Process the batch using existing batch_reveal_contacts method
         results = await self.batch_reveal_contacts(
             prospect_ids,
             batch_size=len(prospect_ids),
-            progress_callback=progress_callback
+            progress_callback=progress_callback,
         )
 
         # Update queue status based on results
@@ -1093,7 +1283,7 @@ class SignalHireClient:
                     "Queue item failed",
                     item_id=item_id,
                     prospect_id=prospect_ids[i],
-                    error=result.error
+                    error=result.error,
                 )
 
         # Return comprehensive results
@@ -1111,10 +1301,10 @@ class SignalHireClient:
                     "prospect_id": prospect_ids[i],
                     "success": result.success,
                     "error": result.error if not result.success else None,
-                    "credits_used": result.credits_used
+                    "credits_used": result.credits_used,
                 }
                 for i, result in enumerate(results)
-            ]
+            ],
         }
 
     async def process_queue_until_empty(
@@ -1122,7 +1312,7 @@ class SignalHireClient:
         batch_size: int | None = None,
         max_batches: int | None = None,
         progress_callback: Callable[[dict[str, Any]], Awaitable[None]] | None = None,
-        batch_delay: float = 1.0
+        batch_delay: float = 1.0,
     ) -> dict[str, Any]:
         """
         Process the entire queue until empty or limits reached.
@@ -1141,12 +1331,16 @@ class SignalHireClient:
         batches_processed = 0
         start_time = datetime.now()
 
-        self.logger.info("Starting queue processing", queue_size=self.batch_queue.queue.qsize())
+        self.logger.info(
+            "Starting queue processing", queue_size=self.batch_queue.queue.qsize()
+        )
 
         while True:
             # Check if we've reached the batch limit
             if max_batches and batches_processed >= max_batches:
-                self.logger.info("Reached maximum batch limit", batches_processed=batches_processed)
+                self.logger.info(
+                    "Reached maximum batch limit", batches_processed=batches_processed
+                )
                 break
 
             # Check if queue is empty
@@ -1176,7 +1370,7 @@ class SignalHireClient:
                 processed=batch_result["processed"],
                 successful=batch_result["successful"],
                 failed=batch_result["failed"],
-                credits_used=batch_result["credits_used"]
+                credits_used=batch_result["credits_used"],
             )
 
             # Delay between batches to respect rate limits
@@ -1197,13 +1391,10 @@ class SignalHireClient:
             "total_time_seconds": round(total_time, 1),
             "avg_time_per_contact": round(total_time / max(1, total_processed), 2),
             "final_queue_stats": self.batch_queue.get_queue_stats(),
-            "completion_timestamp": datetime.now().isoformat()
+            "completion_timestamp": datetime.now().isoformat(),
         }
 
-        self.logger.info(
-            "Queue processing completed",
-            **final_stats
-        )
+        self.logger.info("Queue processing completed", **final_stats)
 
         return final_stats
 
@@ -1221,7 +1412,11 @@ class SignalHireClient:
         return self.batch_queue.clear_completed()
 
     # Compatibility shim for CLI reveal_commands expecting bulk_reveal(RevealOp)
-    async def bulk_reveal(self, operation, progress_callback: Callable[[dict[str, Any]], Awaitable[None]] | None = None) -> dict[str, Any]:
+    async def bulk_reveal(
+        self,
+        operation,
+        progress_callback: Callable[[dict[str, Any]], Awaitable[None]] | None = None,
+    ) -> dict[str, Any]:
         """
         Bulk reveal contacts with enhanced progress reporting.
         Compatibility method for CLI operations with detailed progress tracking.
@@ -1231,9 +1426,7 @@ class SignalHireClient:
 
         # Use enhanced batch_reveal_contacts with progress reporting
         results = await self.batch_reveal_contacts(
-            prospect_ids,
-            batch_size=batch_size,
-            progress_callback=progress_callback
+            prospect_ids, batch_size=batch_size, progress_callback=progress_callback
         )
 
         success = [r for r in results if r.success]
@@ -1247,27 +1440,39 @@ class SignalHireClient:
             "total_prospects": len(prospect_ids),
             "revealed_count": len(success),
             "failed_count": len(failed),
-            "success_rate": round(len(success) / len(prospect_ids) * 100, 1) if prospect_ids else 0,
+            "success_rate": (
+                round(len(success) / len(prospect_ids) * 100, 1) if prospect_ids else 0
+            ),
             "prospects": [
                 {
-                    "id": getattr(r.data or {}, "prospect_id", None) or prospect_ids[i] if i < len(prospect_ids) else None,
+                    "id": (
+                        getattr(r.data or {}, "prospect_id", None) or prospect_ids[i]
+                        if i < len(prospect_ids)
+                        else None
+                    ),
                     "status": "success" if r.success else "failed",
-                    "error": r.error if not r.success else None
+                    "error": r.error if not r.success else None,
                 }
                 for i, r in enumerate(results)
             ],
             "credits_used": total_credits_used,
             "errors": [
                 {
-                    "prospect_id": getattr(r.data or {}, "prospect_id", None) or prospect_ids[i] if i < len(prospect_ids) else None,
-                    "error": r.error
+                    "prospect_id": (
+                        getattr(r.data or {}, "prospect_id", None) or prospect_ids[i]
+                        if i < len(prospect_ids)
+                        else None
+                    ),
+                    "error": r.error,
                 }
-                for i, r in enumerate(results) if not r.success
-            ]
+                for i, r in enumerate(results)
+                if not r.success
+            ],
         }
 
 
 # Utility functions
+
 
 async def create_signalhire_client(api_key: str | None = None) -> SignalHireClient:
     """Create and initialize a SignalHire client."""
@@ -1284,6 +1489,7 @@ async def test_api_connection(api_key: str | None = None) -> bool:
 
 # Example usage patterns for documentation
 
+
 async def example_search_workflow():
     """Example of a complete search and reveal workflow using the API."""
     async with SignalHireClient(api_key="your-api-key") as client:
@@ -1299,7 +1505,7 @@ async def example_search_workflow():
         search_criteria = {
             "title": "Software Engineer",
             "location": "San Francisco",
-            "company_size": "50-200"
+            "company_size": "50-200",
         }
 
         search_response = await client.search_prospects(search_criteria, limit=50)

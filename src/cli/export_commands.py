@@ -31,7 +31,9 @@ def format_export_summary(export_data: dict, format_type: str = "human") -> str:
     output.append("📁 Export Summary")
     output.append(f"Format: {export_format.upper()}")
     output.append(f"Output file: {output_file}")
-    output.append(f"Records exported: {style(str(exported_records), fg='green', bold=True)}/{total_records}")
+    output.append(
+        f"Records exported: {style(str(exported_records), fg='green', bold=True)}/{total_records}"
+    )
 
     if export_data.get('duration'):
         duration = export_data['duration']
@@ -91,39 +93,28 @@ def export():
 
 
 @export.command()
-@click.option(
-    '--search-id',
-    required=True,
-    help='ID of the search to export'
-)
+@click.option('--search-id', required=True, help='ID of the search to export')
 @click.option(
     '--format',
     'export_format',
     default='csv',
     type=click.Choice(['csv', 'json', 'xlsx', 'txt', 'html']),
-    help='Export format (default: csv)'
+    help='Export format (default: csv)',
 )
 @click.option(
-    '--output',
-    'output_file',
-    help='Output file path (default: auto-generated)'
+    '--output', 'output_file', help='Output file path (default: auto-generated)'
 )
-@click.option(
-    '--columns',
-    help='Comma-separated list of columns to include'
-)
-@click.option(
-    '--filter',
-    'filter_criteria',
-    help='JSON string with filter criteria'
-)
+@click.option('--columns', help='Comma-separated list of columns to include')
+@click.option('--filter', 'filter_criteria', help='JSON string with filter criteria')
 @click.option(
     '--overwrite',
     is_flag=True,
-    help='Overwrite existing output file without confirmation'
+    help='Overwrite existing output file without confirmation',
 )
 @click.pass_context
-def search(ctx, search_id, export_format, output_file, columns, filter_criteria, overwrite):
+def search(
+    ctx, search_id, export_format, output_file, columns, filter_criteria, overwrite
+):
     """
     Export search results to file.
     Export the results of a previously performed search to various formats.
@@ -145,7 +136,10 @@ def search(ctx, search_id, export_format, output_file, columns, filter_criteria,
     try:
         # Validate format
         if not validate_export_format(export_format):
-            echo(style(f"❌ Unsupported export format: {export_format}", fg='red'), err=True)
+            echo(
+                style(f"❌ Unsupported export format: {export_format}", fg='red'),
+                err=True,
+            )
             ctx.exit(1)
 
         # Generate output filename if not provided
@@ -154,7 +148,11 @@ def search(ctx, search_id, export_format, output_file, columns, filter_criteria,
 
         # Check if output file exists
         output_path = Path(output_file)
-        if output_path.exists() and not overwrite and not click.confirm(f"File {output_file} already exists. Overwrite?"):
+        if (
+            output_path.exists()
+            and not overwrite
+            and not click.confirm(f"File {output_file} already exists. Overwrite?")
+        ):
             echo("Export cancelled")
             return
 
@@ -189,22 +187,30 @@ def search(ctx, search_id, export_format, output_file, columns, filter_criteria,
         export_service = ExportService(config)
         if export_format.lower() == 'xlsx':
             # Create a minimal Excel file with placeholder data (real implementation should load actual search data)
-            sample = [{
-                'uid': 'sample_uid',
-                'full_name': 'Sample Person',
-                'current_title': 'N/A',
-                'current_company': 'N/A'
-            }]
-            export_result = asyncio.run(export_service.export_to_excel(sample, output_file=output_file))
+            sample = [
+                {
+                    'uid': 'sample_uid',
+                    'full_name': 'Sample Person',
+                    'current_title': 'N/A',
+                    'current_company': 'N/A',
+                }
+            ]
+            export_result = asyncio.run(
+                export_service.export_to_excel(sample, output_file=output_file)
+            )
         else:
             # For other formats, defer to CSV exporter via ExportService CSV path
-            sample = [{
-                'uid': 'sample_uid',
-                'full_name': 'Sample Person',
-                'current_title': 'N/A',
-                'current_company': 'N/A'
-            }]
-            export_result = asyncio.run(export_service.export_to_csv(prospects=sample, output_file=output_file))
+            sample = [
+                {
+                    'uid': 'sample_uid',
+                    'full_name': 'Sample Person',
+                    'current_title': 'N/A',
+                    'current_company': 'N/A',
+                }
+            ]
+            export_result = asyncio.run(
+                export_service.export_to_csv(prospects=sample, output_file=output_file)
+            )
 
         # Normalize result to dict for consistent printing
         result_dict = {
@@ -215,7 +221,11 @@ def search(ctx, search_id, export_format, output_file, columns, filter_criteria,
             'format': export_format,
             'file_size': getattr(export_result, 'file_size_bytes', 0),
             'duration': getattr(export_result, 'export_duration_seconds', 0.0),
-            'errors': [getattr(export_result, 'error_message', '')] if getattr(export_result, 'error_message', None) else [],
+            'errors': (
+                [getattr(export_result, 'error_message', '')]
+                if getattr(export_result, 'error_message', None)
+                else []
+            ),
         }
 
         if config.output_format == 'json':
@@ -227,7 +237,13 @@ def search(ctx, search_id, export_format, output_file, columns, filter_criteria,
             echo("\n✅ Export completed successfully")
             echo(f"💡 File saved to: {result_dict.get('output_file', output_file)}")
         else:
-            echo(style(f"❌ Export failed: {result_dict.get('errors', ['Unknown error'])[0]}", fg='red'), err=True)
+            echo(
+                style(
+                    f"❌ Export failed: {result_dict.get('errors', ['Unknown error'])[0]}",
+                    fg='red',
+                ),
+                err=True,
+            )
             ctx.exit(1)
 
     except KeyboardInterrupt:
@@ -237,27 +253,24 @@ def search(ctx, search_id, export_format, output_file, columns, filter_criteria,
         echo(style(f"❌ Export failed: {e}", fg='red'), err=True)
         if config.debug:
             import traceback
+
             echo(traceback.format_exc(), err=True)
         ctx.exit(1)
 
 
 @export.command()
 @click.option(
-    '--operation-id',
-    required=True,
-    help='ID of the operation to export results from'
+    '--operation-id', required=True, help='ID of the operation to export results from'
 )
 @click.option(
     '--format',
     'export_format',
     default='csv',
     type=click.Choice(['csv', 'json', 'xlsx', 'txt', 'html']),
-    help='Export format (default: csv)'
+    help='Export format (default: csv)',
 )
 @click.option(
-    '--output',
-    'output_file',
-    help='Output file path (default: auto-generated)'
+    '--output', 'output_file', help='Output file path (default: auto-generated)'
 )
 @click.pass_context
 def operation(ctx, operation_id, export_format, output_file):
@@ -303,6 +316,7 @@ def operation(ctx, operation_id, export_format, output_file):
         echo(style(f"❌ Export failed: {e}", fg='red'), err=True)
         if config.debug:
             import traceback
+
             echo(traceback.format_exc(), err=True)
         ctx.exit(1)
 
@@ -312,29 +326,24 @@ def operation(ctx, operation_id, export_format, output_file):
     '--input-file',
     required=True,
     type=click.Path(exists=True),
-    help='Input file to convert'
+    help='Input file to convert',
 )
 @click.option(
     '--from-format',
     type=click.Choice(['csv', 'json', 'xlsx', 'txt']),
-    help='Source format (auto-detected if not specified)'
+    help='Source format (auto-detected if not specified)',
 )
 @click.option(
     '--to-format',
     'export_format',
     required=True,
     type=click.Choice(['csv', 'json', 'xlsx', 'txt', 'html']),
-    help='Target format'
+    help='Target format',
 )
 @click.option(
-    '--output',
-    'output_file',
-    help='Output file path (default: auto-generated)'
+    '--output', 'output_file', help='Output file path (default: auto-generated)'
 )
-@click.option(
-    '--mapping',
-    help='JSON string with column mapping configuration'
-)
+@click.option('--mapping', help='JSON string with column mapping configuration')
 @click.pass_context
 def convert(ctx, input_file, from_format, export_format, output_file, mapping):
     """
@@ -360,7 +369,12 @@ def convert(ctx, input_file, from_format, export_format, output_file, mapping):
         if not from_format:
             from_format = input_path.suffix.lstrip('.').lower()
             if not validate_export_format(from_format):
-                echo(style(f"❌ Cannot auto-detect format for file: {input_file}", fg='red'), err=True)
+                echo(
+                    style(
+                        f"❌ Cannot auto-detect format for file: {input_file}", fg='red'
+                    ),
+                    err=True,
+                )
                 echo("💡 Use --from-format to specify the source format")
                 ctx.exit(1)
 
@@ -399,6 +413,7 @@ def convert(ctx, input_file, from_format, export_format, output_file, mapping):
         echo(style(f"❌ Conversion failed: {e}", fg='red'), err=True)
         if config.debug:
             import traceback
+
             echo(traceback.format_exc(), err=True)
         ctx.exit(1)
 
@@ -408,12 +423,9 @@ def convert(ctx, input_file, from_format, export_format, output_file, mapping):
     '--format',
     'export_format',
     type=click.Choice(['csv', 'json', 'xlsx', 'txt', 'html']),
-    help='Show templates for specific format only'
+    help='Show templates for specific format only',
 )
-@click.option(
-    '--save-template',
-    help='Save template to file instead of displaying'
-)
+@click.option('--save-template', help='Save template to file instead of displaying')
 @click.pass_context
 def template(ctx, export_format, save_template):
     """
@@ -446,44 +458,48 @@ def template(ctx, export_format, save_template):
                     'delimiter': ',',
                     'quoting': 'minimal',
                     'include_headers': True,
-                    'encoding': 'utf-8'
+                    'encoding': 'utf-8',
                 },
-                'example_columns': ['name', 'email', 'company', 'title', 'location', 'phone', 'linkedin_url']
+                'example_columns': [
+                    'name',
+                    'email',
+                    'company',
+                    'title',
+                    'location',
+                    'phone',
+                    'linkedin_url',
+                ],
             },
             'json': {
                 'description': 'JavaScript Object Notation format',
-                'options': {
-                    'indent': 2,
-                    'ensure_ascii': False,
-                    'sort_keys': False
-                },
-                'structure': 'array_of_objects'
+                'options': {'indent': 2, 'ensure_ascii': False, 'sort_keys': False},
+                'structure': 'array_of_objects',
             },
             'xlsx': {
                 'description': 'Microsoft Excel format',
                 'options': {
                     'sheet_name': 'SignalHire Export',
                     'include_index': False,
-                    'freeze_panes': (1, 0)  # Freeze header row
+                    'freeze_panes': (1, 0),  # Freeze header row
                 },
-                'features': ['formulas', 'formatting', 'multiple_sheets']
+                'features': ['formulas', 'formatting', 'multiple_sheets'],
             },
             'txt': {
                 'description': 'Plain text format',
                 'options': {
                     'separator': '\t',  # Tab-separated
                     'line_ending': '\n',
-                    'encoding': 'utf-8'
-                }
+                    'encoding': 'utf-8',
+                },
             },
             'html': {
                 'description': 'HTML table format',
                 'options': {
                     'table_id': 'signalhire-export',
                     'include_css': True,
-                    'responsive': True
-                }
-            }
+                    'responsive': True,
+                },
+            },
         }
 
         if export_format:
@@ -509,7 +525,9 @@ def template(ctx, export_format, save_template):
                     echo(f"  {key}: {value}")
 
                 if 'example_columns' in template_data:
-                    echo(f"\nExample columns: {', '.join(template_data['example_columns'])}")
+                    echo(
+                        f"\nExample columns: {', '.join(template_data['example_columns'])}"
+                    )
 
                 if 'structure' in template_data:
                     echo(f"Structure: {template_data['structure']}")
@@ -532,19 +550,10 @@ def template(ctx, export_format, save_template):
 
 
 @export.command()
+@click.option('--search-id', help='Search ID to check export status for')
+@click.option('--operation-id', help='Operation ID to check export status for')
 @click.option(
-    '--search-id',
-    help='Search ID to check export status for'
-)
-@click.option(
-    '--operation-id',
-    help='Operation ID to check export status for'
-)
-@click.option(
-    '--all',
-    'all_exports',
-    is_flag=True,
-    help='Show status for all recent exports'
+    '--all', 'all_exports', is_flag=True, help='Show status for all recent exports'
 )
 @click.pass_context
 def status(ctx, search_id, operation_id, all_exports):
@@ -578,7 +587,9 @@ def status(ctx, search_id, operation_id, all_exports):
             # Show list of recent exports with status
             echo("📁 export_001 | CSV  | Completed | 2023-12-07 14:30 | 1,250 records")
             echo("📁 export_002 | XLSX | Running   | 2023-12-07 14:35 | 45% complete")
-            echo("📁 export_003 | JSON | Failed    | 2023-12-07 14:40 | Permission error")
+            echo(
+                "📁 export_003 | JSON | Failed    | 2023-12-07 14:40 | Permission error"
+            )
 
         elif operation_id:
             echo(f"📁 Export Operation Status: {operation_id}")
@@ -597,12 +608,18 @@ def status(ctx, search_id, operation_id, all_exports):
             echo("📁 export_004 | JSON | Completed | 1,250 records")
 
         else:
-            echo(style("❌ Please specify --search-id, --operation-id, or --all", fg='red'), err=True)
+            echo(
+                style(
+                    "❌ Please specify --search-id, --operation-id, or --all", fg='red'
+                ),
+                err=True,
+            )
             ctx.exit(1)
 
     except Exception as e:  # noqa: BLE001
         echo(style(f"❌ Failed to check export status: {e}", fg='red'), err=True)
         if config.debug:
             import traceback
+
             echo(traceback.format_exc(), err=True)
         ctx.exit(1)

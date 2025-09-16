@@ -31,6 +31,7 @@ logger = structlog.get_logger(__name__)
 
 class Environment(str, Enum):
     """Supported environments."""
+
     DEVELOPMENT = "development"
     TEST = "test"
     PRODUCTION = "production"
@@ -38,6 +39,7 @@ class Environment(str, Enum):
 
 class LogLevel(str, Enum):
     """Supported log levels."""
+
     DEBUG = "DEBUG"
     INFO = "INFO"
     WARNING = "WARNING"
@@ -47,10 +49,13 @@ class LogLevel(str, Enum):
 
 class SignalHireConfig(BaseModel):
     """SignalHire-specific configuration."""
+
     email: str | None = Field(None, description="SignalHire account email")
     password: str | None = Field(None, description="SignalHire account password")
     api_key: str | None = Field(None, description="SignalHire API key (if available)")
-    base_url: str = Field("https://www.signalhire.com", description="SignalHire base URL")
+    base_url: str = Field(
+        "https://www.signalhire.com", description="SignalHire base URL"
+    )
 
     @validator('email')
     @classmethod
@@ -62,9 +67,12 @@ class SignalHireConfig(BaseModel):
 
 class CallbackServerConfig(BaseModel):
     """Callback server configuration."""
+
     host: str = Field("0.0.0.0", description="Server host")
     port: int = Field(8000, description="Server port")
-    external_host: str | None = Field(None, description="External host for webhook URLs")
+    external_host: str | None = Field(
+        None, description="External host for webhook URLs"
+    )
 
     @validator('port')
     @classmethod
@@ -76,30 +84,49 @@ class CallbackServerConfig(BaseModel):
 
 class ApiConfig(BaseModel):
     """API operation configuration."""
+
     timeout: float = Field(30.0, description="API request timeout in seconds")
     retry_attempts: int = Field(3, description="Number of API retry attempts")
-    batch_size: int = Field(100, description="Default batch size for API operations (max per request)")
-    without_contacts_mode: bool = Field(False, description="Use withoutContacts mode to preserve credits")
+    batch_size: int = Field(
+        100, description="Default batch size for API operations (max per request)"
+    )
+    without_contacts_mode: bool = Field(
+        False, description="Use withoutContacts mode to preserve credits"
+    )
 
 
 class RateLimitConfig(BaseModel):
     """Rate limiting configuration based on SignalHire API limits."""
-    elements_per_minute: int = Field(600, description="Max elements processed per minute (SignalHire limit)")
-    max_elements_per_request: int = Field(100, description="Max elements per single request")
-    max_parallel_requests: int = Field(10, description="Max parallel requests (conservative limit)")
+
+    elements_per_minute: int = Field(
+        600, description="Max elements processed per minute (SignalHire limit)"
+    )
+    max_elements_per_request: int = Field(
+        100, description="Max elements per single request"
+    )
+    max_parallel_requests: int = Field(
+        10, description="Max parallel requests (conservative limit)"
+    )
     retry_attempts: int = Field(3, description="Number of retry attempts")
     retry_delay: float = Field(1.0, description="Base retry delay in seconds")
-    rate_limit_warnings: bool = Field(True, description="Show warnings at usage thresholds")
+    rate_limit_warnings: bool = Field(
+        True, description="Show warnings at usage thresholds"
+    )
 
 
 class ExportConfig(BaseModel):
     """Data export configuration."""
+
     default_format: str = Field("csv", description="Default export format")
     output_dir: Path = Field(Path("./exports"), description="Default export directory")
     include_headers: bool = Field(True, description="Include headers in CSV exports")
     date_format: str = Field("%Y-%m-%d", description="Date format for exports")
-    export_timestamps: bool = Field(True, description="Add timestamps to export filenames")
-    timestamp_format: str = Field("%Y%m%d_%H%M%S", description="Timestamp format for filenames")
+    export_timestamps: bool = Field(
+        True, description="Add timestamps to export filenames"
+    )
+    timestamp_format: str = Field(
+        "%Y%m%d_%H%M%S", description="Timestamp format for filenames"
+    )
 
     @validator('output_dir')
     @classmethod
@@ -112,7 +139,9 @@ class Config(BaseSettings):
     """Main application configuration."""
 
     # Environment
-    environment: Environment = Field(Environment.DEVELOPMENT, description="Application environment")
+    environment: Environment = Field(
+        Environment.DEVELOPMENT, description="Application environment"
+    )
     debug: bool = Field(False, description="Enable debug mode")
     log_level: LogLevel = Field(LogLevel.INFO, description="Logging level")
 
@@ -158,7 +187,9 @@ class Config(BaseSettings):
             return Environment(v.lower())
         return v
 
-    def validate_required_credentials(self, require_signalhire: bool = True) -> list[str]:
+    def validate_required_credentials(
+        self, require_signalhire: bool = True
+    ) -> list[str]:
         """Validate that required credentials are present."""
         missing = []
 
@@ -197,7 +228,11 @@ class Config(BaseSettings):
             "formatters": {
                 "json": {
                     "()": "structlog.stdlib.ProcessorFormatter",
-                    "processor": "structlog.dev.ConsoleRenderer" if self.is_development() else "structlog.processors.JSONRenderer",
+                    "processor": (
+                        "structlog.dev.ConsoleRenderer"
+                        if self.is_development()
+                        else "structlog.processors.JSONRenderer"
+                    ),
                 },
             },
             "handlers": {
@@ -225,9 +260,7 @@ _config: Config | None = None
 
 
 def load_config(
-    env_file: str | None = None,
-    reload: bool = False,
-    validate_credentials: bool = True
+    env_file: str | None = None, reload: bool = False, validate_credentials: bool = True
 ) -> Config:
     """Load and return the application configuration."""
     global _config
@@ -248,13 +281,17 @@ def load_config(
     # Create config instance
     try:
         _config = Config()
-        logger.info("Configuration loaded successfully", environment=_config.environment.value)
+        logger.info(
+            "Configuration loaded successfully", environment=_config.environment.value
+        )
 
         # Validate credentials if requested
         if validate_credentials:
             missing = _config.validate_required_credentials()
             if missing:
-                warnings.warn(f"Missing required credentials: {', '.join(missing)}", stacklevel=2)
+                warnings.warn(
+                    f"Missing required credentials: {', '.join(missing)}", stacklevel=2
+                )
                 logger.warning("Missing credentials", missing=missing)
 
         return _config
@@ -339,8 +376,6 @@ def get_rate_limit_config() -> RateLimitConfig:
 def get_export_config() -> ExportConfig:
     """Get export configuration."""
     return get_config().export
-
-
 
 
 if __name__ == "__main__":
