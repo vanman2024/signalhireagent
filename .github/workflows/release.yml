@@ -1,10 +1,14 @@
-name: Release and Package
+name: Release (Production Build)
 
 on:
   push:
     tags:
       - 'v*'  # Trigger on version tags like v0.2.1
   workflow_dispatch:  # Allow manual trigger
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   create-production-build:
@@ -20,6 +24,7 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
+        cache: 'pip'
     
     - name: Get version from tag
       id: version
@@ -32,47 +37,41 @@ jobs:
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         echo "Version: $VERSION"
     
-    - name: Install dependencies and test
+    - name: Install dev dependencies
       run: |
-        ./scripts/build.sh
-        ./scripts/test.sh
-    
-    - name: Create production build
+        python -m pip install --upgrade pip
+        pip install -e .[dev]
+
+    - name: Quality checks (lint, format, types)
       run: |
-        mkdir -p production-build
-        
-        # Copy source code
-        cp -r src/ production-build/
-        cp pyproject.toml production-build/
-        cp README.md production-build/
-        
-        # Create version file
-        echo "${{ steps.version.outputs.version }}" > production-build/VERSION
-        
-        # Create simple install script
-        cat > production-build/install.sh << 'EOF'
-        #!/bin/bash
-        pip install -e .
-        echo "Installation complete! Run 'signalhire-agent --help' to get started."
-        EOF
-        chmod +x production-build/install.sh
+        ruff check .
+        black --check .
+        mypy src
+
+    - name: Run fast tests
+      run: |
+        python3 run.py -m pytest -m "not slow"
     
+    - name: Create production build (canonical)
+      run: |
+        mkdir -p dist
+        ./scripts/build/build-production.sh dist/signalhireagent --version "${{ steps.version.outputs.version }}" --force
+    
+    - name: Verify production build
+      run: |
+        set -e
+        cd dist/signalhireagent
+        test -x install.sh
+        test -x signalhire-agent
+        ./install.sh
+        ./signalhire-agent --help >/dev/null
+
     - name: Create build archive
       run: |
-        cd production-build
-        tar -czf ../signalhire-agent-${{ steps.version.outputs.version }}-production.tar.gz .
+        cd dist
+        tar -czf ../signalhire-agent-${{ steps.version.outputs.version }}-production.tar.gz signalhireagent
         cd ..
-        zip -r signalhire-agent-${{ steps.version.outputs.version }}-production.zip production-build/
-    
-    - name: Test production build
-      run: |
-        cd production-build
-        # Test version information
-        cat VERSION
-        # Test that install script exists and is executable
-        test -x install.sh
-        # Test that source code was copied
-        test -d src/
+        (cd dist && zip -r ../signalhire-agent-${{ steps.version.outputs.version }}-production.zip signalhireagent)
     
     - name: Create Release
       uses: softprops/action-gh-release@v2
@@ -84,35 +83,32 @@ jobs:
         body: |
           ## SignalHire Agent ${{ steps.version.outputs.version }}
           
-          ### Production Release
-          
-          This release contains the production-ready SignalHire Agent without development dependencies.
-          
+          ### Production Release (Canonical Build)
+
+          This release is generated using the canonical production build script (`scripts/build/build-production.sh`) to exactly match local prod-like builds.
+
           **Download Options:**
-          - `signalhire-agent-${{ steps.version.outputs.version }}-production.tar.gz` - Linux/macOS
-          - `signalhire-agent-${{ steps.version.outputs.version }}-production.zip` - Windows/Universal
-          
+          - `signalhire-agent-${{ steps.version.outputs.version }}-production.tar.gz` — Linux/macOS
+          - `signalhire-agent-${{ steps.version.outputs.version }}-production.zip` — Windows/Universal
+
           ### Installation
           1. Download and extract the archive
-          2. Run `./install.sh` to set up dependencies and virtual environment
-          3. Environment is automatically configured with production settings
-          4. Run `./signalhire-agent --help` to get started
-          
+          2. Run `./install.sh` to set up a virtual environment and dependencies
+          3. Run `./signalhire-agent --help` to get started
+
           ### What's Included
-          - Core application code (`src/`)
-          - Production dependencies only
-          - Installation script with virtual environment support
-          - Auto-configured environment file
-          - CLI wrapper for easy execution
-          - AI agent instruction files for development assistance
-          - Version information (JSON format)
-          
-          ### What's Excluded (Development Only)
-          - Test suites (`tests/`)
-          - Development specifications (`specs/`)
-          - Development tools and configuration
-          
-          For development and contributing, see the full repository.
+          - `src/` — Core application code
+          - `requirements.txt` — Production dependencies
+          - `install.sh` — Installation script (venv + deps)
+          - `signalhire-agent` — CLI wrapper
+          - `.env` — Auto-copied/templated environment
+          - `VERSION` — Version info (JSON)
+          - Agent instruction files and CLI command docs
+
+          ### Excluded (Development Only)
+          - `tests/`, `specs/`, caches, and dev tooling/config
+
+          For development and contributing, use the full repository.
         draft: false
         prerelease: false
       env:
@@ -122,5 +118,5 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: production-build-${{ steps.version.outputs.version }}
-        path: production-build/
+        path: dist/signalhireagent/
         retention-days: 30
