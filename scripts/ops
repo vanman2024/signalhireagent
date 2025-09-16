@@ -122,8 +122,8 @@ cmd_qa() {
         echo "🔍 Type checking backend..."
         mypy src/ || true
         
-        echo "🧪 Running backend tests..."
-        python3 run.py -m pytest -m "not slow" backend-tests/ || true
+        echo "🧪 Running tests..."
+        python3 run.py -m pytest -m "not slow" || true
     fi
     
     # Frontend QA
