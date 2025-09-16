@@ -1,53 +1,59 @@
-# Build & Deployment Automation
+# Build Scripts (Legacy - Use `ops` Command Instead)
 
-Complete automation system for production builds, continuous deployment, and release management.
+**These scripts are now integrated into the simplified `ops` CLI system.**
 
-## 🚀 Quick Start (100% Automated)
+## 🚀 Recommended: Use `ops` Command
 
-```bash
-# Setup continuous deployment with auto-sync and auto-releases
-./scripts/build/continuous-deployment.sh setup --target ~/deployments/signalhire-staging --auto-release
-
-# That's it! Now every commit automatically:
-# ✅ Syncs to your target directory
-# ✅ Updates production build
-# ✅ Creates releases for significant changes
-# ✅ Triggers GitHub Actions
-```
-
-## 📁 Scripts Overview
-
-| Script | Purpose | Auto-Run |
-|--------|---------|----------|
-| `build-production.sh` | Core production build system | Manual |
-| `auto-sync-config.sh` | Manages deployment targets and syncing | Git hooks |
-| `auto-release-manager.sh` | Automatic semantic versioning and releases | Git hooks |
-| `continuous-deployment.sh` | Orchestrates complete automation pipeline | Setup only |
-
-## 🔄 Auto-Sync System
-
-Keeps deployment directories automatically synchronized with your code changes.
+Instead of these individual scripts, use the unified `ops` command:
 
 ```bash
-# Add deployment targets
-./scripts/build/auto-sync-config.sh add ~/staging
-./scripts/build/auto-sync-config.sh add /var/www/production
+# Quality assurance
+ops qa
 
-# View configured targets
-./scripts/build/auto-sync-config.sh list
+# Build production
+ops build --target ~/deploy/signalhire
 
-# Manual sync all targets
-./scripts/build/auto-sync-config.sh sync
+# Verify production build
+ops verify-prod ~/deploy/signalhire
 
-# Setup git hooks for automatic syncing
-./scripts/build/auto-sync-config.sh setup-hooks
+# Create release
+ops release patch
 ```
 
-### What happens automatically:
-- Every `git commit` triggers sync to all configured targets
-- Production build is created with latest code
-- Virtual environment and dependencies are updated
-- `.env` configuration is automatically copied
+## 📁 Legacy Scripts (Still Available)
+
+These scripts are maintained for backward compatibility but the `ops` command is recommended:
+
+| Script | Purpose | New `ops` Equivalent |
+|--------|---------|---------------------|
+| `build-production.sh` | Production builds | `ops build` |
+| `auto-sync-config.sh` | Target management | `ops sync` |
+| `auto-release-manager.sh` | Release management | `ops release` |
+| `continuous-deployment.sh` | Full pipeline | `ops setup` |
+
+## 🔄 Migration Guide
+
+### Old Workflow:
+```bash
+# Complex multi-step process
+./scripts/build/continuous-deployment.sh setup --target ~/deploy --auto-release
+./scripts/build/auto-sync-config.sh add ~/deploy
+./scripts/build/build-production.sh ~/deploy --latest --force
+```
+
+### New Workflow:
+```bash
+# Simple single command
+ops setup ~/deploy
+ops build --target ~/deploy
+```
+
+## 📚 Documentation
+
+For the new simplified system, see:
+- `.automation/README.md` - Complete workflow guide
+- `docs/developer/TESTING_AND_RELEASE.md` - Updated release process
+- `scripts/README.md` - `ops` command reference
 
 ## 🏷️ Auto-Release System
 

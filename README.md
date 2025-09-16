@@ -56,10 +56,10 @@ nano .env  # Add your SignalHire API key
 python3 -m src.cli.main search --title "Software Engineer" --location "San Francisco"
 ```
 
-**Production Build (For CI/CD):**
+**Production Build (Simplified):**
 ```bash
-# Create clean production deployment
-./scripts/build/build-production.sh ~/production-deploy --latest --force
+# Create clean production deployment (simplified)
+ops build --target ~/production-deploy
 cd ~/production-deploy && ./install.sh
 ```
 
@@ -72,7 +72,7 @@ cd ~/production-deploy && ./install.sh
 - ✅ **Universal**: Works on Windows/WSL/Linux/Mac
 - ✅ **Simple setup**: Creates `.env` and adds command to PATH automatically
 
-**Current Version**: `v0.2.0` - [View Release](https://github.com/vanman2024/signalhireagent/releases/tag/v0.2.0)
+**Current Version**: `v0.3.0` - [View Release](https://github.com/vanman2024/signalhireagent/releases/tag/v0.3.0)
 
 ## 📈 Real-World Case Study: Professional Lead Generation
 
