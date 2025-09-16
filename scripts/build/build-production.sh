@@ -312,54 +312,66 @@ print_status "Creating deployment utilities..."
 cat > "$TARGET_DIR/install.sh" << 'EOF'
 #!/bin/bash
 # SignalHire Agent Installation Script
+#
+# PURPOSE: Set up a working Python environment (venv if available) and install production dependencies
+# USAGE: ./install.sh
+# PART OF: Production deployment package
+# CONNECTS TO: signalhire-agent CLI wrapper, requirements.txt
+
+set -euo pipefail
 
 echo "Installing SignalHire Agent..."
 
+# Detect non-interactive/CI mode
+NONINTERACTIVE=${NONINTERACTIVE:-}
+if [ -n "${CI:-}" ] && [ "${CI}" = "true" ]; then
+  NONINTERACTIVE=1
+fi
+
 # Check Python version
-python3 --version | grep -E "3\.(9|10|11|12)" > /dev/null
-if [ $? -ne 0 ]; then
+if ! python3 --version | grep -E "3\.(9|10|11|12)" > /dev/null; then
     echo "Error: Python 3.9+ required"
     exit 1
 fi
 
 # Check if python3-venv is available by testing venv creation
-python3 -m venv test_venv_check > /dev/null 2>&1
-venv_available=$?
-rm -rf test_venv_check > /dev/null 2>&1
-
-if [ $venv_available -ne 0 ]; then
-    echo "Error: python3-venv not available"
-    echo "Please install it with: sudo apt install python3.12-venv"
-    echo ""
-    echo "Alternative: Use --break-system-packages flag"
-    echo "Would you like to install dependencies system-wide? (y/N)"
-    read -r response
-    if [[ "$response" =~ ^[Yy]$ ]]; then
-        echo "Installing dependencies system-wide..."
-        pip3 install -r requirements.txt --break-system-packages
-    else
-        echo "Installation cancelled. Please install python3-venv first."
-        exit 1
-    fi
+if python3 -m venv test_venv_check > /dev/null 2>&1; then
+    rm -rf test_venv_check > /dev/null 2>&1
+    VENV_AVAILABLE=1
 else
+    VENV_AVAILABLE=0
+fi
+
+if [ "$VENV_AVAILABLE" -eq 1 ]; then
     # Create virtual environment if it doesn't exist
     if [ ! -d "venv" ]; then
         echo "Creating virtual environment..."
         python3 -m venv venv
-        if [ $? -ne 0 ]; then
-            echo "Failed to create virtual environment"
-            exit 1
-        fi
     fi
-
     # Activate virtual environment and install dependencies
     echo "Installing dependencies in virtual environment..."
+    # shellcheck disable=SC1091
     source venv/bin/activate
+    pip install --upgrade pip
     pip install -r requirements.txt
+else
+    echo "python3-venv not available. Falling back to user installation."
+    if [ -n "${NONINTERACTIVE:-}" ]; then
+        echo "Non-interactive mode: installing dependencies with --user"
+        pip3 install --upgrade --user pip || true
+        if ! pip3 install --user -r requirements.txt; then
+            echo "--user install failed; attempting system install with --break-system-packages"
+            pip3 install -r requirements.txt --break-system-packages
+        fi
+    else
+        echo "Please install python3-venv (e.g., sudo apt install python3.12-venv)"
+        echo "Or rerun in non-interactive mode: NONINTERACTIVE=1 ./install.sh"
+        exit 1
+    fi
 fi
 
 # Make CLI executable (if using direct execution)
-chmod +x src/cli/main.py
+chmod +x src/cli/main.py || true
 
 echo "Installation complete!"
 echo ""

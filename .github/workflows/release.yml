@@ -65,7 +65,7 @@ jobs:
         cd dist/signalhireagent
         test -x install.sh
         test -x signalhire-agent
-        ./install.sh
+        CI=true NONINTERACTIVE=1 ./install.sh
         ./signalhire-agent --help >/dev/null
 
     - name: Create build archive
