@@ -6,16 +6,24 @@ cd "$(dirname "$0")/.."
 
 echo "🔨 Building signalhireagent..."
 
-# Install/update dependencies
-echo "📦 Installing dependencies..."
-if command -v python3 >/dev/null && python3 -c "import sys; print('Virtual environment' if hasattr(sys, 'real_prefix') or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix) else 'System environment')" | grep -q "Virtual environment"; then
-    pip install -e .[dev]
+# Activate virtual environment
+if [[ -f ".venv/bin/activate" ]]; then
+    echo "📦 Activating .venv virtual environment..."
+    source .venv/bin/activate
+elif [[ -f "venv/bin/activate" ]]; then
+    echo "📦 Activating venv virtual environment..."
+    source venv/bin/activate
 else
-    echo "Using system environment - dependencies assumed installed"
-    echo "Run: python3 -m pip install -e .[dev] --break-system-packages (if needed)"
+    echo "⚠️ No virtual environment found - creating .venv..."
+    python3 -m venv .venv
+    source .venv/bin/activate
 fi
 
-# Lint and fix issues
+# Install/update dependencies
+echo "📦 Installing dependencies..."
+pip install -e .[dev]
+
+# Lint and fix issues  
 echo "🧹 Linting code..."
 ruff check src/ --fix || true
 
@@ -23,8 +31,8 @@ ruff check src/ --fix || true
 echo "🔍 Type checking..."
 mypy src/ || true
 
-# Basic import test
+# Basic import test using run.py (proper way)
 echo "✅ Testing imports..."
-python3 -c "import sys; sys.path.append('src'); import cli.main"
+python3 run.py -c "print('✅ Imports working!')"
 
 echo "✅ Build complete!"

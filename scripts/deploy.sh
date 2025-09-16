@@ -8,6 +8,16 @@ VERSION_TYPE="${1:-patch}"  # major, minor, patch
 
 echo "🚀 Deploying signalhireagent..."
 
+# Activate virtual environment  
+if [[ -f ".venv/bin/activate" ]]; then
+    source .venv/bin/activate
+elif [[ -f "venv/bin/activate" ]]; then
+    source venv/bin/activate
+else
+    echo "❌ No virtual environment found - run ./scripts/build.sh first"
+    exit 1
+fi
+
 # Run tests first
 echo "🧪 Running tests before deploy..."
 ./scripts/test.sh
