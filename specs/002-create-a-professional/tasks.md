@@ -112,6 +112,7 @@
 
 - [ ] T033 @codex Add CLI scroll pagination support for Search API (search --continue-search uses requestId + scrollId)
 - [ ] T034 @codex Add scheduling examples and scripts for daily runs (cron, DO App Platform, Vercel)
+- [x] T035 @codex Preserve agent documentation in production build (devops/deploy/commands/build-production.sh)
 
 ## Dependencies
 

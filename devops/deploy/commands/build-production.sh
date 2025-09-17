@@ -161,8 +161,33 @@ print_status "  Commit:  $COMMIT_HASH"
 print_status "  Target:  $TARGET_DIR"
 
 # Check if target directory exists
+# Preserve selected files/directories before overwriting target
+preserve_backup=""
+preserve_paths=(
+  "CLAUDE.md"
+  "AGENTS.md"
+  "MULTI_AGENT_INTEGRATION_SUMMARY.md"
+  "QUICK_DEPLOYMENT_GUIDE.md"
+  "docs"
+  ".claude"
+  ".codex"
+  ".gemini"
+  ".qwen"
+)
+
 if [[ -d "$TARGET_DIR" ]]; then
     if [[ "$FORCE" == "true" ]]; then
+        print_warning "Backing up agent documentation before overwrite"
+        preserve_backup=$(mktemp -d)
+        for path in "${preserve_paths[@]}"; do
+            if [[ -d "$TARGET_DIR/$path" ]]; then
+                rsync -a "$TARGET_DIR/$path/" "$preserve_backup/$path/"
+            elif [[ -f "$TARGET_DIR/$path" ]]; then
+                mkdir -p "$(dirname "$preserve_backup/$path")"
+                cp -a "$TARGET_DIR/$path" "$preserve_backup/$path"
+            fi
+        done
+
         print_warning "Removing existing target directory"
         rm -rf "$TARGET_DIR"
     else
@@ -199,14 +224,54 @@ cp README.md "$TARGET_DIR/" 2>/dev/null || true
 cp QUICKSTART.md "$TARGET_DIR/" 2>/dev/null || true
 cp LICENSE "$TARGET_DIR/" 2>/dev/null || true
 
-# AI Agent instruction files (essential for agents to work with CLI)
-# Skip copying CLAUDE.md and AGENTS.md - these are development instruction files
+# AI agent instruction files (required for multi-agent workflows)
+print_status "Copying agent instruction files..."
 mkdir -p "$TARGET_DIR/.github"
 cp -r .github/copilot-instructions.md "$TARGET_DIR/.github/" 2>/dev/null || true
 
-# CLI commands reference (referenced by agent files)
-mkdir -p "$TARGET_DIR/docs"
-cp docs/cli-commands.md "$TARGET_DIR/docs/" 2>/dev/null || true
+agent_files=(
+  "CLAUDE.md"
+  "AGENTS.md"
+  "MULTI_AGENT_INTEGRATION_SUMMARY.md"
+  "QUICK_DEPLOYMENT_GUIDE.md"
+  "docs/cli-commands.md"
+)
+
+agent_directories=(
+  ".claude"
+  ".codex"
+  ".gemini"
+  ".qwen"
+)
+
+for agent_file in "${agent_files[@]}"; do
+    if [[ -e "$agent_file" ]]; then
+        target_path="$TARGET_DIR/$agent_file"
+        mkdir -p "$(dirname "$target_path")"
+        cp "$agent_file" "$target_path"
+    fi
+done
+
+for agent_dir in "${agent_directories[@]}"; do
+    if [[ -d "$agent_dir" ]]; then
+        rsync -a "$agent_dir/" "$TARGET_DIR/$agent_dir/" 2>/dev/null || cp -r "$agent_dir" "$TARGET_DIR/$agent_dir"
+    fi
+done
+
+# Restore preserved files/directories if they existed in the target
+if [[ -n "$preserve_backup" && -d "$preserve_backup" ]]; then
+    print_status "Restoring preserved agent documentation..."
+    for path in "${preserve_paths[@]}"; do
+        if [[ -d "$preserve_backup/$path" ]]; then
+            mkdir -p "$TARGET_DIR/$path"
+            cp -a "$preserve_backup/$path/." "$TARGET_DIR/$path/"
+        elif [[ -f "$preserve_backup/$path" ]]; then
+            mkdir -p "$(dirname "$TARGET_DIR/$path")"
+            cp -a "$preserve_backup/$path" "$TARGET_DIR/$path"
+        fi
+    done
+    rm -rf "$preserve_backup"
+fi
 
 # Create production requirements.txt (without dev dependencies)
 print_status "Creating production requirements.txt..."
