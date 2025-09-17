@@ -8,7 +8,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-CONFIG_FILE="$REPO_ROOT/.automation/config.yml"
+CONFIG_FILE="$REPO_ROOT/ops/config.yml"
 
 # Colors
 RED='\033[0;31m'
@@ -173,10 +173,10 @@ cmd_build() {
     print_status "Building production version to: $target"
     
     # Use existing build script
-    if [[ -f "scripts/build/build-production.sh" ]]; then
+    if [[ -f "deploy/commands/build-production.sh" ]]; then
         local args=("$target")
         [[ "$force" == true ]] && args+=(--force)
-        ./scripts/build/build-production.sh "${args[@]}"
+        ./deploy/commands/build-production.sh "${args[@]}"
     else
         # Fallback simple build
         mkdir -p "$target"

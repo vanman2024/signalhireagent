@@ -4,19 +4,19 @@ versioning:
   source: pyproject.toml
 
 targets:
-  - /home/vanman2025/deploy/signalhire
+  - /home/vanman2025/Projects/signalhireagenttests2/signalhireagent
 
 release:
   changelog: true
   tag_prefix: v
-
+  
 qa:
   lint: true
   typecheck: true
   tests: "not slow"
-
+  
 env:
   wsl_check: true
-
+  
 hooks:
   auto_sync: false
