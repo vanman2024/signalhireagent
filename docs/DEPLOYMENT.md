@@ -98,6 +98,28 @@ During deployments, the following user-created files are automatically preserved
 3. Configure `.env` file
 4. Test with `./signalhire-agent --help`
 
+## 🚨 CRITICAL: Development vs Production Protocol
+
+### Never Edit Production Directly
+- ❌ **NEVER** make changes directly in production code
+- ❌ **NEVER** edit files in `/path/to/production/` directory
+- ✅ **ALWAYS** make changes in development environment first
+- ✅ **ALWAYS** test changes in development before deploying
+- ✅ **ALWAYS** use deployment scripts to push changes to production
+
+### Proper Development Workflow
+1. **Make changes in development**: Edit files in main development directory
+2. **Test changes locally**: Verify fixes work in development environment
+3. **Commit changes**: Use git to commit changes to development repository
+4. **Deploy to production**: Use deployment script to push changes to production
+5. **Verify in production**: Test that changes work in production environment
+
+### Why This Matters
+- Production deployments overwrite ALL code changes
+- Manual edits in production are lost when deployment script runs
+- Development → Production flow ensures consistency and version control
+- Deployment script handles proper file copying and environment setup
+
 ## Deployment Commands
 
 ### For Developers
