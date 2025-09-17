@@ -673,8 +673,8 @@ class SignalHireClient:
         env_base = os.getenv("SIGNALHIRE_API_BASE_URL")
         env_prefix = os.getenv("SIGNALHIRE_API_PREFIX")
         self.api_key = api_key or os.getenv("SIGNALHIRE_API_KEY")
-        self.base_url = (env_base or base_url).rstrip("/")
-        prefix_value = env_prefix if env_prefix is not None else api_prefix
+        self.base_url = (env_base if env_base else base_url).rstrip("/")
+        prefix_value = env_prefix if env_prefix else api_prefix
         self.api_prefix = ("/" + prefix_value.strip("/")) if prefix_value else ""
         self.rate_limiter = RateLimiter(max_requests=600, time_window=60)  # 600/minute
         self.session: httpx.AsyncClient | None = None
