@@ -49,10 +49,8 @@ class CliConfig:
         self.password: str | None = os.getenv('SIGNALHIRE_PASSWORD')
         self.api_key: str | None = os.getenv('SIGNALHIRE_API_KEY')
         # API endpoint configuration
-        self.api_base_url: str = os.getenv(
-            'SIGNALHIRE_API_BASE_URL', 'https://api.signalhire.com'
-        )
-        self.api_prefix: str = os.getenv('SIGNALHIRE_API_PREFIX', '/api/v1')
+        self.api_base_url: str = os.getenv('SIGNALHIRE_API_BASE_URL') or 'https://www.signalhire.com'
+        self.api_prefix: str = os.getenv('SIGNALHIRE_API_PREFIX') or '/api/v1'
 
         # Browser configuration
         self.browser_mode: bool = False  # Will auto-detect if API key not available
