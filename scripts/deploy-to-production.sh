@@ -59,9 +59,20 @@ if [[ -d "$PRODUCTION_DIR" && "$(ls -A "$PRODUCTION_DIR" 2>/dev/null)" ]]; then
     
     cd "$PRODUCTION_DIR"
     for pattern in "${PRESERVE_PATTERNS[@]}"; do
-        if ls $pattern 2>/dev/null | grep -v -E '^(README|QUICKSTART|BUILD_INFO)\.md$' >/dev/null 2>&1; then
-            echo "  📄 Preserving: $pattern"
-            cp -r $pattern "$USER_FILES_BACKUP/" 2>/dev/null || true
+        # Skip CLAUDE.md and AGENTS.md as these are development files
+        if [[ "$pattern" == "*.md" ]]; then
+            # Only preserve user-created .md files, not development instruction files
+            for file in *.md; do
+                if [[ -f "$file" && ! "$file" =~ ^(README|QUICKSTART|BUILD_INFO|CLAUDE|AGENTS)\.md$ ]]; then
+                    echo "  📄 Preserving: $file"
+                    cp "$file" "$USER_FILES_BACKUP/" 2>/dev/null || true
+                fi
+            done
+        else
+            if ls $pattern 2>/dev/null >/dev/null 2>&1; then
+                echo "  📄 Preserving: $pattern"
+                cp -r $pattern "$USER_FILES_BACKUP/" 2>/dev/null || true
+            fi
         fi
     done
     cd - >/dev/null
