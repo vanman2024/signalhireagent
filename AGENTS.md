@@ -263,6 +263,7 @@ When users give natural language requests, ALL agents should reference the CLI c
 - **"Check daily limits"** → `signalhire status --credits`
 - **"Remove unwanted titles"** → `signalhire filter job-title --exclude-job-titles "operator,driver"`
 - **"Analyze contacts"** → `signalhire analyze job-titles --input contacts.json`
+- **"Show heavy equipment templates"** → `signalhire search templates`
 
 ### Key Features ALL Agents Should Know:
 - ✅ **Search Profile Tracking**: 5000/day automatic limit monitoring
@@ -276,7 +277,14 @@ When users give natural language requests, ALL agents should reference the CLI c
 ## Production Deployment System
 
 ### For All AI Agents Working with Production
-When users request deployment or production builds, use these commands:
+When users request deployment or production builds, follow the release workflow:
+
+```bash
+# Bump version (choose patch|minor|major)
+./devops/ops/ops release patch
+```
+
+Then use these commands:
 
 ```bash
 # Create production deployment

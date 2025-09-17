@@ -27,7 +27,7 @@ LINKEDIN_PROFILE_PATTERN = re.compile(r'^https?://(?:www\.)?linkedin\.com/in/[\w
 LINKEDIN_COMPANY_PATTERN = re.compile(
     r'^https?://(?:www\.)?linkedin\.com/company/[\w-]+/?$'
 )
-PHONE_PATTERN = re.compile(r'^[\\+]?[1-9][\\d\\s\\-\(\)]{7,15}$')
+PHONE_PATTERN = re.compile(r'^\+?[1-9][\d\s\-()]{7,15}$')
 UUID_PATTERN = re.compile(
     r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', re.IGNORECASE
 )

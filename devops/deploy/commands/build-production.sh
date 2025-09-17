@@ -284,6 +284,7 @@ httpx>=0.25.0
 
 # Data validation and models
 pydantic>=2.0.0
+pydantic-settings>=2.0.0
 
 # Web framework for callback server
 fastapi>=0.100.0
@@ -517,7 +518,12 @@ fi
 
 # Check if virtual environment exists and use it
 if [ -d "$SCRIPT_DIR/venv" ]; then
+    # shellcheck disable=SC1091
     source "$SCRIPT_DIR/venv/bin/activate"
+    # After activation, pick up the venv python
+    if command -v python3 >/dev/null 2>&1; then
+        PYTHON_CMD="$(command -v python3)"
+    fi
 fi
 
 export PYTHONPATH="$SCRIPT_DIR:$PYTHONPATH"

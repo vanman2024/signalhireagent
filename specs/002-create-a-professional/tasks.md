@@ -115,6 +115,7 @@
 - [x] T035 @codex Preserve agent documentation in production build (devops/deploy/commands/build-production.sh)
 - [x] T036 @codex Add search command shortcut for heavy equipment templates (src/cli/search_commands.py)
 - [x] T037 @codex Normalize export path display for WSL outputs (src/lib/common.py, src/cli/export_commands.py)
+- [x] T038 @codex Ensure production build bundles pydantic-settings and CLI wrapper uses venv python (devops/deploy/commands/build-production.sh, src/lib/validation.py)
 
 ## Dependencies
 
