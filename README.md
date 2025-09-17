@@ -154,6 +154,14 @@ signalhire-agent doctor
 - ✅ **Contact Reveal**: Get email/phone via callback URLs
 - ✅ **Credit Management**: Real-time usage tracking and limits
 
+### 🔄 **DevOps & Rollback System**
+- 🚀 **Ops CLI**: Complete development workflow management (`ops qa` → `ops build` → `ops verify-prod` → `ops release`)
+- 🔄 **Rollback Functionality**: Safe rollback to previous versions with automatic backups
+- 🛡️ **Production Safety**: Backup creation, stash handling, and deployment verification
+- 📊 **Version Management**: Semantic versioning with git tag integration
+- 🧪 **Comprehensive Testing**: 31 rollback tests covering unit, integration, and functional scenarios
+- 📋 **Multi-Environment**: Support for development, staging, and production deployments
+
 ## 📖 Usage Guide
 
 ### 1. Basic Commands
@@ -723,6 +731,121 @@ signalhire export summary contacts.csv
 - **Export Formats**: CSV, JSON, Excel with timestamps
 - **Progress Monitoring**: Real-time status updates
 - **Error Handling**: Auto-retry with detailed logging
+
+## 🔄 **Rollback System (New Feature)**
+
+The SignalHire Agent now includes comprehensive rollback functionality for production deployments, ensuring safe version management and quick recovery from issues.
+
+### **🚀 Quick Rollback Commands**
+
+```bash
+# Rollback via ops CLI (recommended)
+ops rollback v1.2.0                    # Rollback to specific version
+ops rollback v1.2.0 ~/deploy/custom    # With custom target directory
+
+# Standalone rollback script
+./devops/deploy/commands/rollback.sh v1.2.0
+./devops/deploy/commands/rollback.sh v1.2.0 ~/deploy/production
+```
+
+### **🛡️ Safety Features**
+
+- ✅ **Automatic Backups**: Creates timestamped backups before rollback
+- ✅ **Stash Handling**: Safely manages uncommitted changes
+- ✅ **Version Validation**: Verifies target version exists in git tags
+- ✅ **Deployment Verification**: Tests deployment after rollback
+- ✅ **Interactive Confirmation**: Shows impact and requires user approval
+- ✅ **Detailed Logging**: Provides rollback summary and recovery options
+
+### **📋 Complete Rollback Workflow**
+
+```bash
+# 1. Check available versions
+git tag --list "v*" --sort=-version:refname | head -5
+
+# 2. Run quality checks before rollback
+ops qa
+
+# 3. Perform rollback with backup
+ops rollback v1.2.0
+
+# 4. Verify deployment
+ops verify-prod
+
+# 5. Check rollback summary
+cat /tmp/signalhire-backup-*/BACKUP_INFO.txt
+```
+
+### **🔧 Rollback Process Details**
+
+1. **Safety Check**: Validates target version and shows what will happen
+2. **Backup Creation**: Creates timestamped backup of current deployment
+3. **Git Operations**: Stashes changes, checks out target version
+4. **Rebuild**: Rebuilds production deployment from target version
+5. **Verification**: Tests the rolled-back deployment
+6. **Summary**: Shows rollback details and recovery options
+
+### **📊 Available Versions**
+
+Your repository includes these rollback targets:
+- `v1.2.0-fast-cli` - Latest fast CLI version
+- `v0.4.12` - Current stable release
+- `v0.4.11` - Previous stable release
+- `v0.4.10` - Earlier stable release
+- `v0.4.9` - Base stable release
+
+### **🔄 Recovery Options**
+
+If a rollback fails or you need to undo:
+
+```bash
+# Restore from automatic backup
+cp -r /tmp/signalhire-backup-*/current-deployment/* ~/deploy/signalhire/
+
+# Restore stashed changes
+git stash pop
+
+# Roll forward to newer version
+ops rollback v0.4.12
+```
+
+### **🧪 Testing Coverage**
+
+The rollback system includes comprehensive testing:
+- **31 total tests** covering all functionality
+- **Unit tests**: Core logic validation
+- **Integration tests**: CLI and script interaction
+- **Functional tests**: End-to-end workflow verification
+- **100% automated** test coverage
+
+```bash
+# Run rollback tests
+python3 -m pytest tests/backend/unit/test_rollback.py -v
+python3 -m pytest tests/backend/integration/test_rollback_integration.py -v
+python3 -m pytest tests/backend/functional/test_rollback_functional.py -v
+```
+
+### **📖 Usage Examples**
+
+**Basic Rollback:**
+```bash
+ops rollback v0.4.11
+```
+
+**Rollback with Custom Target:**
+```bash
+ops rollback v0.4.10 ~/deploy/production
+```
+
+**Check Available Versions:**
+```bash
+git tag --list "v*" --sort=-version:refname
+```
+
+**View Rollback History:**
+```bash
+git log --oneline --grep="rollback\|bump:" | head -10
+```
 
 ## 🤝 Contributing
 
