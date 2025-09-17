@@ -164,8 +164,7 @@ cp QUICKSTART.md "$TARGET_DIR/" 2>/dev/null || true
 cp LICENSE "$TARGET_DIR/" 2>/dev/null || true
 
 # AI Agent instruction files (essential for agents to work with CLI)
-cp CLAUDE.md "$TARGET_DIR/" 2>/dev/null || true
-cp AGENTS.md "$TARGET_DIR/" 2>/dev/null || true
+# Skip copying CLAUDE.md and AGENTS.md - these are development instruction files
 mkdir -p "$TARGET_DIR/.github"
 cp -r .github/copilot-instructions.md "$TARGET_DIR/.github/" 2>/dev/null || true
 
@@ -437,8 +436,7 @@ cat > "$TARGET_DIR/BUILD_INFO.md" << EOF
 - \`install.sh\` - Installation script
 - \`signalhire-agent\` - CLI wrapper script
 - \`.env\` - Production environment file (automatically created with your credentials)
-- \`CLAUDE.md\` - Claude Code agent instructions
-- \`AGENTS.md\` - All AI agents instructions (Codex, Gemini, etc.)
+- Essential documentation files only (README, QUICKSTART, etc.)
 - \`.github/copilot-instructions.md\` - GitHub Copilot instructions
 - \`docs/cli-commands.md\` - Complete CLI command reference for agents
 
