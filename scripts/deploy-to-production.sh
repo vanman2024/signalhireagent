@@ -36,8 +36,9 @@ BUILD_DIR="$(mktemp -d)"
 
 # Backup existing production if it exists
 if [[ -d "$PRODUCTION_DIR" && "$(ls -A "$PRODUCTION_DIR" 2>/dev/null)" ]]; then
-    BACKUP_DIR="${PRODUCTION_DIR}.backup.$(date +%Y%m%d_%H%M%S)"
+    BACKUP_DIR="$(dirname "$PRODUCTION_DIR")/backups/signalhireagent.backup.$(date +%Y%m%d_%H%M%S)"
     echo "💾 Backing up existing production to: $BACKUP_DIR"
+    mkdir -p "$(dirname "$BACKUP_DIR")"
     mv "$PRODUCTION_DIR" "$BACKUP_DIR"
 fi
 
