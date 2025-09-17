@@ -1,6 +1,6 @@
 # signalhireagent Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2025-09-11
+Auto-generated from all feature plans. Last updated: 2025-09-16
 
 ## Active Technologies
 - Python 3.11 + asyncio (signalhireagent)
@@ -42,6 +42,28 @@ When the user gives natural language requests, use the CLI command mappings in t
 - Geographic and job title analysis
 - Automatic 5000/day limit tracking (search profiles + reveals)
 - Progress tracking and resume capability
+
+## 🚨 CRITICAL: Development vs Production Protocol
+
+### Never Edit Production Directly
+- ❌ **NEVER** make changes directly in production code
+- ❌ **NEVER** edit files in `/path/to/production/` directory  
+- ✅ **ALWAYS** make changes in development environment first
+- ✅ **ALWAYS** test changes in development before deploying
+- ✅ **ALWAYS** use deployment scripts to push changes to production
+
+### Proper Development Workflow
+1. **Make changes in development**: Edit files in main development directory
+2. **Test changes locally**: Verify fixes work in development environment
+3. **Commit changes**: Use git to commit changes to development repository
+4. **Deploy to production**: Use `./scripts/deploy-to-production.sh` to push changes
+5. **Verify in production**: Test that changes work in production environment
+
+### Why This Matters
+- Production deployments overwrite ALL code changes
+- Manual edits in production are lost when deployment script runs
+- Development → Production flow ensures consistency and version control
+- Deployment script handles proper file copying and environment setup
 
 ## Code Style
 Python: Follow PEP 8, use async/await patterns, structured logging with JSON
