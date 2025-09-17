@@ -100,19 +100,55 @@ fi
 
 # Get version information
 if [[ "$VERSION_TAG" == "latest" ]]; then
-    VERSION_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0-dev")
-    print_status "Using latest version tag: $VERSION_TAG"
+    # Read version from pyproject.toml
+    if [[ -f "pyproject.toml" ]]; then
+        PYPROJECT_VERSION=$(grep '^version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
+        VERSION_TAG="v$PYPROJECT_VERSION"
+        print_status "Using version from pyproject.toml: $VERSION_TAG"
+        
+        # Auto-create/update git tag if it doesn't exist
+        if ! git rev-parse "$VERSION_TAG" >/dev/null 2>&1; then
+            print_status "Creating git tag: $VERSION_TAG"
+            git tag "$VERSION_TAG" 2>/dev/null || print_warning "Could not create git tag (this is okay)"
+        fi
+    else
+        VERSION_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0-dev")
+        print_status "No pyproject.toml found, using latest git tag: $VERSION_TAG"
+    fi
 elif [[ -n "$VERSION_TAG" ]]; then
-    # Validate that the version tag exists
+    # Validate that the version tag exists, or read from pyproject.toml
     if ! git rev-parse "$VERSION_TAG" >/dev/null 2>&1; then
-        print_error "Version tag '$VERSION_TAG' does not exist"
-        exit 1
+        if [[ -f "pyproject.toml" ]]; then
+            PYPROJECT_VERSION=$(grep '^version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
+            VERSION_TAG="v$PYPROJECT_VERSION"
+            print_status "Version tag not found, using pyproject.toml: $VERSION_TAG"
+            
+            # Auto-create git tag
+            print_status "Creating git tag: $VERSION_TAG"
+            git tag "$VERSION_TAG" 2>/dev/null || print_warning "Could not create git tag (this is okay)"
+        else
+            print_error "Version tag '$VERSION_TAG' does not exist and no pyproject.toml found"
+            exit 1
+        fi
     fi
     print_status "Using specified version: $VERSION_TAG"
 else
-    # Get current version based on latest tag + commits
-    VERSION_TAG=$(git describe --tags --dirty 2>/dev/null || echo "v0.0.0-dev-$(git rev-parse --short HEAD)")
-    print_status "Using current version: $VERSION_TAG"
+    # Read version from pyproject.toml first, fallback to git
+    if [[ -f "pyproject.toml" ]]; then
+        PYPROJECT_VERSION=$(grep '^version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
+        VERSION_TAG="v$PYPROJECT_VERSION"
+        print_status "Using version from pyproject.toml: $VERSION_TAG"
+        
+        # Auto-create git tag if it doesn't exist
+        if ! git rev-parse "$VERSION_TAG" >/dev/null 2>&1; then
+            print_status "Creating git tag: $VERSION_TAG"
+            git tag "$VERSION_TAG" 2>/dev/null || print_warning "Could not create git tag (this is okay)"
+        fi
+    else
+        # Fallback to git describe
+        VERSION_TAG=$(git describe --tags --dirty 2>/dev/null || echo "v0.0.0-dev-$(git rev-parse --short HEAD)")
+        print_status "No pyproject.toml found, using git describe: $VERSION_TAG"
+    fi
 fi
 
 # Get commit hash for version tracking
@@ -327,14 +363,21 @@ if [ -n "${CI:-}" ] && [ "${CI}" = "true" ]; then
   NONINTERACTIVE=1
 fi
 
+# Force WSL Python (avoid Windows Python in WSL)
+PYTHON_CMD="python3"
+if [ -n "${WSL_DISTRO_NAME:-}" ] && command -v /usr/bin/python3 >/dev/null 2>&1; then
+    PYTHON_CMD="/usr/bin/python3"
+    echo "WSL detected, using WSL Python: $PYTHON_CMD"
+fi
+
 # Check Python version
-if ! python3 --version | grep -E "3\.(9|10|11|12)" > /dev/null; then
+if ! $PYTHON_CMD --version | grep -E "3\.(9|10|11|12)" > /dev/null; then
     echo "Error: Python 3.9+ required"
     exit 1
 fi
 
 # Check if python3-venv is available by testing venv creation
-if python3 -m venv test_venv_check > /dev/null 2>&1; then
+if $PYTHON_CMD -m venv test_venv_check > /dev/null 2>&1; then
     rm -rf test_venv_check > /dev/null 2>&1
     VENV_AVAILABLE=1
 else
@@ -344,8 +387,8 @@ fi
 if [ "$VENV_AVAILABLE" -eq 1 ]; then
     # Create virtual environment if it doesn't exist
     if [ ! -d "venv" ]; then
-        echo "Creating virtual environment..."
-        python3 -m venv venv
+        echo "Creating virtual environment with $PYTHON_CMD..."
+        $PYTHON_CMD -m venv venv
     fi
     # Activate virtual environment and install dependencies
     echo "Installing dependencies in virtual environment..."
@@ -401,6 +444,12 @@ cat > "$TARGET_DIR/signalhire-agent" << 'EOF'
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Force WSL Python (avoid Windows Python in WSL)
+PYTHON_CMD="python3"
+if [ -n "${WSL_DISTRO_NAME:-}" ] && command -v /usr/bin/python3 >/dev/null 2>&1; then
+    PYTHON_CMD="/usr/bin/python3"
+fi
+
 # Check if virtual environment exists and use it
 if [ -d "$SCRIPT_DIR/venv" ]; then
     source "$SCRIPT_DIR/venv/bin/activate"
@@ -413,8 +462,8 @@ if [ -f "$SCRIPT_DIR/.env" ]; then
     export $(grep -v '^#' "$SCRIPT_DIR/.env" | xargs)
 fi
 
-# Run the CLI
-python3 -m src.cli.main "$@"
+# Run the CLI with correct Python
+$PYTHON_CMD -m src.cli.main "$@"
 EOF
 
 chmod +x "$TARGET_DIR/signalhire-agent"

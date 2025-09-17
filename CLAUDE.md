@@ -65,6 +65,75 @@ When the user gives natural language requests, use the CLI command mappings in t
 - Development → Production flow ensures consistency and version control
 - Deployment script handles proper file copying and environment setup
 
+### Simple Deployment System (Fixed 2025-09-16)
+The deployment now uses a **whitelist approach** that only updates specific system files:
+
+**System Files (Always Updated):**
+- `src/` - Application code
+- `requirements.txt` - Dependencies  
+- `VERSION` - Version info (auto-reads from pyproject.toml)
+- `BUILD_INFO.md` - Build documentation
+- `install.sh` - Installation script
+- `signalhire-agent` - CLI wrapper
+- `.env` - Environment configuration
+
+**User Files (Always Preserved):**
+- `CLAUDE.md` - User instructions
+- `AGENTS.md` - Agent configurations  
+- `*.txt` - User data files
+- `config/` - User configuration
+- `data/` - User data directories
+- Any other files not in the system whitelist
+
+**Deploy Command:**
+```bash
+./scripts/deploy-to-production.sh
+# ✅ Updates system files with v0.4.6 from pyproject.toml  
+# ✅ Preserves all user files
+# ✅ No backup directories created
+# ✅ Clean, reliable deployment
+```
+
+## 🤝 Working with Users - Critical Guidelines
+
+### User Communication Principles
+- **Be Direct & Concise**: Users want solutions, not explanations. Answer in 1-3 sentences when possible.
+- **Follow Instructions Exactly**: If user says "don't create backups", don't create backups. Period.
+- **Ask for Clarification**: When unclear, ask specific questions rather than making assumptions.
+- **Validate Understanding**: Repeat back critical requirements to confirm understanding.
+
+### Common User Frustrations to Avoid
+- ❌ **Over-explaining**: Don't explain what you're doing unless asked
+- ❌ **Ignoring explicit instructions**: "I told you not to do X" means never do X
+- ❌ **Making assumptions**: When in doubt, ask
+- ❌ **Complex solutions**: Users prefer simple, reliable approaches
+- ❌ **Defensive responses**: Accept feedback and fix issues quickly
+
+### Deployment-Specific User Guidelines
+- **Never edit production directly** - Users will be frustrated if you bypass their workflow
+- **Preserve user files** - Any files users create in production must be preserved
+- **Version control matters** - Users want to track changes via git tags and proper versioning
+- **Simple is better** - Complex backup/restore systems confuse users
+
+### Response Patterns
+```
+✅ Good: "Fixed. Files now preserved during deployment."
+❌ Bad: "I've implemented a comprehensive backup and restoration system that..."
+
+✅ Good: "Version now reads from pyproject.toml automatically."  
+❌ Bad: "The issue was in the version detection logic where..."
+
+✅ Good: "What specific behavior do you want when files exist?"
+❌ Bad: "I think the best approach would be to..."
+```
+
+### When Users Give Critical Feedback
+1. **Acknowledge immediately**: "You're right, that's not working"
+2. **Identify root cause**: Get to the real problem quickly  
+3. **Propose simple solution**: Offer the most direct fix
+4. **Implement and verify**: Test the solution works as expected
+5. **Confirm satisfaction**: "Is this working as you expected?"
+
 ## Code Style
 Python: Follow PEP 8, use async/await patterns, structured logging with JSON
 TypeScript: ESLint + Prettier for Stagehand automation scripts
@@ -172,11 +241,11 @@ grep "@claude" [current-spec]/tasks.md
 ```
 
 ## Recent Changes
-- 004-enterprise-contact-deduplication: Complete contact deduplication and filtering system for enterprise workflows
-- Production build system with automated GitHub Actions workflow for clean deployments  
-- Robust environment management with virtual environment support and auto-configuration
-- Enhanced AI agent integration with comprehensive CLI command references for natural language assistance
-- Complete dependency specification and automated release packaging
+- 004-enterprise-contact-deduplication: Fixed deployment protocol with simple file preservation
+- Version tracking now reads from pyproject.toml automatically and creates git tags
+- Simple deployment only updates system files (src/, VERSION, etc.), preserves all user files  
+- Fixed SignalHire API client environment variable handling (empty string issue)
+- Eliminated backup directory creation during deployments
 
 ## Prerequisites
 - SignalHire API key (for MCP tool integration)
