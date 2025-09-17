@@ -73,8 +73,24 @@
 ├── signalhire-agent    # CLI wrapper
 ├── .env                # Environment configuration
 ├── VERSION             # Version metadata
-└── docs/               # Essential documentation
+├── docs/               # Essential documentation
+│   ├── issues/         # User: Production issues (PRESERVED)
+│   ├── notes/          # User: Operational notes (PRESERVED)
+│   └── user/           # User: Custom documentation (PRESERVED)
+├── operations/         # User: SignalHire operations data (PRESERVED)
+├── local/              # User: Environment configs (PRESERVED)
+├── data/               # User: Exports and data files (PRESERVED)
+└── *.md, *.log, *.notes # User: Any tracking files (PRESERVED)
 ```
+
+### User File Preservation
+During deployments, the following user-created files are automatically preserved:
+- `docs/issues/`, `docs/notes/`, `docs/user/` - User documentation
+- `operations/` - SignalHire operations data and tracking
+- `local/`, `config/` - Environment-specific configurations
+- `data/` - Exported contacts and data files
+- `*.md`, `*.log`, `*.notes` - Any tracking files (except system files)
+- `.signalhire-agent/` - Agent state and cache
 
 ### Installation Process
 1. Extract production build
@@ -89,8 +105,11 @@
 # Release new version
 ./scripts/deploy.sh patch
 
-# Manual production deployment
+# Manual production deployment  
 ./scripts/deploy-to-production.sh /path/to/prod
+
+# Set up production workspace directories
+./scripts/setup-production-workspace.sh /path/to/prod
 
 # Build production package locally
 ./scripts/build/build-production.sh ./dist --version v1.0.0
