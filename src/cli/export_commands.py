@@ -13,6 +13,7 @@ from pathlib import Path
 import click
 from click import echo, style
 
+from ..lib.common import normalize_path_for_display
 from ..services.export_service import ExportService
 
 
@@ -25,7 +26,7 @@ def format_export_summary(export_data: dict, format_type: str = "human") -> str:
     total_records = export_data.get('total_records', 0)
     exported_records = export_data.get('exported_records', 0)
     export_format = export_data.get('format', 'unknown')
-    output_file = export_data.get('output_file', 'N/A')
+    output_file = normalize_path_for_display(export_data.get('output_file', 'N/A'))
 
     output = []
     output.append("📁 Export Summary")
@@ -181,7 +182,7 @@ def search(
         echo("📁 Exporting search results...")
         echo(f"   Search ID: {search_id}")
         echo(f"   Format: {export_format.upper()}")
-        echo(f"   Output: {output_file}")
+        echo(f"   Output: {normalize_path_for_display(output_file)}")
 
         # Minimal implementation to satisfy enhanced contract tests
         export_service = ExportService(config)
@@ -215,7 +216,9 @@ def search(
         # Normalize result to dict for consistent printing
         result_dict = {
             'success': getattr(export_result, 'success', False),
-            'output_file': getattr(export_result, 'file_path', output_file),
+            'output_file': normalize_path_for_display(
+                getattr(export_result, 'file_path', output_file)
+            ),
             'total_records': getattr(export_result, 'records_processed', 0),
             'exported_records': getattr(export_result, 'records_exported', 0),
             'format': export_format,
@@ -235,7 +238,9 @@ def search(
 
         if result_dict.get('success'):
             echo("\n✅ Export completed successfully")
-            echo(f"💡 File saved to: {result_dict.get('output_file', output_file)}")
+            echo(
+                f"💡 File saved to: {normalize_path_for_display(result_dict.get('output_file', output_file))}"
+            )
         else:
             echo(
                 style(
@@ -306,7 +311,7 @@ def operation(ctx, operation_id, export_format, output_file):
         if not output_file:
             output_file = get_default_filename(export_format, operation_id)
 
-        echo(f"   Output: {output_file}")
+        echo(f"   Output: {normalize_path_for_display(output_file)}")
 
         # Placeholder success message
         echo("✅ Operation export completed successfully")
@@ -407,7 +412,7 @@ def convert(ctx, input_file, from_format, export_format, output_file, mapping):
 
         # Placeholder success message
         echo("✅ Format conversion completed successfully")
-        echo(f"💡 Converted file saved to: {output_file}")
+        echo(f"💡 Converted file saved to: {normalize_path_for_display(output_file)}")
 
     except Exception as e:  # noqa: BLE001
         echo(style(f"❌ Conversion failed: {e}", fg='red'), err=True)

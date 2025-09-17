@@ -184,6 +184,49 @@ def format_duration(seconds: float) -> str:
     return f"{days}d {remaining_hours}h"
 
 
+def normalize_path_for_display(path: str | Path | None) -> str:
+    """Normalize filesystem paths for display in WSL/Windows environments.
+
+    Converts Windows UNC or drive-style paths that point into the WSL
+    filesystem into POSIX-style paths so users can easily navigate to the
+    location from a WSL shell. Standard POSIX paths are returned unchanged.
+    """
+
+    if path is None:
+        return ""
+
+    path_str = str(path)
+    if not path_str:
+        return path_str
+
+    normalized = path_str.replace("\\", "/")
+    lower_normalized = normalized.lower()
+
+    wsl_prefixes = (
+        "//?/unc/wsl.localhost/",
+        "//?/unc/wsl$/",
+        "//wsl.localhost/",
+        "//wsl$/",
+    )
+
+    for prefix in wsl_prefixes:
+        if lower_normalized.startswith(prefix):
+            trimmed = normalized[len(prefix) :].lstrip("/")
+            segments = [segment for segment in trimmed.split("/") if segment]
+            if segments:
+                # Drop the distro name segment to produce a Linux-style path
+                segments = segments[1:] if len(segments) > 1 else []
+            return "/" + "/".join(segments) if segments else "/"
+
+    drive_match = re.match(r"^([a-zA-Z]):/(.*)$", normalized)
+    if drive_match:
+        drive = drive_match.group(1).lower()
+        remainder = drive_match.group(2)
+        return f"/mnt/{drive}/{remainder}" if remainder else f"/mnt/{drive}"
+
+    return normalized
+
+
 def debounce(wait_seconds: float):
     """
     Decorator to debounce function calls.

@@ -114,6 +114,7 @@
 - [ ] T034 @codex Add scheduling examples and scripts for daily runs (cron, DO App Platform, Vercel)
 - [x] T035 @codex Preserve agent documentation in production build (devops/deploy/commands/build-production.sh)
 - [x] T036 @codex Add search command shortcut for heavy equipment templates (src/cli/search_commands.py)
+- [x] T037 @codex Normalize export path display for WSL outputs (src/lib/common.py, src/cli/export_commands.py)
 
 ## Dependencies
 
