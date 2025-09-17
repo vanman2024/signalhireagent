@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "signalhire-agent"
-version = "0.4.11"
+version = "0.4.12"
 description = "AI-powered lead generation automation for SignalHire with multi-platform expansion capabilities"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -114,7 +114,7 @@ where = ["src"]
 "" = "src"
 
 [tool.pytest.ini_options]
-minversion = "0.4.11"
+minversion = "0.4.12"
 addopts = "-ra -q --strict-markers --strict-config"
 python_files = [
     "test_api_client_enhanced.py",
@@ -136,7 +136,7 @@ markers = [
 ]
 
 [tool.ruff]
-target-version = "0.4.11"
+target-version = "0.4.12"
 line-length = 88
 select = [
     "E",   # pycodestyle errors
@@ -171,7 +171,7 @@ ignore = [
 "tests/**/*" = ["ARG", "S101", "S106"]
 
 [tool.mypy]
-python_version = "0.4.11"
+python_version = "0.4.12"
 check_untyped_defs = true
 disallow_any_generics = true
 disallow_incomplete_defs = true
