@@ -58,7 +58,7 @@ class AgentConfig(BaseModel):
 
     # API Settings
     daily_reveal_limit: int = Field(
-        100, description="Daily API reveal limit for tracking"
+        5000, description="Daily API reveal limit for tracking"
     )
     api_timeout: float = Field(30.0, description="API request timeout in seconds")
     api_retry_attempts: int = Field(3, description="Number of API retry attempts")

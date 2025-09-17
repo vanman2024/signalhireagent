@@ -7,9 +7,10 @@ reveal contact information for prospects using bulk operations.
 
 import asyncio
 import json
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import click
 from click import echo, style
@@ -24,6 +25,7 @@ from rich.progress import (
     TimeRemainingColumn,
 )
 
+from ..lib.contact_cache import CachedContact, ContactCache
 from ..models.operations import RevealOp
 from ..services.signalhire_client import SignalHireClient
 
@@ -46,14 +48,14 @@ def handle_api_error(error: str, status_code: int | None = None, logger=None) ->
         echo("💡 Solutions:")
         echo("  • Wait a few minutes before retrying")
         echo("  • Reduce the number of prospects per batch")
-        echo("  • Switch to browser mode for bulk operations:")
-        echo("    signalhire reveal --browser --bulk-size 1000 [prospects]")
-        echo("  • Check your current usage: signalhire status")
+        echo("  • Pause briefly before resuming high-volume jobs")
+        echo("  • Check your current usage: signalhire status --credits")
+        echo("  • Monitor daily usage: signalhire status --daily-usage")
         echo()
-        echo("📊 API Limits:")
-        echo("  • 600 requests per minute")
-        echo("  • 100 contact reveals per day (API mode)")
-        echo("  • Unlimited reveals with browser mode")
+        echo("📊 API Quotas:")
+        echo("  • 600 search requests per minute")
+        echo("  • 5,000 contact reveals per day (API mode)")
+        echo("  • 5,000 search profile views per day")
 
     # Insufficient credits (402)
     elif (
@@ -65,10 +67,10 @@ def handle_api_error(error: str, status_code: int | None = None, logger=None) ->
         echo("Your account doesn't have enough credits for this operation.")
         echo()
         echo("💡 Solutions:")
-        echo("  • Check your current balance: signalhire credits --check")
+        echo("  • Check your current balance: signalhire status --credits")
+        echo("  • Review usage trends: signalhire status --daily-usage")
         echo("  • Purchase additional credits at: https://signalhire.com/credits")
-        echo("  • Use browser mode for unlimited reveals (slower but no credit cost)")
-        echo("  • Reduce the number of prospects to reveal")
+        echo("  • Split the job into smaller batches and retry after the daily reset")
 
     # Authentication errors (401, 403)
     elif (
@@ -83,7 +85,7 @@ def handle_api_error(error: str, status_code: int | None = None, logger=None) ->
         echo("  • Check your API key: export SIGNALHIRE_API_KEY='your-key'")
         echo("  • Verify your credentials are correct")
         echo("  • Regenerate your API key if needed")
-        echo("  • Switch to browser mode: export SIGNALHIRE_EMAIL='your@email.com'")
+        echo("  • Contact support if issues persist after regenerating the API key")
 
     # Network errors
     elif (
@@ -107,7 +109,6 @@ def handle_api_error(error: str, status_code: int | None = None, logger=None) ->
         echo("💡 Solutions:")
         echo("  • This is usually temporary - try again later")
         echo("  • Check SignalHire status page for outages")
-        echo("  • Switch to browser mode as a workaround")
 
     # Not found errors (404)
     elif status_code == 404:
@@ -159,6 +160,8 @@ def format_reveal_results(results: dict[str, Any], format_type: str = "human") -
     operation_id = results.get('operation_id', 'N/A')
     total_prospects = results.get('total_prospects', 0)
     revealed_count = results.get('revealed_count', 0)
+    cached_count = results.get('cached_reused_count', 0)
+    needs_refresh_count = results.get('needs_refresh_count', 0)
     failed_count = results.get('failed_count', 0)
     credits_used = results.get('credits_used', 0)
 
@@ -167,30 +170,46 @@ def format_reveal_results(results: dict[str, Any], format_type: str = "human") -
     output.append(f"Operation ID: {style(operation_id, fg='blue')}")
     output.append(f"Total prospects: {total_prospects}")
     output.append(
-        f"Successfully revealed: {style(str(revealed_count), fg='green', bold=True)}"
+        f"Newly revealed: {style(str(revealed_count), fg='green', bold=True)}"
     )
+
+    if cached_count:
+        output.append(
+            f"Reused from local cache: {style(str(cached_count), fg='cyan', bold=True)}"
+        )
+
+    if needs_refresh_count > 0:
+        output.append(
+            f"Needs refresh (no local contacts cached): {style(str(needs_refresh_count), fg='yellow')}"
+        )
 
     if failed_count > 0:
         output.append(f"Failed: {style(str(failed_count), fg='red')}")
 
     output.append(f"Credits used: {style(str(credits_used), fg='yellow')}")
 
-    # Success rate
-    success_rate = (
-        (revealed_count / total_prospects * 100) if total_prospects > 0 else 0
-    )
-    output.append(f"Success rate: {success_rate:.1f}%")
+    # Success rate counts cached contacts as successful reuse
+    total_success = revealed_count + cached_count
+    success_rate = (total_success / total_prospects * 100) if total_prospects > 0 else 0
+    output.append(f"Success rate: {success_rate:.1f}% (including cached contacts)")
 
     # Show sample revealed contacts
     prospects = results.get('prospects', [])
     revealed_prospects = [
-        p for p in prospects if p.get('status') == 'success' and p.get('contacts')
+        p
+        for p in prospects
+        if p.get('contacts') and p.get('status') in {'success', 'cached'}
     ]
 
     if revealed_prospects:
         output.append("\n📧 Sample revealed contacts:")
         for prospect in revealed_prospects[:3]:  # Show first 3
-            name = prospect.get('full_name', 'Unknown')
+            name = (
+                prospect.get('full_name')
+                or prospect.get('profile', {}).get('full_name')
+                or prospect.get('profile', {}).get('fullName')
+                or 'Unknown'
+            )
             contacts = prospect.get('contacts', [])
             emails = [c['value'] for c in contacts if c.get('type') == 'email']
 
@@ -203,9 +222,19 @@ def format_reveal_results(results: dict[str, Any], format_type: str = "human") -
     return "\n".join(output)
 
 
+@dataclass
+class ProspectWorkItem:
+    """Prospect metadata used to decide whether to reveal or reuse cached data."""
+
+    uid: str
+    profile: Optional[Dict[str, Any]] = None
+    contacts_fetched: bool = False
+    source: str = "input"
+
+
 def load_prospects_from_file(
     file_path: str, skip_existing_contacts: bool = True
-) -> list[str]:
+) -> List[ProspectWorkItem]:
     """
     Load prospect UIDs from a search results file.
 
@@ -226,53 +255,124 @@ def load_prospects_from_file(
             data = json.load(f)
 
         # Handle different file formats
+        work_items: List[ProspectWorkItem] = []
+        _ = skip_existing_contacts  # Retained for backwards compatibility
+
+        def _make_item(entry: Dict[str, Any]) -> Optional[ProspectWorkItem]:
+            uid_value = entry.get('uid') or entry.get('id') or entry.get('prospect_uid')
+            if not uid_value:
+                return None
+
+            contacts_flag = bool(
+                entry.get('contactsFetched')
+                or entry.get('contacts_fetched')
+                or entry.get('contactsFetchedAt')
+            )
+            return ProspectWorkItem(
+                uid=str(uid_value),
+                profile=entry,
+                contacts_fetched=contacts_flag,
+                source='file',
+            )
+
         if isinstance(data, list):
-            # List of UIDs - assume all need revealing
-            return data
-        if isinstance(data, dict):
-            # Search results format
-            if 'profiles' in data:
-                profiles = data['profiles']
-                uids = []
-                skipped_count = 0
-
-                for p in profiles:
-                    uid = p.get('uid') or p.get('id')
-                    if not uid:
+            for item in data:
+                if isinstance(item, str):
+                    work_items.append(ProspectWorkItem(uid=item, source='file'))
+                elif isinstance(item, dict):
+                    prospect_item = _make_item(item)
+                    if prospect_item:
+                        work_items.append(prospect_item)
+        elif isinstance(data, dict):
+            if 'profiles' in data and isinstance(data['profiles'], list):
+                for profile in data['profiles']:
+                    if not isinstance(profile, dict):
                         continue
-
-                    # Check if contacts already exist
-                    if skip_existing_contacts and p.get('contactsFetched'):
-                        skipped_count += 1
+                    prospect_item = _make_item(profile)
+                    if prospect_item:
+                        work_items.append(prospect_item)
+            elif 'prospects' in data and isinstance(data['prospects'], list):
+                for profile in data['prospects']:
+                    if not isinstance(profile, dict):
                         continue
+                    prospect_item = _make_item(profile)
+                    if prospect_item:
+                        work_items.append(prospect_item)
+            elif 'prospect_uids' in data and isinstance(data['prospect_uids'], list):
+                for uid_value in data['prospect_uids']:
+                    if isinstance(uid_value, str):
+                        work_items.append(
+                            ProspectWorkItem(uid=uid_value, source='file')
+                        )
+            else:
+                raise click.ClickException(
+                    f"Unrecognized file format in {file_path}"
+                )
+        else:
+            raise click.ClickException(f"Invalid JSON format in {file_path}")
 
-                    uids.append(uid)
-
-                if skip_existing_contacts and skipped_count > 0:
-                    click.echo(
-                        f"ℹ️  Skipped {skipped_count} prospects that already have contacts"
-                    )
-                    click.echo(
-                        f"🔍 Will reveal {len(uids)} prospects that need contacts"
-                    )
-
-                return uids
-            if 'prospects' in data:
-                prospects = data['prospects']
-                return [
-                    p.get('uid') or p.get('id')
-                    for p in prospects
-                    if p.get('uid') or p.get('id')
-                ]
-            if 'prospect_uids' in data:
-                return data['prospect_uids']
-            raise click.ClickException(f"Unrecognized file format in {file_path}")
-        raise click.ClickException(f"Invalid JSON format in {file_path}")
+        return work_items
 
     except json.JSONDecodeError as e:
         raise click.ClickException(f"Invalid JSON in {file_path}: {e}") from e
     except OSError as e:
         raise click.ClickException(f"Error reading {file_path}: {e}") from e
+
+
+def deduplicate_work_items(items: Iterable[ProspectWorkItem]) -> List[ProspectWorkItem]:
+    """Deduplicate work items, preferring entries that include profile data."""
+
+    deduped: Dict[str, ProspectWorkItem] = {}
+    for item in items:
+        if not item.uid:
+            continue
+        existing = deduped.get(item.uid)
+        if not existing:
+            deduped[item.uid] = item
+            continue
+
+        # Prefer entries that include profile details over bare UIDs
+        if existing.profile and not item.profile:
+            continue
+        if not existing.profile and item.profile:
+            deduped[item.uid] = item
+            continue
+
+        # Prefer file-sourced data (typically richer) over CLI args
+        if existing.source == 'input' and item.source == 'file':
+            deduped[item.uid] = item
+
+    return list(deduped.values())
+
+
+def partition_prospects(
+    items: Iterable[ProspectWorkItem],
+    cache: ContactCache,
+    skip_existing: bool,
+) -> Tuple[
+    List[ProspectWorkItem],
+    List[Tuple[ProspectWorkItem, CachedContact]],
+    List[ProspectWorkItem],
+]:
+    """Split prospects into pending reveals, cached results, and needs-refresh lists."""
+
+    pending: List[ProspectWorkItem] = []
+    cached: List[Tuple[ProspectWorkItem, CachedContact]] = []
+    needs_refresh: List[ProspectWorkItem] = []
+
+    for item in items:
+        cached_entry = cache.get(item.uid)
+        if cached_entry:
+            cached.append((item, cached_entry))
+            continue
+
+        if skip_existing and item.contacts_fetched:
+            needs_refresh.append(item)
+            continue
+
+        pending.append(item)
+
+    return pending, cached, needs_refresh
 
 
 def save_reveal_results(
@@ -449,8 +549,14 @@ async def check_credits_and_confirm(config, total_prospects: int, logger) -> boo
     Returns True if user confirms to proceed, False otherwise.
     """
     if not config.api_key:
-        # Skip credit check for browser mode
-        return True
+        echo(
+            style(
+                "❌ SIGNALHIRE_API_KEY is required. Browser automation is disabled in this release.",
+                fg='red',
+                bold=True,
+            )
+        )
+        return False
 
     try:
         api_client = SignalHireClient(api_key=config.api_key)
@@ -539,7 +645,7 @@ async def check_credits_and_confirm(config, total_prospects: int, logger) -> boo
             echo(
                 f"     Need: {estimated_cost} credits, Available today: {daily_status['remaining']}"
             )
-            echo("     💡 Try again tomorrow or use browser mode for unlimited reveals")
+            echo("     💡 Try again tomorrow after the quota resets")
             return False
 
         # Cost warning for expensive operations
@@ -635,7 +741,7 @@ async def execute_reveal(
     '--browser-wait',
     type=int,
     default=2,
-    help='Wait time between browser actions in seconds [default: 2]',
+    help='(Deprecated) Browser automation disabled; option retained for compatibility',
 )
 @click.option(
     '--api-only',
@@ -665,18 +771,18 @@ def reveal(
     skip_existing,
 ):
     """
-    Reveal contact information (API-first with browser fallback).
-    🚀 API-FIRST: Uses SignalHire API by default (100 contacts/day limit)
-    🌐 BROWSER MODE: Automatic fallback for bulk operations or when API unavailable
-    💰 CREDIT AWARE: Shows cost estimates and tracks daily usage
+    Reveal contact information (API-only in this release).
+    🚀 API-FIRST: Uses SignalHire API by default (5,000 reveals/day quota)
+    🚫 BROWSER MODE: Disabled; all operations run through the API layer
+    💳 CREDIT AWARE: Warns at 50%, 75%, and 90% daily usage thresholds
     \b
     EXAMPLES:
       # API-first reveal (recommended for daily use)
       signalhire reveal --search-file prospects.csv --output contacts.csv
       # Force API-only mode
       signalhire reveal --search-file prospects.csv --api-only --output contacts.csv
-      # Large bulk operation (browser mode)
-      signalhire reveal --search-file large_list.csv --bulk-size 1000 --browser-wait 3
+      # Break large reveal lists into API-sized batches
+      signalhire reveal --search-file large_list.csv --bulk-size 1000
       # Check costs before revealing
       signalhire reveal --search-file prospects.csv --dry-run
       # Save to SignalHire lead list
@@ -685,9 +791,10 @@ def reveal(
       signalhire reveal uid1 uid2 uid3 --output specific_contacts.csv
     \b
     RATE LIMITS & COSTS:
-    • API Mode: 100 contacts/day, ~$0.10-0.20 per contact
-    • Browser Mode: No daily limit, higher cost per contact
-    • Use --dry-run to estimate costs before proceeding
+    • API Mode: 5,000 contact reveals/day (1 credit per contact)
+    • Search profiles: 5,000/day shared with prospect searches
+    • Use --dry-run to estimate credits and confirm availability before revealing
+    • Browser automation is not available in this build
     \b
     OUTPUT FORMATS:
     • CSV (default): Spreadsheet-compatible with all contact fields
@@ -697,256 +804,373 @@ def reveal(
 
     config = ctx.obj['config']
     logger = ctx.obj.get('logger')
+    contact_cache = ContactCache()
+    _ = api_only  # Browser mode is disabled; flag retained for CLI compatibility
 
-    # Collect prospect UIDs from arguments and file
-    all_prospect_uids = list(prospect_uids)
+    work_items: List[ProspectWorkItem] = [
+        ProspectWorkItem(uid=str(uid), source='input')
+        for uid in prospect_uids
+        if uid
+    ]
 
     if search_file:
         try:
-            file_uids = load_prospects_from_file(
+            file_items = load_prospects_from_file(
                 search_file, skip_existing_contacts=skip_existing
             )
-            all_prospect_uids.extend(file_uids)
-
+            work_items.extend(file_items)
             if config.verbose:
-                echo(f"📂 Loaded {len(file_uids)} prospect UIDs from {search_file}")
-
+                echo(f"📂 Loaded {len(file_items)} prospects from {search_file}")
         except (OSError, json.JSONDecodeError) as e:
             echo(style(f"Error loading prospects from file: {e}", fg='red'), err=True)
             ctx.exit(1)
 
-    # Validate we have prospects to reveal
-    if not all_prospect_uids:
+    work_items = deduplicate_work_items(work_items)
+
+    if not work_items:
         echo(style("Error: No prospect UIDs provided.", fg='red'), err=True)
         echo("Provide UIDs as arguments or use --search-file option", err=True)
         ctx.exit(1)
 
-    # Remove duplicates while preserving order
-    unique_uids = []
-    seen = set()
-    for uid in all_prospect_uids:
-        if uid and uid not in seen:
-            unique_uids.append(uid)
-            seen.add(uid)
+    profiles_by_uid = {
+        item.uid: item.profile for item in work_items if item.profile
+    }
+    if profiles_by_uid:
+        contact_cache.merge_profiles(
+            {uid: profile for uid, profile in profiles_by_uid.items() if profile}
+        )
 
-    total_prospects = len(unique_uids)
+    pending_items, cached_hits, needs_refresh_items = partition_prospects(
+        work_items, contact_cache, skip_existing
+    )
+
+    total_unique = len(work_items)
+    total_pending = len(pending_items)
+    cached_count = len(cached_hits)
+    needs_refresh_count = len(needs_refresh_items)
 
     if config.verbose:
-        echo(f"📊 Total unique prospects to reveal: {total_prospects}")
-        if len(all_prospect_uids) != total_prospects:
-            echo(f"   (Removed {len(all_prospect_uids) - total_prospects} duplicates)")
+        echo(f"📊 Total unique prospects: {total_unique}")
+        echo(f"   Pending API reveals: {total_pending}")
+        echo(f"   Cached contacts available: {cached_count}")
+        if needs_refresh_count:
+            echo(f"   Needs refresh (no local cache): {needs_refresh_count}")
 
-    # Validate credentials based on mode
-    if config.browser_mode:
-        # Browser mode explicitly requested
-        if not config.email or not config.password:
-            echo(
-                style("Error: Browser mode requires email and password.", fg='red'),
-                err=True,
-            )
-            echo(
-                "Set SIGNALHIRE_EMAIL and SIGNALHIRE_PASSWORD environment variables",
-                err=True,
-            )
-            echo("or use --email and --password options", err=True)
-            ctx.exit(1)
-    else:
-        # Default to API mode - check if we have API credentials
-        if not config.api_key:
-            if api_only:
-                echo(
-                    style(
-                        "Error: --api-only specified but no API key available.",
-                        fg='red',
-                    ),
-                    err=True,
-                )
-                echo(
-                    "Set SIGNALHIRE_API_KEY environment variable for API-only mode",
-                    err=True,
-                )
-                echo("Or remove --api-only to allow browser fallback", err=True)
-                ctx.exit(1)
-            else:
-                echo(
-                    style(
-                        "Warning: No API key provided, falling back to browser mode",
-                        fg='yellow',
-                    ),
-                    err=True,
-                )
-                echo(
-                    "For better reliability, consider setting SIGNALHIRE_API_KEY environment variable",
-                    err=True,
-                )
-                config.browser_mode = True
-                if not config.email or not config.password:
-                    echo(
-                        style(
-                            "Error: No valid authentication method available.", fg='red'
-                        ),
-                        err=True,
-                    )
-                    echo(
-                        "Set SIGNALHIRE_API_KEY for API mode, or SIGNALHIRE_EMAIL/SIGNALHIRE_PASSWORD for browser mode",
-                        err=True,
-                    )
-                    ctx.exit(1)
-
-    # Dry run mode
-    if dry_run:
-        echo("🧪 Dry Run - Reveal operation summary:")
-        echo(f"  Total prospects: {total_prospects}")
-        echo(f"  Bulk size: {bulk_size}")
-        echo(f"  Estimated batches: {(total_prospects + bulk_size - 1) // bulk_size}")
-        echo(f"  Use native export: {use_native_export}")
-        if use_native_export:
-            echo(f"  Export format: {export_format}")
-        if save_to_list:
-            echo(f"  Save to list: {save_to_list}")
+    if config.browser_mode and total_pending > 0:
         echo(
-            f"  Mode: {'Browser automation' if config.browser_mode else 'API (recommended)'}"
+            style(
+                "Error: Browser automation is disabled. Run in API mode only.",
+                fg='red',
+            ),
+            err=True,
         )
-        echo(f"  Timeout: {timeout} seconds")
+        ctx.exit(1)
 
-        # Enhanced credit information for dry run
-        if not config.browser_mode and config.api_key:
-            try:
-                api_client = SignalHireClient(api_key=config.api_key)
-                credits_response = asyncio.run(api_client.check_credits())
+    if total_pending > 0 and not config.api_key:
+        echo(
+            style(
+                "Error: SIGNALHIRE_API_KEY is required for reveal operations.",
+                fg='red',
+            ),
+            err=True,
+        )
+        echo("Set the environment variable or pass --api-key explicitly.", err=True)
+        ctx.exit(1)
 
-                if credits_response.success:
-                    credits_data = credits_response.data or {}
-                    current_credits = credits_data.get('credits_remaining', 0)
-                    estimated_cost = total_prospects
+    pending_uids = [item.uid for item in pending_items]
 
-                    # Check daily usage
-                    daily_status = asyncio.run(
-                        api_client.rate_limiter.check_daily_limits()
-                    )
+    def render_dry_run() -> None:
+        echo("🧪 Dry Run - Reveal operation summary:")
+        echo(f"  Total prospects considered: {total_unique}")
+        echo(f"  Pending API reveals: {total_pending}")
+        echo(f"  Reusing cached contacts: {cached_count}")
+        if needs_refresh_count:
+            echo(
+                "  Needs refresh (no cached contacts): "
+                f"{needs_refresh_count}"
+            )
+        echo(f"  Skip already revealed flag: {skip_existing}")
 
-                    echo("\n💰 Credit & Daily Usage Analysis:")
-                    echo(
-                        f"  Current balance: {style(str(current_credits), fg='green', bold=True)} credits"
-                    )
-                    echo(
-                        f"  Estimated cost: {style(str(estimated_cost), fg='yellow')} credits"
-                    )
-                    echo(
-                        f"  Daily usage: {daily_status['current_usage']}/{daily_status['daily_limit']} credits ({daily_status['percentage_used']:.1f}%)"
-                    )
-
-                    if current_credits >= estimated_cost:
-                        remaining = current_credits - estimated_cost
-                        echo(
-                            f"  ✅ Sufficient credits - {remaining} remaining after operation"
+        if total_pending > 0:
+            echo(f"  Bulk size: {bulk_size}")
+            echo(
+                f"  Estimated batches: {(total_pending + bulk_size - 1) // bulk_size}"
+            )
+            echo(f"  Use native export: {use_native_export}")
+            if use_native_export:
+                echo(f"  Export format: {export_format}")
+            if save_to_list:
+                echo(f"  Save to list: {save_to_list}")
+            echo(f"  Timeout: {timeout} seconds")
+            if config.api_key:
+                try:
+                    api_client = SignalHireClient(api_key=config.api_key)
+                    credits_response = asyncio.run(api_client.check_credits())
+                    if credits_response.success:
+                        credits_data = credits_response.data or {}
+                        current_credits = credits_data.get('credits_remaining', 0)
+                        estimated_cost = total_pending
+                        daily_status = asyncio.run(
+                            api_client.rate_limiter.check_daily_limits()
                         )
 
-                        # Check daily limits
-                        if estimated_cost <= daily_status['remaining']:
+                        echo("\n💰 Credit & Daily Usage Analysis:")
+                        echo(
+                            f"  Current balance: {style(str(current_credits), fg='green', bold=True)} credits"
+                        )
+                        echo(
+                            f"  Estimated cost: {style(str(estimated_cost), fg='yellow')} credits"
+                        )
+                        echo(
+                            f"  Daily usage: {daily_status['current_usage']}/{daily_status['daily_limit']} credits ({daily_status['percentage_used']:.1f}%)"
+                        )
+
+                        if current_credits >= estimated_cost:
+                            remaining = current_credits - estimated_cost
                             echo(
-                                f"  ✅ Within daily limit - {daily_status['remaining'] - estimated_cost} remaining today"
+                                f"  ✅ Sufficient credits - {remaining} remaining after operation"
                             )
+                            if estimated_cost <= daily_status['remaining']:
+                                echo(
+                                    f"  ✅ Within daily limit - {daily_status['remaining'] - estimated_cost} remaining today"
+                                )
+                            else:
+                                echo(
+                                    style(
+                                        "  ❌ Would exceed daily limit! Need "
+                                        f"{estimated_cost - daily_status['remaining']} more credits",
+                                        fg='red',
+                                        bold=True,
+                                    )
+                                )
                         else:
+                            shortfall = estimated_cost - current_credits
                             echo(
                                 style(
-                                    f"  ❌ Would exceed daily limit! Need {estimated_cost - daily_status['remaining']} more credits",
+                                    f"  ❌ Insufficient credits - need {shortfall} more",
                                     fg='red',
                                     bold=True,
                                 )
                             )
+                            echo(
+                                "  💡 Consider purchasing credits or reducing prospect count"
+                            )
+
+                        warning_level = daily_status.get('warning_level')
+                        if warning_level == 'critical':
+                            echo(
+                                style(
+                                    f"  🚨 CRITICAL: Daily limit almost reached ({daily_status['percentage_used']:.1f}%)",
+                                    fg='red',
+                                    bold=True,
+                                )
+                            )
+                        elif warning_level == 'high':
+                            echo(
+                                style(
+                                    f"  ⚠️  WARNING: High daily usage ({daily_status['percentage_used']:.1f}%)",
+                                    fg='yellow',
+                                    bold=True,
+                                )
+                            )
+                        elif warning_level == 'moderate':
+                            echo(
+                                f"  INFO: Moderate usage: {daily_status['percentage_used']:.1f}% of daily limit"
+                            )
                     else:
-                        shortfall = estimated_cost - current_credits
                         echo(
                             style(
-                                f"  ❌ Insufficient credits - need {shortfall} more",
-                                fg='red',
-                                bold=True,
-                            )
-                        )
-                        echo(
-                            "  💡 Consider purchasing credits or reducing prospect count"
-                        )
-
-                    # Daily usage warnings
-                    if daily_status['warning_level'] == 'critical':
-                        echo(
-                            style(
-                                f"  🚨 CRITICAL: Daily limit almost reached ({daily_status['percentage_used']:.1f}%)",
-                                fg='red',
-                                bold=True,
-                            )
-                        )
-                    elif daily_status['warning_level'] == 'high':
-                        echo(
-                            style(
-                                f"  ⚠️  WARNING: High daily usage ({daily_status['percentage_used']:.1f}%)",
+                                f"  ⚠️  Could not check credits: {credits_response.error}",
                                 fg='yellow',
-                                bold=True,
                             )
                         )
-                    elif daily_status['warning_level'] == 'moderate':
-                        echo(
-                            f"  INFO: Moderate usage: {daily_status['percentage_used']:.1f}% of daily limit"
-                        )
-                else:
-                    echo(
-                        style(
-                            f"  ⚠️  Could not check credits: {credits_response.error}",
-                            fg='yellow',
-                        )
-                    )
-
-            except Exception as e:  # noqa: BLE001
-                echo(style(f"  ⚠️  Credit check failed: {e}", fg='yellow'))
-        elif config.browser_mode:
-            echo("\n💰 Cost Estimate:")
-            echo("  Browser mode: Variable costs (typically higher than API)")
-            echo("  💡 Tip: Consider using API mode for better cost predictability")
+                except Exception as exc:  # noqa: BLE001
+                    echo(style(f"  ⚠️  Credit check failed: {exc}", fg='yellow'))
         else:
-            echo("\n💰 Cost Estimate:")
-            echo("  No API key: Cannot estimate costs without authentication")
-            echo("  💡 Set SIGNALHIRE_API_KEY for cost estimates and API mode")
+            echo("  No API calls required — all contacts available from cache")
 
-        # Show sample UIDs
-        echo("\n📋 Sample prospect UIDs:")
-        for i, uid in enumerate(unique_uids[:5], 1):
-            echo(f"  {i}. {uid}")
-        if total_prospects > 5:
-            echo(f"  ... and {total_prospects - 5} more")
+        if cached_count:
+            echo("\n📦 Cached prospects ready:")
+            for idx, (item, _) in enumerate(cached_hits[:5], 1):
+                echo(f"  {idx}. {item.uid} (cached)")
 
-        echo(
-            f"\n💰 Estimated cost: {total_prospects} credits (1 per successful reveal)"
-        )
+        if total_pending > 0:
+            echo("\n📋 Sample prospect UIDs to reveal:")
+            for idx, uid in enumerate(pending_uids[:5], 1):
+                echo(f"  {idx}. {uid}")
+            if total_pending > 5:
+                echo(f"  ... and {total_pending - 5} more")
+            echo(
+                f"\n💰 Estimated cost: {total_pending} credits (1 per new reveal)"
+            )
+
+        if needs_refresh_count:
+            echo(
+                "\n⚠️  Some prospects have contactsFetched but no cached contacts. "
+                "Run again with --no-skip-existing to refresh local data if needed."
+            )
+
         echo("\n✅ Reveal parameters validated. Remove --dry-run to execute.")
+
+    if dry_run:
+        render_dry_run()
         return
 
-    # Execute reveal
+    def compose_results(api_result: Optional[dict[str, Any]]) -> dict[str, Any]:
+        final: dict[str, Any] = {
+            "operation_id": (
+                api_result.get('operation_id', 'op_unknown')
+                if api_result
+                else 'cache_only'
+            ),
+            "total_prospects": total_unique,
+            "revealed_count": api_result.get('revealed_count', 0) if api_result else 0,
+            "cached_reused_count": cached_count,
+            "needs_refresh_count": needs_refresh_count,
+            "failed_count": api_result.get('failed_count', 0) if api_result else 0,
+            "credits_used": api_result.get('credits_used', 0) if api_result else 0,
+            "prospects": [],
+        }
+
+        warnings: List[str] = []
+        if api_result and api_result.get('warnings'):
+            warnings.extend(api_result['warnings'])
+        if needs_refresh_count:
+            warnings.append(
+                "Contacts previously revealed but not cached locally. "
+                "Run with --no-skip-existing to refresh if you need those details."
+            )
+        final['warnings'] = warnings
+
+        api_entries: Dict[str, Dict[str, Any]] = {}
+        if api_result:
+            for record in api_result.get('prospects', []):
+                uid = record.get('uid') or record.get('id') or record.get('prospect_id')
+                if not uid:
+                    continue
+                profile = record.get('profile') or profiles_by_uid.get(uid)
+                contacts = record.get('contacts') or []
+                if contacts:
+                    contact_cache.upsert(uid, contacts=contacts, profile=profile, metadata={'source': 'api'})
+                elif profile:
+                    contact_cache.upsert(uid, profile=profile)
+                entry = {
+                    'uid': uid,
+                    'status': record.get('status', 'success' if contacts else 'unknown'),
+                    'contacts': contacts,
+                    'profile': profile,
+                    'source': 'api',
+                    'error': record.get('error'),
+                    'credits_used': record.get('credits_used', 0),
+                }
+                if profile:
+                    entry['full_name'] = profile.get('full_name') or profile.get('fullName')
+                api_entries[uid] = entry
+
+        cached_map: Dict[str, Dict[str, Any]] = {}
+        for item, cached_contact in cached_hits:
+            contact_cache.upsert(item.uid, profile=item.profile)
+            entry_profile = cached_contact.profile or item.profile
+            entry = {
+                'uid': item.uid,
+                'status': 'success',
+                'contacts': cached_contact.contacts,
+                'profile': entry_profile,
+                'source': 'cache',
+                'first_revealed_at': cached_contact.first_revealed_at,
+                'last_updated_at': cached_contact.last_updated_at,
+            }
+            if isinstance(entry_profile, dict):
+                entry['full_name'] = entry_profile.get('full_name') or entry_profile.get('fullName')
+            cached_map[item.uid] = entry
+
+        needs_refresh_map: Dict[str, Dict[str, Any]] = {}
+        for item in needs_refresh_items:
+            entry = {
+                'uid': item.uid,
+                'status': 'needs_refresh',
+                'contacts': [],
+                'profile': item.profile,
+                'source': 'skip',
+                'warning': 'Contact data not cached locally. Re-run with --no-skip-existing to refresh.',
+            }
+            needs_refresh_map[item.uid] = entry
+
+        for item in work_items:
+            uid = item.uid
+            if uid in api_entries:
+                final['prospects'].append(api_entries[uid])
+            elif uid in cached_map:
+                final['prospects'].append(cached_map[uid])
+            elif uid in needs_refresh_map:
+                final['prospects'].append(needs_refresh_map[uid])
+            else:
+                final['prospects'].append(
+                    {
+                        'uid': uid,
+                        'status': 'unknown',
+                        'contacts': [],
+                        'profile': item.profile,
+                        'source': 'unknown',
+                    }
+                )
+
+        if api_result and api_result.get('export_file_path'):
+            final['export_file_path'] = api_result['export_file_path']
+
+        return final
+
+    if total_pending == 0:
+        final_results = compose_results(None)
+        contact_cache.save()
+
+        if config.output_format == 'json':
+            result_output = json.dumps(final_results, indent=2)
+        else:
+            result_output = format_reveal_results(final_results, config.output_format)
+
+        if output:
+            save_reveal_results(final_results, output, config.output_format)
+            echo(f"✅ Results saved to: {output}")
+            if config.output_format != 'json':
+                echo(result_output)
+        else:
+            echo(result_output)
+
+        if cached_count:
+            echo(
+                f"\n♻️  Reused {cached_count} contacts from local cache (no new credits used)"
+            )
+        if needs_refresh_count:
+            echo(
+                style(
+                    "⚠️  Some contacts are missing locally. Run with --no-skip-existing to refresh.",
+                    fg='yellow',
+                )
+            )
+        return
+
+    # Execute reveal for pending prospects
     echo("🔓 Revealing contact information...")
 
     if config.verbose:
-        echo(
-            f"Mode: {'Browser automation' if config.browser_mode else 'API (recommended)'}"
-        )
+        echo("Mode: API (recommended)")
         echo(f"Bulk size: {bulk_size}")
         echo(f"Native export: {use_native_export}")
         if config.debug:
-            echo(f"First 10 UIDs: {unique_uids[:10]}")
+            echo(f"First 10 UIDs: {pending_uids[:10]}")
 
-    # Interactive credit confirmation (skip for dry-run which already showed estimates)
-    if not config.browser_mode and not dry_run:
-        confirmed = asyncio.run(
-            check_credits_and_confirm(config, total_prospects, logger)
-        )
-        if not confirmed:
-            echo("Operation cancelled.")
-            return
+    confirmed = asyncio.run(
+        check_credits_and_confirm(config, total_pending, logger)
+    )
+    if not confirmed:
+        echo("Operation cancelled.")
+        return
 
     try:
-        # Run async reveal with progress bar
-        results = asyncio.run(
+        api_result = asyncio.run(
             execute_reveal_with_progress(
-                unique_uids,
+                pending_uids,
                 config,
                 logger,
                 bulk_size=bulk_size,
@@ -958,35 +1182,49 @@ def reveal(
             )
         )
 
-        # Display results
+        final_results = compose_results(api_result)
+        contact_cache.save()
+
         if config.output_format == 'json':
-            result_output = json.dumps(results, indent=2)
+            result_output = json.dumps(final_results, indent=2)
         else:
-            result_output = format_reveal_results(results, config.output_format)
+            result_output = format_reveal_results(final_results, config.output_format)
 
         if output:
-            save_reveal_results(results, output, config.output_format)
+            save_reveal_results(final_results, output, config.output_format)
             echo(f"✅ Results saved to: {output}")
-
             if config.output_format != 'json':
                 echo(result_output)
         else:
             echo(result_output)
 
-        # Success metrics
-        revealed_count = results.get('revealed_count', 0)
-        credits_used = results.get('credits_used', 0)
-
+        revealed_count = final_results.get('revealed_count', 0)
+        credits_used = final_results.get('credits_used', 0)
         if revealed_count > 0:
             echo(
                 f"\n✅ Successfully revealed {revealed_count} contacts using {credits_used} credits"
             )
-        else:
-            echo("\n⚠️  No contacts revealed")
+        if final_results.get('cached_reused_count'):
+            echo(
+                f"♻️  Reused {final_results['cached_reused_count']} contacts from local cache"
+            )
+        if final_results.get('needs_refresh_count'):
+            echo(
+                style(
+                    "⚠️  Some contacts still need refresh. Run with --no-skip-existing to fetch them.",
+                    fg='yellow',
+                )
+            )
+        if final_results.get('failed_count'):
+            echo(
+                style(
+                    f"⚠️  {final_results['failed_count']} contacts failed to reveal.",
+                    fg='yellow',
+                )
+            )
 
-        # Show export file if native export was used
-        if use_native_export and results.get('export_file_path'):
-            echo(f"📁 Native export file: {results['export_file_path']}")
+        if use_native_export and final_results.get('export_file_path'):
+            echo(f"📁 Native export file: {final_results['export_file_path']}")
 
     except KeyboardInterrupt:
         echo("\n🛑 Reveal operation cancelled by user", err=True)

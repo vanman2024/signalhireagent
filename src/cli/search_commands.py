@@ -14,6 +14,7 @@ from typing import Any
 import click
 from click import echo, style
 
+from ..lib.contact_cache import ContactCache
 from ..models.search_criteria import SearchCriteria
 from ..services.search_analysis_service import create_heavy_equipment_search_templates
 from ..services.signalhire_client import SignalHireClient
@@ -60,6 +61,8 @@ def format_search_results(results: dict[str, Any], format_type: str = "human") -
     profiles = results.get('prospects') or results.get('profiles') or []
     current_batch = len(profiles)
     scroll_id = results.get('scroll_id') or results.get('scrollId')
+    cached_count = results.get('cached_contacts_count', 0)
+    skipped_cached = results.get('skipped_revealed_count', 0)
 
     output = []
     output.append("🔍 Search Results")
@@ -68,6 +71,15 @@ def format_search_results(results: dict[str, Any], format_type: str = "human") -
         f"Total prospects found: {style(str(total_count), fg='green', bold=True)}"
     )
     output.append(f"Current batch: {current_batch} prospects")
+
+    if cached_count:
+        output.append(
+            f"Cached contacts available: {style(str(cached_count), fg='cyan')}"
+        )
+    if skipped_cached:
+        output.append(
+            f"Skipped (already revealed & cached): {style(str(skipped_cached), fg='yellow')}"
+        )
 
     if scroll_id:
         output.append(f"Scroll ID: {scroll_id[:20]}... (use --continue-search)")
@@ -211,6 +223,11 @@ async def execute_search(
     '--output', type=click.Path(), help='Save results to file [default: stdout]'
 )
 @click.option(
+    '--skip-revealed/--include-revealed',
+    default=False,
+    help='Skip prospects whose contacts are already cached locally',
+)
+@click.option(
     '--continue-search', is_flag=True, help='Continue previous search using pagination'
 )
 @click.option(
@@ -250,6 +267,7 @@ def search(
     open_to_work,
     size,
     output,
+    skip_revealed,
     continue_search,
     scroll_id,
     request_id,
@@ -281,6 +299,9 @@ def search(
 
       # Large paginated search
       signalhire search --title "Designer" --size 100 --continue-search
+
+      # Skip prospects that already have cached contact data
+      signalhire search --title "Mechanic" --skip-revealed --output prospects.json
 
       # Show built-in Boolean templates
       signalhire search templates
@@ -449,6 +470,63 @@ def search(
                     },
                     f,
                 )
+
+        # Merge cached contacts and optionally skip already revealed prospects
+        contact_cache = ContactCache()
+        cached_contacts = 0
+        skipped_cached = 0
+        cached_uids: list[str] = []
+
+        profile_key = None
+        if isinstance(results.get('profiles'), list):
+            profile_key = 'profiles'
+        elif isinstance(results.get('prospects'), list):
+            profile_key = 'prospects'
+
+        original_profiles = results.get(profile_key, []) if profile_key else []
+        filtered_profiles = []
+
+        for profile in original_profiles:
+            if not isinstance(profile, dict):
+                filtered_profiles.append(profile)
+                continue
+
+            uid = profile.get('uid') or profile.get('id')
+            cached_entry = contact_cache.get(uid) if uid else None
+
+            if uid:
+                # Persist latest profile metadata for future reveals/cache usage
+                contact_cache.upsert(uid, profile=profile)
+
+            if cached_entry and cached_entry.contacts:
+                profile['contacts'] = cached_entry.contacts
+                profile['contact_source'] = 'cache'
+                cached_contacts += 1
+                cached_uids.append(uid)
+
+                if cached_entry.profile:
+                    profile.setdefault(
+                        'full_name',
+                        cached_entry.profile.get('full_name')
+                        or cached_entry.profile.get('fullName'),
+                    )
+
+            if cached_entry and cached_entry.contacts and skip_revealed:
+                skipped_cached += 1
+                continue
+
+            filtered_profiles.append(profile)
+
+        if profile_key:
+            results[profile_key] = filtered_profiles
+
+        results['cached_contacts_count'] = cached_contacts
+        results['skipped_revealed_count'] = skipped_cached
+        results['returned_count'] = len(filtered_profiles)
+        if cached_uids:
+            results['cached_uids'] = cached_uids
+
+        contact_cache.save()
 
         # Display results
         if config.output_format == 'json':

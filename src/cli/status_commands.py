@@ -25,59 +25,174 @@ def format_credits_info(
         return json.dumps(credits_data, indent=2)
 
     # Human-readable format
-    regular_credits = credits_data.get('credits', 0)
-    without_contacts_credits = credits_data.get('without_contacts_credits')
+    output = ["💳 Credit Status"]
 
-    output = []
-    output.append("💳 Credit Status")
-    output.append(
-        f"Regular credits: {style(str(regular_credits), fg='green' if regular_credits > 100 else 'yellow' if regular_credits > 10 else 'red', bold=True)}"
+    def _coerce_int(value):
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return None
+
+    def _first_non_null(data: dict[str, Any], *keys: str) -> Any:
+        for key in keys:
+            if key in data and data[key] is not None:
+                return data[key]
+        return None
+
+    regular_credits = _coerce_int(
+        _first_non_null(
+            credits_data,
+            'credits',
+            'available_credits',
+            'credits_remaining',
+        )
     )
 
-    if without_contacts_credits is not None:
+    if regular_credits is not None:
+        credit_color = 'green' if regular_credits > 1000 else 'yellow'
+        if regular_credits <= 100:
+            credit_color = 'red'
         output.append(
-            f"Without contacts credits: {style(str(without_contacts_credits), fg='green' if without_contacts_credits > 100 else 'yellow', bold=True)}"
+            f"Available credits: {style(f'{regular_credits:,}', fg=credit_color, bold=True)}"
         )
-
-    # Credit usage guidelines
-    output.append("\n📊 Credit Guidelines:")
-    output.append("  • 1 credit per contact reveal")
-    output.append("  • Bulk operations recommended for efficiency")
-    output.append("  • Monitor usage during large campaigns")
-    output.append("  • API mode: 100 reveals/day limit")
-    output.append("  • Browser mode: Higher limits but slower")
-
-    # Enhanced credit warnings with daily limits
-    if regular_credits <= 10:
-        output.append(
-            f"\n🚨 {style('CRITICAL: Credits critically low!', fg='red', bold=True)}"
-        )
-        output.append("   • Immediate action required")
-        output.append("   • Consider switching to browser mode for bulk operations")
-        output.append("   • Purchase additional credits if needed")
-    elif regular_credits <= 50:
-        output.append(
-            f"\n⚠️  {style('WARNING: Credits running low', fg='yellow', bold=True)}"
-        )
-        output.append("   • Monitor usage carefully")
-        output.append("   • Plan remaining reveals strategically")
-        output.append("   • Consider smaller batch sizes")
-    elif regular_credits <= 100:
-        output.append(f"\n(i)  {style('NOTICE: Approaching daily limit', fg='blue')}")
-        output.append("   • API mode limited to 100 reveals/day")
-        output.append("   • Consider timing reveals across multiple days")
-
-    # API vs Browser mode guidance
-    if regular_credits > 100:
-        output.append(f"\n💡 {style('TIP: High credit balance detected', fg='green')}")
-        output.append(
-            "   • Consider using browser mode for bulk operations (>1000 contacts)"
-        )
-        output.append("   • Browser mode can handle larger volumes")
     else:
-        output.append(f"\n💡 {style('RECOMMENDATION: API-first approach', fg='green')}")
-        output.append("   • Use API mode for reliability and speed")
-        output.append("   • Reserve browser mode for high-volume scenarios")
+        raw_credits = _first_non_null(
+            credits_data,
+            'credits',
+            'available_credits',
+            'credits_remaining',
+        )
+        output.append(f"Available credits: {raw_credits or 'unknown'}")
+
+    without_contacts = _coerce_int(
+        _first_non_null(
+            credits_data,
+            'without_contacts_credits',
+            'withoutContactsCredits',
+        )
+    )
+    if without_contacts is not None:
+        output.append(
+            f"Without contacts credits: {style(f'{without_contacts:,}', fg='green', bold=True)}"
+        )
+
+    plan_type = _first_non_null(credits_data, 'plan_type', 'planType')
+    if plan_type:
+        output.append(f"Plan: {plan_type}")
+
+    daily_limit = (
+        _coerce_int(
+            _first_non_null(
+                credits_data,
+                'daily_limit',
+                'dailyLimit',
+                'daily_quota',
+                'dailyQuota',
+            )
+        )
+        or 5000
+    )
+    used_today = _coerce_int(
+        _first_non_null(
+            credits_data,
+            'used_today',
+            'daily_used',
+            'credits_used_today',
+            'creditsUsedToday',
+        )
+    )
+    remaining_today = daily_limit - used_today if used_today is not None else None
+    percentage_used = (
+        (used_today / daily_limit) * 100
+        if used_today is not None and daily_limit > 0
+        else None
+    )
+
+    search_limit = (
+        _coerce_int(
+            _first_non_null(
+                credits_data,
+                'search_profile_limit',
+                'searchProfileLimit',
+            )
+        )
+        or 5000
+    )
+    search_usage = _coerce_int(
+        _first_non_null(
+            credits_data,
+            'search_profiles_used',
+            'searchProfilesUsed',
+        )
+    )
+    if search_usage is None:
+        usage_details = credits_data.get('usageDetails') or {}
+        search_usage = _coerce_int(usage_details.get('searches'))
+
+    reset_time = _first_non_null(
+        credits_data,
+        'reset_time',
+        'resetTime',
+        'resetDate',
+    )
+    reset_seconds = _coerce_int(
+        _first_non_null(
+            credits_data,
+            'reset_in_seconds',
+            'resetInSeconds',
+        )
+    )
+
+    output.append("")
+    output.append("📊 Daily Quotas")
+    if used_today is not None:
+        percentage_display = (
+            f"{percentage_used:.1f}%" if percentage_used is not None else ""
+        )
+        usage_line = f"  • Contact reveals: {used_today:,}/{daily_limit:,}"
+        if percentage_display:
+            usage_line += f" ({percentage_display} used)"
+        output.append(usage_line)
+        if remaining_today is not None:
+            output.append(f"  • Remaining today: {max(remaining_today, 0):,} credits")
+    else:
+        output.append(f"  • Contact reveals: {daily_limit:,} credits/day")
+
+    if search_usage is not None:
+        search_pct = (search_usage / search_limit) * 100 if search_limit > 0 else 0
+        output.append(
+            f"  • Search profiles: {search_usage:,}/{search_limit:,} ({search_pct:.1f}% used)"
+        )
+    else:
+        output.append(f"  • Search profiles: {search_limit:,} per day")
+
+    if reset_time:
+        output.append(f"  • Resets at: {reset_time}")
+    elif reset_seconds is not None:
+        hours = max(reset_seconds, 0) // 3600
+        minutes = (max(reset_seconds, 0) % 3600) // 60
+        output.append(f"  • Resets in: {hours}h {minutes}m")
+
+    if percentage_used is not None:
+        if percentage_used >= 90:
+            output.append(
+                f"\n🚨 {style('Critical: Daily reveal quota nearly exhausted!', fg='red', bold=True)}"
+            )
+            output.append("   • Pause large jobs until the daily reset completes")
+        elif percentage_used >= 75:
+            output.append(
+                f"\n⚠️  {style('Warning: Daily usage above 75%', fg='yellow', bold=True)}"
+            )
+            output.append("   • Split remaining work into smaller batches")
+        elif percentage_used >= 50:
+            output.append(f"\nℹ️  {style('Notice: Daily usage above 50%', fg='blue')}")
+            output.append("   • Monitor credits closely during bulk operations")
+
+    output.append("")
+    output.append("💡 Tips")
+    output.append("  • Run signalhire status --credits before large workflows")
+    output.append("  • Use --dry-run to confirm costs before revealing contacts")
+    output.append("  • Credits reset nightly; plan multi-day campaigns accordingly")
 
     return "\n".join(output)
 
@@ -222,8 +337,8 @@ def format_system_status(
     output.append(f"Authentication: {auth_icon} {auth_status}")
 
     # Browser automation status
-    browser_status = system_data.get('browser_status', 'unknown')
-    browser_icon = '✅' if browser_status == 'available' else '❌'
+    browser_status = system_data.get('browser_status', 'disabled')
+    browser_icon = '❌'
     output.append(f"Browser Automation: {browser_icon} {browser_status}")
 
     # Configuration
@@ -335,7 +450,7 @@ async def check_system_status(config) -> dict[str, Any]:
     status = {
         'api_status': 'unknown',
         'auth_status': 'unknown',
-        'browser_status': 'unknown',
+        'browser_status': 'disabled',
         'config_status': 'unknown',
     }
 
@@ -352,11 +467,9 @@ async def check_system_status(config) -> dict[str, Any]:
     else:
         status['api_status'] = 'not_configured'
 
-    # Check browser automation
-    if config.email and config.password:
-        status['browser_status'] = 'available'
-    else:
-        status['browser_status'] = 'not_configured'
+    # Browser automation status is fixed (disabled)
+    # Browser automation disabled in API-first build
+    status['browser_status'] = 'disabled'
 
     # Check configuration
     if config.api_key or (config.email and config.password):
@@ -378,32 +491,37 @@ def format_daily_usage(usage_data: dict[str, Any], format_type: str = "human") -
     credits_used = usage_data.get("credits_used", 0)
     reveals = usage_data.get("reveals", 0)
     searches = usage_data.get("searches", 0)
+    daily_limit = usage_data.get("daily_limit", 5000)
+    percentage_used = (credits_used / daily_limit) * 100 if daily_limit else 0
 
     output = []
     output.append("📊 Daily Usage (Last 24 Hours)")
     output.append(f"Credits Used: {style(str(credits_used), fg='blue', bold=True)}")
     output.append(f"Contacts Revealed: {reveals}")
     output.append(f"Searches Performed: {searches}")
+    output.append(
+        f"Usage vs quota: {percentage_used:.1f}% of {daily_limit:,} daily credits"
+    )
 
     # Enhanced usage warnings with actionable guidance
-    if credits_used >= 90:
+    if percentage_used >= 90:
         output.append(
-            f"\n🚨 {style('CRITICAL: Approaching daily API limit!', fg='red', bold=True)}"
+            f"\n🚨 {style('CRITICAL: Daily quota above 90%', fg='red', bold=True)}"
         )
-        output.append("   • API mode limited to 100 reveals/day")
-        output.append("   • Consider switching to browser mode for remaining reveals")
-        output.append("   • Spread reveals across multiple days")
-    elif credits_used >= 75:
+        output.append("   • Pause reveals until credits reset at midnight UTC")
+        output.append("   • Schedule remaining work for tomorrow")
+        output.append("   • Notify stakeholders about quota exhaustion")
+    elif percentage_used >= 75:
         output.append(
-            f"\n⚠️  {style('WARNING: High daily usage', fg='yellow', bold=True)}"
+            f"\n⚠️  {style('WARNING: Daily usage above 75%', fg='yellow', bold=True)}"
         )
-        output.append("   • 75% of daily API limit reached")
         output.append("   • Plan remaining reveals carefully")
-        output.append("   • Consider smaller batch sizes")
-    elif credits_used >= 50:
-        output.append(f"\n(i)  {style('NOTICE: Moderate usage detected', fg='blue')}")
-        output.append("   • 50% of daily API limit reached")
-        output.append("   • Good progress, continue monitoring")
+        output.append("   • Split bulk jobs into smaller batches")
+        output.append("   • Communicate expected completion timelines")
+    elif percentage_used >= 50:
+        output.append(f"\nℹ️  {style('NOTICE: Daily usage above 50%', fg='blue')}")
+        output.append("   • Stay alert for approaching warning thresholds")
+        output.append("   • Review upcoming campaign schedule")
 
     # Usage efficiency metrics
     if reveals > 0:
@@ -416,7 +534,7 @@ def format_daily_usage(usage_data: dict[str, Any], format_type: str = "human") -
 
     # Time-based guidance
     current_hour = datetime.now().hour
-    if credits_used >= 50 and current_hour < 18:
+    if percentage_used >= 50 and current_hour < 18:
         output.append(f"\n⏰ {style('TIMING SUGGESTION:', fg='green')}")
         output.append("   • Consider pausing reveals until tomorrow")
         output.append("   • Daily API limit resets at midnight UTC")
@@ -431,9 +549,8 @@ def format_credit_warnings(
     if format_type == "json":
         return json.dumps(credits_data, indent=2)
 
-    remaining_credits = max(
-        0, 100 - credits_data.get('daily_used', 0)
-    )  # API limit is 100/day
+    daily_limit = credits_data.get('daily_limit', 5000)
+    remaining_credits = max(0, daily_limit - credits_data.get('daily_used', 0))
 
     output = []
     output.append("⚠️  Credit Pre-Check")
@@ -446,8 +563,10 @@ def format_credit_warnings(
             output.append(
                 f"   • Shortfall: {planned_reveals - remaining_credits} credits"
             )
-            output.append("   • SOLUTION: Reduce batch size or use browser mode")
-        elif planned_reveals > remaining_credits * 0.8:
+            output.append(
+                "   • SOLUTION: Reduce batch size or resume after the daily reset"
+            )
+        elif remaining_credits and planned_reveals > remaining_credits * 0.8:
             output.append(
                 f"⚠️  {style('HIGH RISK: Close to daily limit', fg='yellow', bold=True)}"
             )
@@ -471,9 +590,10 @@ async def check_credit_sufficiency(config, planned_reveals: int = 0) -> dict[str
     daily_usage = await check_daily_usage()
 
     credits_data['daily_used'] = daily_usage.get('credits_used', 0)
+    credits_data['daily_limit'] = daily_usage.get('daily_limit', 5000)
     credits_data['planned_reveals'] = planned_reveals
     credits_data['sufficient'] = planned_reveals <= max(
-        0, 100 - credits_data.get('daily_used', 0)
+        0, credits_data['daily_limit'] - credits_data.get('daily_used', 0)
     )
 
     return credits_data
@@ -491,6 +611,7 @@ async def check_daily_usage() -> dict[str, Any]:
         "searches": 0,
         "from_time": (datetime.now() - timedelta(days=1)).isoformat(),
         "to_time": datetime.now().isoformat(),
+        "daily_limit": 5000,
     }
 
     one_day_ago = datetime.now() - timedelta(days=1)

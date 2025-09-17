@@ -20,6 +20,8 @@ from typing import Any
 import httpx
 import structlog
 
+from ..lib.contact_cache import normalize_contacts
+
 
 @dataclass
 class APIResponse:
@@ -1429,45 +1431,74 @@ class SignalHireClient:
             prospect_ids, batch_size=batch_size, progress_callback=progress_callback
         )
 
-        success = [r for r in results if r.success]
-        failed = [r for r in results if not r.success]
+        prospect_records: list[dict[str, Any]] = []
+        success_count = 0
+        failure_count = 0
+        total_credits_used = 0
+        error_entries: list[dict[str, Any]] = []
 
-        # Calculate final statistics
-        total_credits_used = sum(r.credits_used for r in results if r.success)
+        for index, api_result in enumerate(results):
+            uid = None
+            if index < len(prospect_ids):
+                uid = prospect_ids[index]
+            elif isinstance(api_result.data, dict):
+                uid = (
+                    api_result.data.get("prospect_uid")
+                    or api_result.data.get("uid")
+                    or api_result.data.get("id")
+                )
+
+            record: dict[str, Any] = {
+                "uid": uid,
+                "status": "success" if api_result.success else "failed",
+                "error": api_result.error,
+                "credits_used": api_result.credits_used,
+            }
+
+            payload = api_result.data if isinstance(api_result.data, dict) else None
+
+            if api_result.success:
+                success_count += 1
+                total_credits_used += api_result.credits_used
+
+                normalized_contacts = normalize_contacts(payload)
+                if normalized_contacts:
+                    record["contacts"] = normalized_contacts
+
+                profile = None
+                if payload:
+                    profile = payload.get("prospect") or payload.get("profile")
+                    if not isinstance(profile, dict):
+                        profile = None
+
+                if profile:
+                    record["profile"] = profile
+
+                if payload:
+                    record["payload_keys"] = sorted(payload.keys())
+            else:
+                failure_count += 1
+                error_entries.append({
+                    "prospect_id": uid,
+                    "error": api_result.error,
+                    "status_code": api_result.status_code,
+                })
+                if payload:
+                    record["payload_keys"] = sorted(payload.keys())
+
+            prospect_records.append(record)
+
+        success_rate = round(success_count / len(prospect_ids) * 100, 1) if prospect_ids else 0
 
         return {
             "operation_id": getattr(operation, "id", "op_unknown"),
             "total_prospects": len(prospect_ids),
-            "revealed_count": len(success),
-            "failed_count": len(failed),
-            "success_rate": (
-                round(len(success) / len(prospect_ids) * 100, 1) if prospect_ids else 0
-            ),
-            "prospects": [
-                {
-                    "id": (
-                        getattr(r.data or {}, "prospect_id", None) or prospect_ids[i]
-                        if i < len(prospect_ids)
-                        else None
-                    ),
-                    "status": "success" if r.success else "failed",
-                    "error": r.error if not r.success else None,
-                }
-                for i, r in enumerate(results)
-            ],
+            "revealed_count": success_count,
+            "failed_count": failure_count,
+            "success_rate": success_rate,
+            "prospects": prospect_records,
             "credits_used": total_credits_used,
-            "errors": [
-                {
-                    "prospect_id": (
-                        getattr(r.data or {}, "prospect_id", None) or prospect_ids[i]
-                        if i < len(prospect_ids)
-                        else None
-                    ),
-                    "error": r.error,
-                }
-                for i, r in enumerate(results)
-                if not r.success
-            ],
+            "errors": error_entries,
         }
 
 

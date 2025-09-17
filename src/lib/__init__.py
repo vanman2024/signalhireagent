@@ -37,6 +37,7 @@ from .common import (
     truncate_string,
     validate_url,
 )
+from .contact_cache import ContactCache, CachedContact, normalize_contacts
 from .config import (
     get_api_config,
     get_callback_server_config,
@@ -91,6 +92,10 @@ __all__ = [
     "sanitize_filename",
     "truncate_string",
     "validate_url",
+    # Contact cache
+    "ContactCache",
+    "CachedContact",
+    "normalize_contacts",
     # Configuration
     "get_api_config",
     "get_callback_server_config",

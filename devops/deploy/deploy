@@ -9,7 +9,8 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+CONFIG_FILE="$REPO_ROOT/devops/ops/config.yml"
 
 # Colors
 RED='\033[0;31m'
@@ -25,21 +26,55 @@ print_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
 cd "$REPO_ROOT"
 
+get_default_target() {
+    if [[ -f "$CONFIG_FILE" ]]; then
+        python3 - "$CONFIG_FILE" 2>/dev/null <<'PY'
+import pathlib
+import sys
+
+config_path = pathlib.Path(sys.argv[1])
+targets = []
+current = None
+
+for raw_line in config_path.read_text().splitlines():
+    line = raw_line.rstrip()
+    stripped = line.strip()
+
+    if not stripped or stripped.startswith('#'):
+        continue
+
+    if not line.startswith(' '):
+        current = stripped.rstrip(':')
+        continue
+
+    if current == 'targets' and stripped.startswith('- '):
+        targets.append(stripped[2:].strip())
+
+if targets:
+    print(targets[0])
+PY
+    fi
+}
+
 case "${1:-help}" in
     production)
         shift
         print_status "Running production deployment..."
-        ./deploy/commands/deploy-to-production.sh "$@"
+        if [[ $# -eq 0 ]]; then
+            default_target=$(get_default_target)
+            set -- "$default_target"
+        fi
+        ./devops/deploy/commands/deploy-to-production.sh "$@"
         ;;
     simple)
         shift
         print_status "Running simple deployment..."
-        ./deploy/commands/deploy-to-production-simple.sh "$@"
+        ./devops/deploy/commands/deploy-to-production-simple.sh "$@"
         ;;
     build)
         shift
         print_status "Running production build..."
-        ./deploy/commands/build-production.sh "$@"
+        ./devops/deploy/commands/build-production.sh "$@"
         ;;
     help|--help|-h)
         cat << EOF

@@ -567,23 +567,23 @@ def prospect_enrichment(ctx, prospect_list, output_dir):
     config = ctx.obj['config']
     logger = ctx.obj.get('logger')
 
-    # Validate credentials
+    # Validate credentials (API-only)
     if config.browser_mode:
-        if not config.email or not config.password:
-            echo(
-                style("Error: Browser mode requires email and password", fg='red'),
-                err=True,
-            )
-            ctx.exit(1)
-    elif not config.api_key:
         echo(
-            style("Warning: No API key, falling back to browser mode", fg='yellow'),
+            style(
+                "Error: Browser automation is disabled. Use API credentials only.",
+                fg='red',
+            ),
             err=True,
         )
-        config.browser_mode = True
-        if not config.email or not config.password:
-            echo(style("Error: No valid authentication available", fg='red'), err=True)
-            ctx.exit(1)
+        ctx.exit(1)
+
+    if not config.api_key:
+        echo(
+            style("Error: SIGNALHIRE_API_KEY is required for this workflow.", fg='red'),
+            err=True,
+        )
+        ctx.exit(1)
 
     output_path = Path(output_dir)
 
@@ -633,8 +633,8 @@ def bulk_export(ctx, export_existing, output_dir):
     """
     Export existing SignalHire lists/projects.
 
-    Exports data from existing SignalHire lists or projects using
-    browser automation to access the native export functionality.
+    Browser automation is disabled in this release, so the workflow
+    exits immediately with guidance to use the API export tools instead.
 
     \b
     Examples:
@@ -644,39 +644,12 @@ def bulk_export(ctx, export_existing, output_dir):
     config = ctx.obj['config']
     logger = ctx.obj.get('logger')
 
-    # API-only: explicitly error for unsupported UI bulk export
-
-    # Validate credentials
-    if not config.email or not config.password:
-        echo(
-            style("Error: Browser mode requires email and password", fg='red'), err=True
-        )
-        ctx.exit(1)
-
-    output_path = Path(output_dir)
-
-    try:
-        echo("📤 Starting bulk export workflow...")
-
-        runner = WorkflowRunner(config, logger)
-        results = asyncio.run(runner.run_bulk_export(export_existing, output_path))
-
-        # Display results
-        if config.output_format == 'json':
-            echo(json.dumps(results, indent=2))
-        else:
-            echo(format_workflow_results(results, config.output_format))
-
-        echo("\n✅ Export completed successfully!")
-        echo(f"📁 Results saved to: {output_path.absolute()}")
-
-    except KeyboardInterrupt:
-        echo("\n🛑 Export cancelled by user", err=True)
-        ctx.exit(1)
-    except Exception as e:  # noqa: BLE001
-        echo(style(f"❌ Export failed: {e}", fg='red'), err=True)
-        if config.debug:
-            import traceback
-
-            echo(traceback.format_exc(), err=True)
-        ctx.exit(1)
+    echo(
+        style(
+            "Error: Bulk export requires browser automation, which is currently disabled.",
+            fg='red',
+        ),
+        err=True,
+    )
+    echo("Use signalhire export commands backed by the API instead.", err=True)
+    ctx.exit(1)

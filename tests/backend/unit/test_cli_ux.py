@@ -61,7 +61,7 @@ class TestHandleApiError:
                     messages.append(msg)
 
             assert any("Rate Limit Exceeded!" in msg for msg in messages)
-            assert "browser mode" in " ".join(messages).lower()
+            assert "status --credits" in " ".join(messages).lower()
 
     def test_insufficient_credits_error_402(self):
         """Test insufficient credits error handling."""

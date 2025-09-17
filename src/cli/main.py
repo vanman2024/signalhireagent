@@ -54,8 +54,8 @@ class CliConfig:
         )
         self.api_prefix: str = os.getenv('SIGNALHIRE_API_PREFIX') or '/api/v1'
 
-        # Browser configuration
-        self.browser_mode: bool = False  # Will auto-detect if API key not available
+        # Browser configuration (disabled in API-first builds)
+        self.browser_mode: bool = False
         self.headless: bool = True
 
         # Output configuration
@@ -109,13 +109,8 @@ class CliConfig:
 
     def auto_detect_mode(self):
         """Auto-detect whether to use browser or API mode."""
-        if self.api_key:
-            self.browser_mode = False
-        elif self.email and self.password:
-            self.browser_mode = True
-        else:
-            # Default to browser mode, will show error if credentials missing
-            self.browser_mode = True
+        # Browser automation is disabled; always enforce API mode
+        self.browser_mode = False
 
 
 # Global configuration instance
@@ -171,8 +166,9 @@ def main(
     """
     SignalHire Agent - API-First Lead Generation & Contact Revelation
     🚀 API-FIRST APPROACH: Uses SignalHire's API by default for reliable, fast contact reveals
-    📊 Rate limits: 600 elements/minute search, separate daily reveal quotas
-    🌐 BROWSER MODE: Optional browser automation for bulk operations (1000+ contacts)
+    💳 Daily quotas: 5,000 API contact reveals & 5,000 search profile views
+    📈 Usage warnings at 50%, 75%, and 90% to protect production credits
+    🚫 BROWSER MODE: Currently unavailable (API-first delivery only)
     
     QUICK START:
       # Set credentials (choose one method)
@@ -187,24 +183,23 @@ def main(
       # Reveal contacts (API-first by default)
       signalhire reveal --input prospects.csv --output contacts.csv
 
-      # Force browser mode for bulk operations
-      signalhire reveal --input large_list.csv --browser --bulk-size 1000
+      # Confirm credits before large campaigns
+      signalhire status --credits
     
     MODES:
-      • API Mode (Default): Fast, reliable, daily reveal quotas
-      • Browser Mode: Slower but handles large volumes, bypasses API limits
-      • Auto Mode: Automatically chooses best method based on volume
+      • API Mode: Fast, reliable, 5,000 reveals & 5,000 search profiles/day
+      • Automation Only When Available: Browser workflows are disabled in this release
     
     EXAMPLES:
       # Basic search and reveal (API-first)
       signalhire search --title "VP Engineering" --company "Tech Startup"
       signalhire reveal --search-id abc123 --output vps.csv
 
-      # Large-scale operation (browser mode)
-      signalhire reveal --input 5000_prospects.csv --browser --bulk-size 2000
+      # Multi-day campaign planning
+      signalhire status --daily-usage
 
       # Check credits and status
-      signalhire credits --check
+      signalhire status --credits
       signalhire status --detailed
 
       # Workflow with progress tracking
