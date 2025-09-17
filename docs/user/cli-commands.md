@@ -20,7 +20,7 @@ When working with natural language requests, use these command mappings:
 **Analysis Requests:**
 - "Analyze job titles in these contacts" → `signalhire analyze job-titles --input contacts.json`
 - "Check geographic coverage" → `signalhire analyze geography --input contacts.json`
-- "Show me search templates for heavy equipment" → `signalhire analyze search-templates`
+- "Show me search templates for heavy equipment" → `signalhire search templates`
 
 **Filtering Requests:**
 - "Remove operators and drivers from contacts" → `signalhire filter job-title --input contacts.json --output filtered.json --exclude-job-titles "operator,driver"`
@@ -249,7 +249,8 @@ signalhire analyze [COMMAND] [OPTIONS]
     ```
 *   **Show Heavy Equipment search templates:**
     ```bash
-    signalhire analyze search-templates
+    signalhire search templates
+    # Alias: signalhire analyze search-templates
     ```
 
 ## `signalhire filter`

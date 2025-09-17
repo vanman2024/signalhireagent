@@ -15,6 +15,7 @@ import click
 from click import echo, style
 
 from ..models.search_criteria import SearchCriteria
+from ..services.search_analysis_service import create_heavy_equipment_search_templates
 from ..services.signalhire_client import SignalHireClient
 from .reveal_commands import handle_api_error
 
@@ -94,6 +95,32 @@ def save_search_results(
         # Save as human-readable text
         with open(output_path, 'w') as f:
             f.write(format_search_results(results, "human"))
+
+
+def _show_search_templates() -> None:
+    """Display available Boolean search templates for quick search setup."""
+    templates = create_heavy_equipment_search_templates()
+
+    echo("\n🔍 Heavy Equipment Mechanic Search Templates")
+    echo(
+        "Use these with: signalhire search --title \"[TITLE]\" "
+        '--keywords "[KEYWORDS]"'
+    )
+
+    for name, template in templates.items():
+        echo(f"\n📋 {name.replace('_', ' ').title()}:")
+        echo(f"  Title: {template['title']}")
+        echo(f"  Keywords: {template['keywords']}")
+        echo(f"  Description: {template['description']}")
+        echo(
+            "  Command: signalhire search --title "
+            f'"{template["title"]}" --keywords "{template["keywords"]}"'
+        )
+
+    echo("\n💡 Pro Tips:")
+    echo("  • Use AND NOT to exclude operators and drivers")
+    echo("  • Combine equipment brands (CAT, Komatsu, John Deere)")
+    echo("  • Focus on repair/maintenance skills vs operations")
 
 
 async def execute_search(
@@ -208,6 +235,7 @@ async def execute_search(
 @click.option(
     '--dry-run', is_flag=True, help='Show what would be searched without executing'
 )
+@click.argument('preset', required=False)
 @click.pass_context
 def search(
     ctx,
@@ -228,6 +256,7 @@ def search(
     dry_run,
     all_pages,
     max_pages,
+    preset,
 ):
     """
     Search SignalHire database for prospects (API-powered).
@@ -253,6 +282,9 @@ def search(
       # Large paginated search
       signalhire search --title "Designer" --size 100 --continue-search
 
+      # Show built-in Boolean templates
+      signalhire search templates
+
     \b
     BOOLEAN OPERATORS:
     Use AND, OR, NOT, and parentheses in title, company, and keywords fields:
@@ -265,6 +297,15 @@ def search(
     Large searches are automatically paginated. Use --continue-search to get
     the next page of results from a previous search.
     """
+
+    if preset:
+        normalized = preset.replace('-', '_').lower()
+        if normalized in {'template', 'templates'}:
+            _show_search_templates()
+            ctx.exit(0)
+        raise click.UsageError(
+            f"Unexpected argument '{preset}'. Did you mean 'signalhire search templates'?"
+        )
 
     config = ctx.obj['config']
     logger = ctx.obj.get('logger')
