@@ -50,10 +50,25 @@ esac
 NEW_VERSION="$MAJOR.$MINOR.$PATCH"
 echo "📈 New version: $NEW_VERSION"
 
+# Update version in pyproject.toml
+echo "📝 Updating version in pyproject.toml..."
+sed -i "s/version = \".*\"/version = \"$NEW_VERSION\"/" pyproject.toml
+
+# Commit version bump
+echo "💾 Committing version bump..."
+git add pyproject.toml
+git commit -m "bump: version $NEW_VERSION
+
+🤖 Generated with Claude Code
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
+
 # Create git tag
 echo "🏷️  Creating release tag..."
 git tag "v$NEW_VERSION"
+git push origin main
 git push origin "v$NEW_VERSION"
 
 echo "✅ Deploy complete!"
 echo "🌐 GitHub Actions will handle the rest automatically"
+echo "📦 Production build will be created at: https://github.com/$(git remote get-url origin | sed 's/.*github.com[\/:]//;s/.git$//')/releases/tag/v$NEW_VERSION"

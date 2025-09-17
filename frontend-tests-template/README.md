@@ -48,8 +48,10 @@ test('price calculation is correct', () => {
 
 For detailed guidance on testing strategy:
 
-- **[📋 Testing Strategy Guide](docs/TESTING_STRATEGY.md)**: Complete framework for deciding what to test
-- **[🎯 Test Type Selection Guide](docs/TEST_TYPE_GUIDE.md)**: Quick reference for choosing test types
+- **[📋 Testing Strategy Guide](docs/TESTING_STRATEGY.md)**: Complete framework for deciding what to test and when
+- **[🎯 Test Type Selection Guide](docs/TEST_TYPE_GUIDE.md)**: Quick reference for choosing the right test types
+- **[🔧 Implementation Guide](docs/IMPLEMENTATION_GUIDE.md)**: Practical examples and code patterns for each test type
+- **[🚀 Quick Start Guide](docs/QUICK_START.md)**: Step-by-step setup and priority guidelines for new projects
 - **[🔍 Example Test Suites](tests/e2e/user-journeys.spec.ts)**: Real examples of smart E2E testing
 
 ## 🚀 Why This Template?
@@ -71,7 +73,9 @@ frontend-testing-suite-template/
 ├── README.md                   # This file
 ├── docs/
 │   ├── TESTING_STRATEGY.md     # Complete testing strategy guide
-│   └── TEST_TYPE_GUIDE.md      # Test type selection guide
+│   ├── TEST_TYPE_GUIDE.md      # Test type selection reference
+│   ├── IMPLEMENTATION_GUIDE.md # Practical implementation examples
+│   └── QUICK_START.md          # Quick setup and priority guide
 ├── tests/
 │   ├── global-setup.ts         # Test environment setup
 │   ├── global-teardown.ts      # Test cleanup
@@ -127,6 +131,10 @@ test('homepage is accessible', async ({ page }) => {
 ```
 
 ## 🚀 Quick Start
+
+### 📖 Before You Begin
+- **[Quick Start Guide](docs/QUICK_START.md)**: Step-by-step setup with priority guidelines
+- **[Implementation Guide](docs/IMPLEMENTATION_GUIDE.md)**: Practical examples for each test type
 
 ### 1. Copy to New Project
 ```bash
