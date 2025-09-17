@@ -1,7 +1,7 @@
 #!/bin/bash
 # Main Deploy Command
 # 
-# PURPOSE: Unified deployment interface for SignalHire Agent
+# PURPOSE: Unified deployment interface for any project
 # USAGE: ./deploy/deploy <command> [options]
 # PART OF: Deploy system
 # CONNECTS TO: ops system, deploy commands, production targets
@@ -43,7 +43,7 @@ case "${1:-help}" in
         ;;
     help|--help|-h)
         cat << EOF
-SignalHire Agent Deploy CLI
+Project Deploy CLI
 
 USAGE:
     deploy <command> [options]
@@ -54,8 +54,8 @@ COMMANDS:
     build [target]           Build production version only
     
 EXAMPLES:
-    deploy production ~/Projects/signalhireagenttests2/signalhireagent
-    deploy simple ~/deploy/signalhire
+    deploy production ~/deploy/your-project
+    deploy simple ~/deploy/staging
     deploy build ~/test-build --force
 
 NOTE: Use 'ops' command for complete workflow (qa → build → verify → release)

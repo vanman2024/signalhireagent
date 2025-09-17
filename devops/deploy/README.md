@@ -1,6 +1,8 @@
 # Deploy System
 
-**Deployment and build management for SignalHire Agent.**
+**Deployment and build management template for projects.**
+
+> **Note**: This deploy system is designed as a reusable template. When copied to other projects, customize the build scripts and target paths for your specific project needs.
 
 ## 🎯 **Main Command**
 
@@ -21,13 +23,13 @@ deploy build [target]         # Build production version only
 
 ```bash
 # Deploy to production environment
-deploy production ~/Projects/signalhireagenttests2/signalhireagent
+deploy production ~/deploy/your-project     # Customize path for your project
 
-# Simple deployment for testing
-deploy simple ~/test-deploy
+# Simple deployment for testing  
+deploy simple ~/test-deploy                 # Customize path for your project
 
 # Build only (no deployment)
-deploy build ~/build-output --force
+deploy build ~/build-output --force         # Customize path for your project
 ```
 
 ## 📁 **File Structure**
@@ -99,3 +101,17 @@ System files that get updated:
 - Handles virtual environment creation properly
 - Prevents Windows/WSL path conflicts
 - Auto-detects and configures correct Python interpreter
+
+## 📋 **Template Customization**
+
+When copying this deploy system to a new project:
+
+1. **Update build scripts**: Customize `commands/build-production.sh` for your project's:
+   - Dependencies (requirements.txt, package.json, etc.)
+   - Entry points and CLI wrappers
+   - Environment variables and configuration
+   - File structure and essential files
+
+2. **Customize deployment targets**: Update target paths in ops config and scripts
+
+3. **Adapt for your stack**: Modify for your language/framework (Python, Node.js, Rust, etc.)

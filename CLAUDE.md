@@ -54,45 +54,16 @@ When the user gives natural language requests, use the CLI command mappings in t
 
 ### Proper Development Workflow
 1. **Make changes in development**: Edit files in main development directory
-2. **Test changes locally**: Verify fixes work in development environment
+2. **Test with ops system**: Run `./ops/ops qa` to validate changes
 3. **Commit changes**: Use git to commit changes to development repository
-4. **Deploy to production**: Use `./scripts/deploy-to-production.sh` to push changes
-5. **Verify in production**: Test that changes work in production environment
+4. **Deploy to production**: Use `./ops/ops build` and deployment commands
+5. **Verify in production**: Run `./ops/ops verify-prod` to test production build
 
 ### Why This Matters
 - Production deployments overwrite ALL code changes
 - Manual edits in production are lost when deployment script runs
 - Development → Production flow ensures consistency and version control
-- Deployment script handles proper file copying and environment setup
-
-### Simple Deployment System (Fixed 2025-09-16)
-The deployment now uses a **whitelist approach** that only updates specific system files:
-
-**System Files (Always Updated):**
-- `src/` - Application code
-- `requirements.txt` - Dependencies  
-- `VERSION` - Version info (auto-reads from pyproject.toml)
-- `BUILD_INFO.md` - Build documentation
-- `install.sh` - Installation script
-- `signalhire-agent` - CLI wrapper
-- `.env` - Environment configuration
-
-**User Files (Always Preserved):**
-- `CLAUDE.md` - User instructions
-- `AGENTS.md` - Agent configurations  
-- `*.txt` - User data files
-- `config/` - User configuration
-- `data/` - User data directories
-- Any other files not in the system whitelist
-
-**Deploy Command:**
-```bash
-./scripts/deploy-to-production.sh
-# ✅ Updates system files with v0.4.6 from pyproject.toml  
-# ✅ Preserves all user files
-# ✅ No backup directories created
-# ✅ Clean, reliable deployment
-```
+- Ops/deploy systems handle proper file management and environment setup
 
 ## 🤝 Working with Users - Critical Guidelines
 
@@ -241,11 +212,11 @@ grep "@claude" [current-spec]/tasks.md
 ```
 
 ## Recent Changes
-- 004-enterprise-contact-deduplication: Fixed deployment protocol with simple file preservation
-- Version tracking now reads from pyproject.toml automatically and creates git tags
-- Simple deployment only updates system files (src/, VERSION, etc.), preserves all user files  
-- Fixed SignalHire API client environment variable handling (empty string issue)
-- Eliminated backup directory creation during deployments
+- 004-enterprise-contact-deduplication: Complete contact deduplication and filtering system
+- Consolidated ops and deploy systems into dedicated folders (ops/, deploy/)
+- Fixed WSL Python environment dependency issues in production builds
+- Standardized semantic versioning workflow with ops system
+- Eliminated deployment file preservation issues
 
 ## Prerequisites
 - SignalHire API key (for MCP tool integration)
@@ -266,51 +237,56 @@ grep "@claude" [current-spec]/tasks.md
 
 - Always use absolute paths when reading files
 
-## Production Build System
+## 🚀 Ops & Deploy Systems
 
-### Creating Production Deployments
-Use the production build script for clean, deployment-ready packages:
+Use the consolidated ops and deploy systems for all development and deployment tasks.
 
+### Operations Workflow (ops/)
 ```bash
-# Create production build in target directory
-./scripts/build/build-production.sh ~/target/directory --latest --force
+# Daily development workflow
+./ops/ops qa                    # Quality checks (lint, format, typecheck, tests)
+./ops/ops build                 # Build production to configured target
+./ops/ops verify-prod          # Verify production build works
+./ops/ops release patch         # Create patch release (bug fixes)
+./ops/ops release minor         # Create minor release (new features)
+./ops/ops release major         # Create major release (breaking changes)
 
-# What it does:
-# - Copies only essential application files (src/, docs/, agent instructions)
-# - Auto-creates .env with your development credentials
-# - Removes development files (tests/, specs/, version.py)
-# - Creates install.sh with virtual environment support
-# - Includes complete dependency specification
-# - Generates CLI wrapper for easy execution
+# Setup and status
+./ops/ops setup [target]        # One-time setup with target directory
+./ops/ops status                # Show current config and versions
+./ops/ops env doctor           # Diagnose environment issues
 ```
 
-### GitHub Actions Integration
-Automated releases via `.github/workflows/release.yml`:
-- **Triggers**: Version tags (`git tag v0.2.1 && git push origin v0.2.1`) or manual dispatch
-- **Builds**: Production packages with clean dependencies
-- **Tests**: Validates build integrity and required files
-- **Releases**: Creates GitHub releases with downloadable packages
-
-### Testing Production Builds
+### Deployment Commands (deploy/)
 ```bash
-# Test locally before releasing
-./scripts/build/build-production.sh test-build --latest --force
-cd test-build
-./install.sh  # Sets up virtual environment and dependencies
-./signalhire-agent --help  # Test CLI works
+# Production deployment
+./deploy/deploy production [target]    # Full production deployment
+./deploy/deploy simple [target]        # Simple file-based deployment
+./deploy/deploy build [target]         # Build production version only
 ```
 
-## Code Quality Commands
-- **ALWAYS** run linting and type checking commands after making code changes
-- Lint code: `ruff check src/`
-- Fix linting issues: `ruff check --fix src/`
-- Type check: `mypy src/`
-- Use python3 run.py instead of direct pytest commands for consistent environment setup
-- Test message for consistent behavior
-- Always validate input parameters in all functions
-- Never commit secrets or API keys - always use environment variables and .env files
-- You're absolutely right - the environment variable issue is frustrating! The problem is that we're running Python from Windows but the .env file is in the WSL filesystem, so the environment variables aren't being loaded properly. We need to make sure we are we are using wsl properly its super annoying but I don't see any way around it
-- for all agents make sure they are commiting their work and using there symbols that they have committed their work so we know they did it
+### Semantic Versioning
+```
+MAJOR.MINOR.PATCH format:
+./ops/ops release patch    # 0.4.9 → 0.4.10 (bug fixes)
+./ops/ops release minor    # 0.4.9 → 0.5.0  (new features)
+./ops/ops release major    # 0.4.9 → 1.0.0  (breaking changes)
+```
+
+### Documentation
+- **Complete ops workflow**: `ops/README.md`
+- **Complete deploy system**: `deploy/README.md`
+- **Legacy documentation**: `docs/developer/TESTING_AND_RELEASE.md`
+
+## Code Quality Guidelines
+- **Use ops system**: Run `./ops/ops qa` for complete quality checks (includes linting, formatting, type checking, tests)
+- **Manual commands** (if needed):
+  - Lint: `ruff check src/` (auto-fix: `ruff check --fix src/`)
+  - Type check: `mypy src/`
+  - Tests: `python3 run.py -m pytest`
+- **Always validate input parameters** in all functions
+- **Never commit secrets** - use environment variables and .env files
+- **WSL compatibility**: Use WSL-native Python to avoid environment issues
 
 ## 🚨 CRITICAL: Script Documentation Standards
 **MANDATORY for ALL AGENTS**: Every script file must include a standardized header.
@@ -342,61 +318,24 @@ cd test-build
 ## Agent Work Validation Protocol
 When checking any agent's completed work, use this systematic validation approach:
 
-### 1. Automated Testing Validation
-```bash
-# Run the full test suite to catch any breaking changes
-python3 run.py -m pytest
+### Agent Work Validation
+Use the ops system for systematic validation:
 
-# Check specific test categories
-python3 run.py -m pytest -m unit
-python3 run.py -m pytest -m integration  
+```bash
+# Complete validation workflow
+./ops/ops qa                    # Run all quality checks
+./ops/ops build                 # Test production build
+./ops/ops verify-prod          # Verify production works
 ```
 
-### 2. Code Quality Checks
+### Manual Validation (if needed)
 ```bash
-# Lint all code changes
-ruff check src/
-
-# Type checking
-mypy src/
-
-# Check for any import/dependency issues
-python3 -c "import sys; sys.path.append('src'); import services.deduplication_service"
-```
-
-### 3. Git Commit Review
-```bash
-# Check agent's recent commits
-git log --grep="[AgentName]" --oneline -10
-
-# Review specific commits with diffs
-git show <commit-hash>
-
-# Check if commits follow the required format
+# Check commits follow format
 git log --grep="🤖 Generated by" --oneline -5
-```
 
-### 4. Functional Testing
-```bash
-# Test CLI commands work
+# Test CLI functionality  
 signalhire --help
-signalhire [command] --help
-
-# Test with sample data if available
-[command] --input sample.csv --output test_output.csv
 ```
-
-### 5. File Structure Validation
-```bash
-# Check all required files were created
-ls -la src/services/
-ls -la tests/integration/
-ls -la tests/unit/
-ls -la src/lib/
-```
-
-### Quick Validation Script
-Use `scripts/validate-agent-work.sh [agent-name]` for automated validation of agent work.
 
 <!-- MANUAL ADDITIONS END -->
 # important-instruction-reminders

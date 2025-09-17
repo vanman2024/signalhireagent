@@ -1,4 +1,5 @@
-# SignalHire Agent Operations Config
+# Project Operations Config
+# Template: Customize for your project
 versioning:
   strategy: conventional_commits
   source: pyproject.toml

@@ -1,8 +1,9 @@
 #!/bin/bash
-# Single operations CLI for signalhireagent
+# Operations CLI Template
 # 
 # Replaces complex automation with simple, explicit commands
 # Perfect for solo development with AI CLI agents
+# Template: Customize for your project when copying to other repos
 
 set -e
 
@@ -58,16 +59,17 @@ activate_venv() {
 
 # Commands
 cmd_setup() {
-    local target="${1:-$HOME/deploy/signalhire}"
+    local target="${1:-$HOME/deploy/project}"
     local auto_release="${2:-false}"
     
-    print_status "Setting up signalhireagent operations"
+    print_status "Setting up project operations"
     print_status "Target: $target"
     
     # Create config
-    mkdir -p .automation
+    mkdir -p ops
     cat > "$CONFIG_FILE" << EOF
-# SignalHire Agent Operations Config
+# Project Operations Config
+# Template: Customize for your project
 versioning:
   strategy: conventional_commits
   source: pyproject.toml
@@ -122,13 +124,26 @@ cmd_qa() {
         echo "🔍 Type checking backend..."
         mypy src/ || true
         
-        echo "🧪 Running tests..."
-        python3 run.py -m pytest -m "not slow" || true
+        echo "🧪 Running backend tests..."
+        # Standardized test structure for template consistency
+        if [[ -d "tests/backend" ]]; then
+            echo "   Using standardized tests/backend/ structure..."
+            python3 run.py -m pytest tests/backend/ -m "not slow" || true
+        elif [[ -d "tests/unit" ]] && [[ -d "tests/integration" ]]; then
+            echo "   Using legacy tests/unit + tests/integration structure..."
+            echo "   Running unit tests..."
+            python3 run.py -m pytest tests/unit/ -v || true
+            echo "   Running integration tests..."
+            python3 run.py -m pytest tests/integration/ -m "not slow" -v || true
+        else
+            echo "   Running all tests (fallback)..."
+            python3 run.py -m pytest -m "not slow" || true
+        fi
     fi
     
     # Frontend QA
     if [[ "$test_type" == "frontend" ]] || [[ "$test_type" == "all" ]]; then
-        if [[ -d "frontend-tests" ]] && [[ -f "package.json" ]]; then
+        if [[ -d "tests/frontend" ]] && [[ -f "package.json" ]]; then
             echo "🧹 Linting frontend..."
             npm run lint:frontend 2>/dev/null || echo "⚠️ Frontend linting not configured"
             
@@ -470,7 +485,7 @@ case "${1:-help}" in
         ;;
     help|--help|-h)
         cat << EOF
-SignalHire Agent Operations CLI
+Project Operations CLI (Template)
 
 USAGE:
     ops <command> [options]
@@ -487,9 +502,9 @@ COMMANDS:
     hooks [install|remove]   Manage auto-sync git hooks (optional)
 
 EXAMPLES:
-    ops setup ~/deploy/signalhire
+    ops setup ~/deploy/your-project    # Customize path for your project
     ops qa
-    ops build --target ~/deploy/signalhire --force
+    ops build --target ~/deploy/your-project --force
     ops verify-prod
     ops release minor
     ops status
@@ -499,6 +514,10 @@ WORKFLOW:
     Daily: ops qa → ops build → ops verify-prod
     Release: ops release [patch|minor|major]
     Sync: ops sync (or enable with ops hooks install)
+    
+TEMPLATE NOTE:
+    This ops system is designed as a template. When copying to other projects,
+    customize the QA commands, build scripts, and target paths for your specific stack.
 EOF
         ;;
     *)
