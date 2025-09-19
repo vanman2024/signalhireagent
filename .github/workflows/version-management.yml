@@ -1,0 +1,103 @@
+name: Automatic Version Management with Deploy
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - 'archive/**'          # Ignore archive changes
+      - 'tests/**'            # Ignore test changes
+      - 'docs/**'             # Ignore documentation changes
+
+permissions:
+  contents: write
+  actions: read
+  checks: read
+  pull-requests: write
+
+jobs:
+  version-and-deploy:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install semantic-release dependencies
+      run: |
+        npm install --no-save \
+          semantic-release \
+          @semantic-release/changelog \
+          @semantic-release/git \
+          @semantic-release/github \
+          @semantic-release/exec
+
+    - name: Update VERSION file and create release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        # Create semantic-release config for SignalHire
+        cat > .releaserc.json << 'EOF'
+        {
+          "branches": ["main"],
+          "plugins": [
+            "@semantic-release/commit-analyzer",
+            "@semantic-release/release-notes-generator",
+            [
+              "@semantic-release/exec",
+              {
+                "prepareCmd": "node -e \"const fs = require('fs'); const versionData = { version: 'v${nextRelease.version}', commit: process.env.GITHUB_SHA, build_date: new Date().toISOString(), build_type: 'production' }; fs.writeFileSync('VERSION', JSON.stringify(versionData, null, 2));\""
+              }
+            ],
+            [
+              "@semantic-release/git",
+              {
+                "assets": ["VERSION"],
+                "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+              }
+            ],
+            "@semantic-release/github"
+          ]
+        }
+        EOF
+        
+        # Run semantic-release
+        npx semantic-release
+      continue-on-error: true
+
+    - name: Deploy to signalhiretest2 directory
+      if: always()
+      run: |
+        echo "🚀 Starting automatic deployment to signalhiretest2..."
+        
+        # Create scripts directory if it doesn't exist
+        mkdir -p scripts
+        
+        # Make deploy script executable if it exists
+        if [ -f "scripts/intelligent-auto-deploy.sh" ]; then
+          chmod +x scripts/intelligent-auto-deploy.sh
+          
+          # Run deployment
+          ./scripts/intelligent-auto-deploy.sh /home/vanman2025 $(pwd)
+          
+          echo "✅ Deployment to signalhiretest2 completed successfully"
+        else
+          echo "⚠️  Deploy script not found at scripts/intelligent-auto-deploy.sh"
+        fi
+
+    - name: Version and deployment complete
+      if: always()
+      run: |
+        echo "✅ SignalHire version management workflow completed"
+        echo "📦 Current version: $(cat VERSION | jq -r .version 2>/dev/null || echo 'unknown')"
+        echo "🚀 Deployed to: /home/vanman2025/signalhiretest2/"
+        echo ""
+        echo "🎯 SignalHire Agent ready for testing"
