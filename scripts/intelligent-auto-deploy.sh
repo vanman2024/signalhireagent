@@ -7,7 +7,7 @@ set -e
 # Configuration
 TEMPLATE_REPO_DIR="$1"
 SOURCE_DIR="$2"
-TARGET_DIR="signalhiretest2"
+TARGET_DIR="Projects/signalhireagenttests2"
 
 if [ -z "$TEMPLATE_REPO_DIR" ] || [ -z "$SOURCE_DIR" ]; then
     echo "Usage: $0 <template-repo-dir> <source-dir>"
@@ -158,14 +158,17 @@ eval rsync -av \
     --include="pyproject.toml" \
     --include="setup.py"
 
-# Special handling for VERSION file
-echo "📝 Updating VERSION file..."
+# Special handling for VERSION file and important files
+echo "📝 Updating VERSION file and important configs..."
 if [ -f "$SOURCE_DIR/VERSION" ]; then
     cp "$SOURCE_DIR/VERSION" "$TEMPLATE_REPO_DIR/$TARGET_DIR/VERSION"
     echo "   ✅ VERSION file updated"
 else
     echo "   ⚠️  No VERSION file found in source"
 fi
+
+# Ensure all new application folders/files are included
+echo "🔄 Ensuring all new application files and folders are synced..."
 
 # Verify sync results
 echo "📊 Sync results:"
