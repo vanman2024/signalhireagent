@@ -97,6 +97,27 @@ EXCLUDE_PATTERNS=(
     "DEPLOYMENT.md"
     "ARCHITECTURE.md"
     
+    # Developer-focused documentation (exclude from test environment)
+    "AGENTS.md"
+    "CLAUDE.md"
+    "ENVIRONMENT_SETUP.md"
+    "MULTI_AGENT_INTEGRATION_SUMMARY.md"
+    "QUICKSTART.md"
+    "QUICK_DEPLOYMENT_GUIDE.md"
+    "README.md"
+    
+    # Development directories that shouldn't be in test environment
+    "agentswarm"
+    "agentswarm/"
+    "devops"
+    "devops/"
+    "templates"
+    "templates/"
+    "specs"
+    "specs/"
+    "memory"
+    "memory/"
+    
     # Lock files and logs
     "package-lock.json"
     "yarn.lock"
@@ -146,17 +167,19 @@ done
 echo "📋 Exclusion patterns configured: ${#EXCLUDE_PATTERNS[@]} patterns"
 
 # Perform intelligent sync using rsync
-echo "🔄 Syncing application files (excluding dev/test files)..."
+echo "🔄 Syncing core application files only..."
 eval rsync -av \
     --delete \
     $RSYNC_EXCLUDES \
     "$SOURCE_DIR"/ "$TEMPLATE_REPO_DIR/$TARGET_DIR"/ \
     --exclude=".*" \
-    --include="README.md" \
     --include="VERSION" \
     --include="requirements.txt" \
     --include="pyproject.toml" \
-    --include="setup.py"
+    --include="setup.py" \
+    --include="signalhire-agent" \
+    --include="run.py" \
+    --include="setup.sh"
 
 # Special handling for VERSION file and important files
 echo "📝 Updating VERSION file and important configs..."
