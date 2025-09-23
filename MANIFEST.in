@@ -1,6 +1,13 @@
 include README.md
 include LICENSE
 include VERSION
+exclude README.dev.md
+exclude AGENTS.md
+exclude CLAUDE.md
+exclude ENVIRONMENT_SETUP.md
+exclude QUICKSTART.md
+exclude QUICK_DEPLOYMENT_GUIDE.md
+exclude MULTI_AGENT_INTEGRATION_SUMMARY.md
 recursive-include src *.py
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]

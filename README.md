@@ -29,59 +29,23 @@ AI-powered lead generation automation for SignalHire with full API integration. 
 
 ### Installation
 
-**Option 1: Install with pipx (Recommended for CLI tools):**
+**Install with pipx (Recommended):**
 ```bash
 # Install pipx if you haven't already
 python3 -m pip install --user pipx
 python3 -m pipx ensurepath
 
-# Install SignalHire Agent from PyPI (when published)
-pipx install signalhire-agent
-
-# Or install from GitHub (current method)
+# Install SignalHire Agent
 pipx install git+https://github.com/vanman2024/signalhireagent.git
 
 # The CLI is now available globally
 signalhire-agent --version
-signalhire-agent search --title "Software Engineer" --location "San Francisco"
 ```
 
-**Option 2: Install with pip:**
+**Alternative: Install with pip:**
 ```bash
-# Install from PyPI (when published)
-pip install signalhire-agent
-
-# Or install from GitHub
 pip install git+https://github.com/vanman2024/signalhireagent.git
-
-# Run the CLI
 signalhire-agent --version
-```
-
-**Option 3: Development Setup:**
-```bash
-# 1. Clone and setup latest code
-git clone https://github.com/vanman2024/signalhireagent.git
-cd signalhireagent
-
-# 2. Install in development mode
-pip install -e .
-
-# 3. Add your API key
-nano .env  # Add your SignalHire API key
-
-# 4. Test and use
-signalhire-agent search --title "Software Engineer" --location "San Francisco"
-```
-
-**Option 4: Production Deployment (Legacy):**
-```bash
-# Download latest release from GitHub
-wget https://github.com/vanman2024/signalhireagent/releases/latest/download/signalhire-agent-production.tar.gz
-tar -xzf signalhire-agent-production.tar.gz
-cd signalhire-agent-*/
-./install.sh  # Creates virtual environment and installs dependencies
-./signalhire-agent search --title "Software Engineer" --location "San Francisco"
 ```
 
 ### Configuration
