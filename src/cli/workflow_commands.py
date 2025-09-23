@@ -16,9 +16,9 @@ from typing import Any
 import click
 from click import echo, style
 
-from ..models.search_criteria import SearchCriteria
-from ..services.export_service import ExportService
-from ..services.signalhire_client import SignalHireClient
+from models.search_criteria import SearchCriteria
+from services.export_service import ExportService
+from services.signalhire_client import SignalHireClient
 from .reveal_commands import handle_api_error
 
 
@@ -254,7 +254,7 @@ class WorkflowRunner:
     ) -> dict[str, Any]:
         """Execute reveal operation."""
         api_client = SignalHireClient(api_key=self.config.api_key)
-        from ..models.operations import RevealOp
+        from models.operations import RevealOp
 
         operation = RevealOp(prospect_ids=prospect_uids, batch_size=100)
         return await api_client.bulk_reveal(operation)

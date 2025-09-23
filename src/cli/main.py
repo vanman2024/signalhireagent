@@ -330,7 +330,7 @@ def doctor(ctx, ping):
                 # Import lazily to avoid circulars
                 import asyncio as _asyncio
 
-                from ..services.signalhire_client import SignalHireClient
+                from services.signalhire_client import SignalHireClient
 
                 async def _do_ping():
                     client = SignalHireClient(

@@ -14,7 +14,7 @@ from typing import Any
 import click
 from click import echo, style
 
-from ..services.signalhire_client import SignalHireClient
+from services.signalhire_client import SignalHireClient
 
 
 def format_credits_info(
