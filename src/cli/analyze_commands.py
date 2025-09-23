@@ -2,8 +2,8 @@ from collections import Counter
 
 import click
 
-from src.services.filter_service import load_contacts_from_file
-from src.services.search_analysis_service import (
+from services.filter_service import load_contacts_from_file
+from services.search_analysis_service import (
     analyze_geographic_coverage,
     create_heavy_equipment_search_templates,
     identify_search_overlap,

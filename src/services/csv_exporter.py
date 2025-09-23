@@ -20,7 +20,7 @@ try:
 except ImportError:
     HAS_PANDAS = False
 
-from src.models.prospect import Prospect
+from models.prospect import Prospect
 
 
 @dataclass

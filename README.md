@@ -29,50 +29,88 @@ AI-powered lead generation automation for SignalHire with full API integration. 
 
 ### Installation
 
-**Production Deployment (Recommended):**
+**Option 1: Install with pipx (Recommended for CLI tools):**
 ```bash
-# 1. Download latest release from GitHub
-wget https://github.com/vanman2024/signalhireagent/releases/latest/download/signalhire-agent-production.tar.gz
-tar -xzf signalhire-agent-production.tar.gz
-cd signalhire-agent-*/
+# Install pipx if you haven't already
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath
 
-# 2. Install with automatic environment setup
-./install.sh  # Creates virtual environment and installs dependencies
+# Install SignalHire Agent from PyPI (when published)
+pipx install signalhire-agent
 
-# 3. Start using immediately (environment pre-configured)
-./signalhire-agent search --title "Software Engineer" --location "San Francisco"
+# Or install from GitHub (current method)
+pipx install git+https://github.com/vanman2024/signalhireagent.git
+
+# The CLI is now available globally
+signalhire-agent --version
+signalhire-agent search --title "Software Engineer" --location "San Francisco"
 ```
 
-**Development Setup:**
+**Option 2: Install with pip:**
+```bash
+# Install from PyPI (when published)
+pip install signalhire-agent
+
+# Or install from GitHub
+pip install git+https://github.com/vanman2024/signalhireagent.git
+
+# Run the CLI
+signalhire-agent --version
+```
+
+**Option 3: Development Setup:**
 ```bash
 # 1. Clone and setup latest code
 git clone https://github.com/vanman2024/signalhireagent.git
 cd signalhireagent
 
-# 2. Add your API key
+# 2. Install in development mode
+pip install -e .
+
+# 3. Add your API key
 nano .env  # Add your SignalHire API key
 
-# 3. Test and use
-python3 -m src.cli.main search --title "Software Engineer" --location "San Francisco"
+# 4. Test and use
+signalhire-agent search --title "Software Engineer" --location "San Francisco"
 ```
 
-**Production Build (Simplified):**
+**Option 4: Production Deployment (Legacy):**
 ```bash
-# Create clean production deployment (simplified)
-ops build --target ~/production-deploy
-cd ~/production-deploy && ./install.sh
+# Download latest release from GitHub
+wget https://github.com/vanman2024/signalhireagent/releases/latest/download/signalhire-agent-production.tar.gz
+tar -xzf signalhire-agent-production.tar.gz
+cd signalhire-agent-*/
+./install.sh  # Creates virtual environment and installs dependencies
+./signalhire-agent search --title "Software Engineer" --location "San Francisco"
+```
+
+### Configuration
+
+After installation, configure your SignalHire API key:
+
+```bash
+# Option 1: Environment variable (recommended for pipx/pip installs)
+export SIGNALHIRE_API_KEY="your-api-key-here"
+
+# Option 2: Create .env file in your working directory
+echo "SIGNALHIRE_API_KEY=your-api-key-here" > .env
+
+# Option 3: Use the CLI config command
+signalhire-agent config set api-key your-api-key-here
+
+# Verify configuration
+signalhire-agent config show
 ```
 
 **Key Features:**
-- ✅ **Production ready**: Clean deployment with virtual environment isolation
+- ✅ **pip/pipx installable**: Standard Python package installation
+- ✅ **Global CLI**: Available system-wide after installation
 - ✅ **Auto-configuration**: Environment automatically configured with your credentials
-- ✅ **CLI wrapper**: Easy execution with `./signalhire-agent` script
 - ✅ **Fast startup**: Commands start instantly with optimized dependency loading
-- ✅ **Auto-dependencies**: Automatically handles all dependencies via `run.py`
 - ✅ **Universal**: Works on Windows/WSL/Linux/Mac
-- ✅ **Simple setup**: Creates `.env` and adds command to PATH automatically
+- ✅ **Version management**: Semantic versioning with automated releases
 
-**Current Version**: `v0.4.2` - [View Release](https://github.com/vanman2024/signalhireagent/releases/tag/v0.4.2)
+**Current Version**: `v1.1.2` - [View Releases](https://github.com/vanman2024/signalhireagent/releases)
 
 ## 📈 Real-World Case Study: Professional Lead Generation
 
