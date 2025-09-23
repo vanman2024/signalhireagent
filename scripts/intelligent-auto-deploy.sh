@@ -80,9 +80,7 @@ EXCLUDE_PATTERNS=(
     ".DS_Store"
     "Thumbs.db"
     
-    # Documentation directories and files  
-    "docs"
-    "docs/"
+    # Development documentation directories (keep user docs)
     "documentation"
     "documentation/"
     "examples"
@@ -117,6 +115,13 @@ EXCLUDE_PATTERNS=(
     "specs/"
     "memory"
     "memory/"
+    
+    # Exclude developer docs but keep user docs
+    "docs/developer"
+    "docs/developer/"
+    "docs/planning"
+    "docs/planning/"
+    "docs/DEPLOYMENT.md"
     
     # Lock files and logs
     "package-lock.json"
@@ -167,19 +172,12 @@ done
 echo "📋 Exclusion patterns configured: ${#EXCLUDE_PATTERNS[@]} patterns"
 
 # Perform intelligent sync using rsync
-echo "🔄 Syncing core application files only..."
+echo "🔄 Syncing application files and user documentation..."
 eval rsync -av \
     --delete \
     $RSYNC_EXCLUDES \
     "$SOURCE_DIR"/ "$TEMPLATE_REPO_DIR/$TARGET_DIR"/ \
-    --exclude=".*" \
-    --include="VERSION" \
-    --include="requirements.txt" \
-    --include="pyproject.toml" \
-    --include="setup.py" \
-    --include="signalhire-agent" \
-    --include="run.py" \
-    --include="setup.sh"
+    --exclude=".*"
 
 # Special handling for VERSION file and important files
 echo "📝 Updating VERSION file and important configs..."

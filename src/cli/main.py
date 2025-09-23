@@ -9,6 +9,7 @@ import json
 import os
 import sys
 from pathlib import Path
+from importlib.metadata import version, PackageNotFoundError
 
 import click
 import structlog
@@ -118,6 +119,7 @@ cli_config = CliConfig()
 
 
 @click.group()
+@click.version_option(version=version('signalhire-agent'), prog_name='signalhire-agent')
 @click.option('--email', envvar='SIGNALHIRE_EMAIL', help='SignalHire login email')
 @click.option(
     '--password', envvar='SIGNALHIRE_PASSWORD', help='SignalHire login password'

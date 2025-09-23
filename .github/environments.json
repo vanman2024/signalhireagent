@@ -1,0 +1,77 @@
+{
+  "environments": {
+    "test-ubuntu": {
+      "description": "Ubuntu testing environment",
+      "deployment_branch_policy": {
+        "protected_branches": false,
+        "custom_branch_policies": true,
+        "branches": ["main", "feature/**", "test/**"]
+      },
+      "reviewers": [],
+      "wait_timer": 0
+    },
+    "test-windows": {
+      "description": "Windows testing environment",
+      "deployment_branch_policy": {
+        "protected_branches": false,
+        "custom_branch_policies": true,
+        "branches": ["main", "feature/**", "test/**"]
+      },
+      "reviewers": [],
+      "wait_timer": 0
+    },
+    "test-macos": {
+      "description": "macOS testing environment",
+      "deployment_branch_policy": {
+        "protected_branches": false,
+        "custom_branch_policies": true,
+        "branches": ["main", "feature/**", "test/**"]
+      },
+      "reviewers": [],
+      "wait_timer": 0
+    },
+    "staging": {
+      "description": "Test PyPI staging environment",
+      "deployment_branch_policy": {
+        "protected_branches": true,
+        "custom_branch_policies": false
+      },
+      "reviewers": ["vanman2024"],
+      "wait_timer": 0,
+      "secrets": {
+        "TEST_PYPI_TOKEN": "Required - Token for Test PyPI uploads"
+      },
+      "url": "https://test.pypi.org/project/multiagent-core/"
+    },
+    "production": {
+      "description": "Production PyPI environment",
+      "deployment_branch_policy": {
+        "protected_branches": true,
+        "custom_branch_policies": false
+      },
+      "reviewers": ["vanman2024"],
+      "wait_timer": 30,
+      "required_conversations_resolution": true,
+      "secrets": {
+        "PYPI_TOKEN": "Required - Token for PyPI uploads"
+      },
+      "url": "https://pypi.org/project/multiagent-core/"
+    }
+  },
+  "secrets": {
+    "TEST_PYPI_TOKEN": {
+      "description": "Test PyPI API token for staging deployments",
+      "environments": ["staging"]
+    },
+    "PYPI_TOKEN": {
+      "description": "PyPI API token for production releases",
+      "environments": ["production"]
+    }
+  },
+  "variables": {
+    "CLI_TEST_PATHS": {
+      "value": "/home/.npm-global/bin:/home/.nvm/versions/node/*/bin:/home/.local/bin",
+      "description": "Additional paths to check for CLI tools"
+    }
+  }
+}

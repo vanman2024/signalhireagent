@@ -73,25 +73,14 @@ jobs:
         npx semantic-release
       continue-on-error: true
 
-    - name: Deploy to signalhiretest2 directory
+    - name: Skip deployment (GitHub Actions can't access local machine)
       if: always()
       run: |
-        echo "🚀 Starting automatic deployment to signalhiretest2..."
-        
-        # Create scripts directory if it doesn't exist
-        mkdir -p scripts
-        
-        # Make deploy script executable if it exists
-        if [ -f "scripts/intelligent-auto-deploy.sh" ]; then
-          chmod +x scripts/intelligent-auto-deploy.sh
-          
-          # Run deployment
-          ./scripts/intelligent-auto-deploy.sh /home/vanman2025 $(pwd)
-          
-          echo "✅ Deployment to signalhiretest2 completed successfully"
-        else
-          echo "⚠️  Deploy script not found at scripts/intelligent-auto-deploy.sh"
-        fi
+        echo "ℹ️  Deployment skipped - GitHub Actions runs on remote servers"
+        echo "💡 To deploy locally, run:"
+        echo "   cd /home/vanman2025/signalhireagent"
+        echo "   git pull"
+        echo "   ./scripts/intelligent-auto-deploy.sh /home/vanman2025 \$(pwd)"
 
     - name: Version and deployment complete
       if: always()

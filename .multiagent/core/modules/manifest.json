@@ -1,0 +1,55 @@
+{
+  "modules": [
+    {
+      "name": "agent-deployment",
+      "enabled": true
+    },
+    {
+      "name": "vscode-settings",
+      "enabled": true
+    },
+    {
+      "name": "documentation",
+      "enabled": true
+    },
+    {
+      "name": "github-workflows",
+      "enabled": true
+    },
+    {
+      "name": "testing-enhancement",
+      "enabled": true
+    },
+    {
+      "name": "security-audit",
+      "enabled": true
+    },
+    {
+      "name": "performance-check",
+      "enabled": true
+    },
+    {
+      "name": "production-readiness",
+      "enabled": true
+    },
+    {
+      "name": "git-helpers",
+      "enabled": true
+    }
+  ],
+  "flags": {
+    "--security-only": [
+      "agent-deployment",
+      "security-audit"
+    ],
+    "--minimal": [
+      "agent-deployment",
+      "documentation"
+    ],
+    "--no-testing": {
+      "exclude": [
+        "testing-enhancement"
+      ]
+    }
+  }
+}

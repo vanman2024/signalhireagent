@@ -55,12 +55,7 @@ As a recruiter searching for 7,000+ Heavy Equipment Mechanics, I need to run mul
 5. **Given** I want to optimize my search strategy, **When** I review deduplication reports, **Then** the system shows which geographic areas or search terms yielded the most unique contacts.
 
 ### Edge Cases
-- What happens when two contacts have different names but same LinkedIn URL?
-- How does system handle JSON files with different schemas or missing fields?
-- What occurs when reveal quota is exceeded during a large batch reveal?
-- How does system process contacts with missing uid or LinkedIn URL?
-- What happens when a reveal fails - can it be retried or is it marked as attempted?
-- How does system handle "LinkedIn-only" results (no email found) - does SignalHire charge for these?
+-Pem handle "LinkedIn-only" results (no email found) - does SignalHire charge for these? Yes
 
 ## Requirements *(mandatory)*
 
