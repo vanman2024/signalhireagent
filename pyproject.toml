@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "signalhire-agent"
-version = "1.1.0"
+version = "1.1.1"
 description = "AI-powered lead generation automation for SignalHire with multi-platform expansion capabilities"
 readme = "README.md"
 requires-python = ">=3.11"
