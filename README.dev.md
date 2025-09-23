@@ -29,19 +29,39 @@ signalhireagent/                  # Full repo (21MB)
 ## Installation Methods During Development
 
 ### 1. GitHub Installation (Current Method)
+
+#### First Time Installation
 ```bash
 # Install latest from main branch
 pipx install git+https://github.com/vanman2024/signalhireagent.git
+```
 
-# Install specific version/tag
+#### Updating to Latest Version
+```bash
+# Method 1: Force reinstall (replaces existing)
+pipx install --force git+https://github.com/vanman2024/signalhireagent.git
+
+# Method 2: Uninstall then reinstall (cleaner)
+pipx uninstall signalhire-agent
+pipx install git+https://github.com/vanman2024/signalhireagent.git
+
+# Method 3: Upgrade if available (may not work with git URLs)
+pipx upgrade signalhire-agent
+```
+
+#### Installing Specific Versions
+```bash
+# Install specific tag/version
 pipx install git+https://github.com/vanman2024/signalhireagent.git@v2.0.0
 
-# Install from feature branch
-pipx install git+https://github.com/vanman2024/signalhireagent.git@feature-branch
+# Install from feature branch for testing
+pipx install --force git+https://github.com/vanman2024/signalhireagent.git@feature-branch
 
-# Force reinstall to get updates
-pipx install --force git+https://github.com/vanman2024/signalhireagent.git
+# Check what version is installed
+signalhire-agent --version
 ```
+
+**Note:** pipx doesn't automatically update packages installed from git. You must use `--force` or reinstall to get the latest changes.
 
 ### 2. Local Development Installation
 ```bash
