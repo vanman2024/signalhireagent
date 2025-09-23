@@ -20,7 +20,7 @@ from typing import Any
 import httpx
 import structlog
 
-from ..lib.contact_cache import normalize_contacts
+from lib.contact_cache import normalize_contacts
 
 
 @dataclass

@@ -14,7 +14,7 @@ from urllib.parse import urlparse
 
 import structlog
 
-from ..models.exceptions import DataValidationError
+from models.exceptions import DataValidationError
 
 if TYPE_CHECKING:
     from collections.abc import Callable

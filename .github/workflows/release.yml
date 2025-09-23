@@ -61,16 +61,16 @@ jobs:
     - name: Create production build (canonical)
       run: |
         mkdir -p dist
-        ./scripts/build/build-production.sh dist/signalhireagent --version "${{ steps.version.outputs.version }}" --force
+        ./scripts/build/build-production.sh dist --version "${{ steps.version.outputs.version }}" --force
 
-    - name: Verify production build
+    - name: Publish to PyPI
+      if: startsWith(github.ref, 'refs/tags/')
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
       run: |
-        set -e
-        cd dist/signalhireagent
-        test -x install.sh
-        test -x signalhire-agent
-        CI=true NONINTERACTIVE=1 ./install.sh
-        ./signalhire-agent --help >/dev/null
+        pip install twine
+        python -m twine upload dist/*.whl dist/*.tar.gz
 
     - name: Create build archive
       run: |
