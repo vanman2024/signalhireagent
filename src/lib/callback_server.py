@@ -19,7 +19,7 @@ from fastapi import BackgroundTasks, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
-from models.person_callback import PersonCallbackData, PersonCallbackItem
+from ..models.person_callback import PersonCallbackData, PersonCallbackItem
 
 if TYPE_CHECKING:
     from collections.abc import Callable

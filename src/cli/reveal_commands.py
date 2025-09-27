@@ -25,9 +25,9 @@ from rich.progress import (
     TimeRemainingColumn,
 )
 
-from lib.contact_cache import CachedContact, ContactCache
-from models.operations import RevealOp
-from services.signalhire_client import SignalHireClient
+from ..lib.contact_cache import CachedContact, ContactCache
+from ..models.operations import RevealOp
+from ..services.signalhire_client import SignalHireClient
 
 
 def handle_api_error(error: str, status_code: int | None = None, logger=None) -> None:

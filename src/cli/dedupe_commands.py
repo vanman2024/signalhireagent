@@ -3,7 +3,7 @@ import os
 
 import click
 
-from services.deduplication_service import (
+from ..services.deduplication_service import (
     create_backup_files,
     deduplicate_contacts,
     load_contacts_from_files,

@@ -13,11 +13,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from models.contact_info import ContactInfo
-from models.education import EducationEntry
-from models.experience import ExperienceEntry
-from models.operations import RevealOp, SearchOp
-from models.prospect import Prospect
+from ..models.contact_info import ContactInfo
+from ..models.education import EducationEntry
+from ..models.experience import ExperienceEntry
+from ..models.operations import RevealOp, SearchOp
+from ..models.prospect import Prospect
 from .csv_exporter import CSVExporter, ExportConfig, ExportResult
 
 logger = logging.getLogger(__name__)

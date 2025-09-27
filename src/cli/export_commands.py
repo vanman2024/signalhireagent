@@ -13,8 +13,8 @@ from pathlib import Path
 import click
 from click import echo, style
 
-from lib.common import normalize_path_for_display
-from services.export_service import ExportService
+from ..lib.common import normalize_path_for_display
+from ..services.export_service import ExportService
 
 
 def format_export_summary(export_data: dict, format_type: str = "human") -> str:

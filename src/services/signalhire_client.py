@@ -20,7 +20,7 @@ from typing import Any
 import httpx
 import structlog
 
-from lib.contact_cache import normalize_contacts
+from ..lib.contact_cache import normalize_contacts
 
 
 @dataclass
@@ -668,8 +668,9 @@ class SignalHireClient:
     def __init__(
         self,
         api_key: str | None = None,
-        base_url: str = "https://www.signalhire.com",
-        api_prefix: str = "/api/v1",
+        base_url: str = "https://www.signalhire.com/api/v1",
+        api_prefix: str = "",
+        callback_url: str | None = None,
     ):
         # Allow environment variables to override defaults
         env_base = os.getenv("SIGNALHIRE_API_BASE_URL")
@@ -678,6 +679,7 @@ class SignalHireClient:
         self.base_url = (env_base if env_base else base_url).rstrip("/")
         prefix_value = env_prefix if env_prefix else api_prefix
         self.api_prefix = ("/" + prefix_value.strip("/")) if prefix_value else ""
+        self.callback_url = callback_url
         self.rate_limiter = RateLimiter(max_requests=600, time_window=60)  # 600/minute
         self.session: httpx.AsyncClient | None = None
         self._credits_cache: dict[str, Any] | None = None
@@ -924,8 +926,10 @@ class SignalHireClient:
             return await self._make_request("POST", endpoint, json=body)
 
     async def get_prospect_details(self, prospect_id: str) -> APIResponse:
-        """Get detailed information for a specific prospect."""
-        return await self._make_request("GET", f"/prospects/{prospect_id}")
+        """Get detailed information for a specific prospect using search API."""
+        # Use searchByQuery to find the prospect by ID
+        search_query = {"query": f"id:{prospect_id}"}
+        return await self._make_request("POST", "/candidate/searchByQuery", json=search_query)
 
     async def reveal_contact_by_identifier(
         self, identifier: str, callback_url: str
@@ -959,7 +963,10 @@ class SignalHireClient:
                     status_code=503,
                 )
 
-            resp = await self._make_request("POST", f"/prospects/{prospect_id}/reveal")
+            resp = await self._make_request("POST", "/candidate/search", json={
+                "items": [prospect_id],
+                "callbackUrl": self.callback_url or "https://your-callback-endpoint.com/signalhire"
+            })
             attempt += 1
             self.retry_strategy.record_attempt(
                 resp.success, resp.status_code, resp.error
@@ -1212,6 +1219,10 @@ class SignalHireClient:
         """
         self.retry_strategy.reset_stats()
         self.logger.info("Retry statistics reset")
+
+    async def close(self) -> None:
+        """Alias for close_session() for convenience."""
+        await self.close_session()
 
     # Queue Management Methods
 

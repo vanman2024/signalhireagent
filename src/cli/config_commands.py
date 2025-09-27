@@ -20,7 +20,7 @@ try:
 except ImportError:
     from pydantic import BaseModel, Field, validator
 
-from models.exceptions import ConfigurationError
+from ..models.exceptions import ConfigurationError
 
 
 class ConfigValue(BaseModel):

@@ -1,0 +1,46 @@
+name: Claude Feedback Router
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  route-feedback:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Claude Code SDK
+        run: |
+          npm install -g @anthropic/claude-cli
+
+      - name: Route Feedback via Claude Code SDK
+        if: contains(github.event.comment.body, 'Code Review for PR')
+        run: |
+          # Use Claude Code SDK to invoke pr-feedback-router subagent
+          echo "PR Number: ${{ github.event.issue.number }}"
+          echo "Comment ID: ${{ github.event.comment.id }}"
+          echo "Comment Body: ${{ github.event.comment.body }}"
+          
+          # Invoke the pr-feedback-router subagent with context
+          claude Task pr-feedback-router \
+            --description "Route feedback from PR ${{ github.event.issue.number }}" \
+            --prompt "Parse the following Claude review feedback and route fixes to the appropriate agent:
+
+          PR Number: ${{ github.event.issue.number }}
+          Comment ID: ${{ github.event.comment.id }}
+          Repository: ${{ github.repository }}
+          
+          Review Feedback:
+          ${{ github.event.comment.body }}
+          
+          Tasks:
+          1. Parse the feedback to extract specific issues and fixes needed
+          2. Identify which agent created this PR (from branch name or PR description)
+          3. Route the fixes to the appropriate agent CLI (codex, qwen, gemini, copilot) 
+          4. Use non-interactive mode: echo \"fix command\" | agent-cli --non-interactive
+          5. Monitor the fixes and track the feedback loop state"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}

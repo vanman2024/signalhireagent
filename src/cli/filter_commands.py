@@ -1,6 +1,6 @@
 import click
 
-from services.filter_service import (
+from ..services.filter_service import (
     filter_contacts_by_job_title,
     load_contacts_from_file,
     save_contacts_to_file,

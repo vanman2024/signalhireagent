@@ -14,10 +14,10 @@ from typing import Any
 import click
 from click import echo, style
 
-from lib.contact_cache import ContactCache
-from models.search_criteria import SearchCriteria
-from services.search_analysis_service import create_heavy_equipment_search_templates
-from services.signalhire_client import SignalHireClient
+from ..lib.contact_cache import ContactCache
+from ..models.search_criteria import SearchCriteria
+from ..services.search_analysis_service import create_heavy_equipment_search_templates
+from ..services.signalhire_client import SignalHireClient
 from .reveal_commands import handle_api_error
 
 

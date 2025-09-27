@@ -119,7 +119,7 @@ cli_config = CliConfig()
 
 
 @click.group()
-@click.version_option(version=version('signalhire-agent'), prog_name='signalhire-agent')
+@click.version_option(version='dev', prog_name='signalhire-agent')
 @click.option('--email', envvar='SIGNALHIRE_EMAIL', help='SignalHire login email')
 @click.option(
     '--password', envvar='SIGNALHIRE_PASSWORD', help='SignalHire login password'
@@ -330,7 +330,7 @@ def doctor(ctx, ping):
                 # Import lazily to avoid circulars
                 import asyncio as _asyncio
 
-                from services.signalhire_client import SignalHireClient
+                from ..services.signalhire_client import SignalHireClient
 
                 async def _do_ping():
                     client = SignalHireClient(
