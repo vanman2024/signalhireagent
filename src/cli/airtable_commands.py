@@ -18,6 +18,16 @@ from click import echo, style
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
+# Import validation utilities
+from src.lib.validation import (
+    ValidationResult,
+    validate_email,
+    validate_phone,
+    validate_url,
+    validate_linkedin_profile,
+    validate_signalhire_uid
+)
+
 
 @click.group()
 def airtable():
@@ -264,11 +274,24 @@ async def _execute_direct_sync(signalhire_api_key: str, airtable_api_key: str,
     
     echo(f"\n🔍 Starting direct sync operation...")
     
-    # Parse SignalHire IDs if provided
+    # Parse and validate SignalHire IDs if provided
     ids_to_sync = []
     if signalhire_ids:
-        ids_to_sync = [uid.strip() for uid in signalhire_ids.split(',') if uid.strip()]
-        echo(f"📝 Specific IDs to sync: {len(ids_to_sync)}")
+        raw_ids = [uid.strip() for uid in signalhire_ids.split(',') if uid.strip()]
+
+        # Validate each SignalHire ID
+        for uid in raw_ids:
+            result = validate_signalhire_uid(uid)
+            if result.is_valid:
+                ids_to_sync.append(uid)
+            else:
+                echo(f"⚠️  Skipping invalid SignalHire ID: {uid} - {result.error_message}")
+
+        echo(f"📝 Valid IDs to sync: {len(ids_to_sync)} (from {len(raw_ids)} provided)")
+
+        if not ids_to_sync and raw_ids:
+            echo(f"❌ No valid SignalHire IDs found in input")
+            return
     else:
         # Find contacts in Airtable that have SignalHire IDs but no contact info
         echo(f"🔍 Finding contacts in Airtable to sync...")
@@ -432,10 +455,85 @@ async def _update_airtable_contact(client: httpx.AsyncClient, api_key: str, base
         raise
 
 
+def validate_contact_data(contact_data: dict) -> tuple[bool, list[str], dict]:
+    """
+    Validate contact data before syncing to Airtable.
+
+    Returns:
+        tuple: (is_valid, validation_messages, cleaned_data)
+    """
+    validation_messages = []
+    cleaned_data = {}
+    has_errors = False
+
+    # Validate emails
+    contacts = contact_data.get('contacts', [])
+    for contact in contacts:
+        if contact.get('type') == 'email':
+            email_value = contact.get('value', '')
+            result = validate_email(email_value)
+            if result.is_valid:
+                contact['value'] = result.cleaned_value
+                validation_messages.append(f"✅ Email validated: {result.cleaned_value}")
+            else:
+                validation_messages.append(f"⚠️  Email validation failed: {email_value} - {result.error_message}")
+                # Don't mark as error - just skip invalid emails
+
+        elif contact.get('type') == 'phone':
+            phone_value = contact.get('value', '')
+            result = validate_phone(phone_value)
+            if result.is_valid:
+                contact['value'] = result.cleaned_value
+                validation_messages.append(f"✅ Phone validated: {result.cleaned_value}")
+            else:
+                validation_messages.append(f"⚠️  Phone validation failed: {phone_value} - {result.error_message}")
+                # Don't mark as error - just skip invalid phones
+
+    # Validate social URLs
+    social = contact_data.get('social', [])
+    for social_profile in social:
+        if social_profile.get('type') == 'li' and social_profile.get('link'):
+            linkedin_url = social_profile.get('link')
+            result = validate_linkedin_profile(linkedin_url)
+            if result.is_valid:
+                social_profile['link'] = result.cleaned_value
+                validation_messages.append(f"✅ LinkedIn URL validated")
+            else:
+                validation_messages.append(f"⚠️  LinkedIn URL validation failed: {result.error_message}")
+
+    # Validate SignalHire UID
+    uid = contact_data.get('uid')
+    if uid:
+        result = validate_signalhire_uid(uid)
+        if not result.is_valid:
+            validation_messages.append(f"⚠️  Invalid SignalHire ID format: {uid}")
+            has_errors = True  # This is critical - invalid ID means can't sync
+
+    # Basic data quality checks
+    full_name = contact_data.get('fullName', '')
+    if not full_name or len(full_name) < 2:
+        validation_messages.append("⚠️  Missing or invalid full name")
+        has_errors = True
+
+    return not has_errors, validation_messages, contact_data
+
+
 def _format_signalhire_data_for_airtable(contact_data: dict) -> dict:
-    """Format SignalHire contact data for Airtable fields."""
+    """Format SignalHire contact data for Airtable fields with validation."""
     fields = {}
-    
+
+    # Validate the contact data first
+    is_valid, validation_messages, cleaned_data = validate_contact_data(contact_data)
+
+    # Log validation results (if there are warnings/errors)
+    if validation_messages:
+        for msg in validation_messages:
+            if msg.startswith('⚠️'):
+                echo(f"   {msg}")
+
+    # Use cleaned data for processing
+    contact_data = cleaned_data
+
     # Basic info
     if contact_data.get('fullName'):
         fields['Full Name'] = contact_data['fullName']
@@ -443,17 +541,23 @@ def _format_signalhire_data_for_airtable(contact_data: dict) -> dict:
         fields['Job Title'] = contact_data['title']
     if contact_data.get('company'):
         fields['Company'] = contact_data['company']
-    
+
     # Contact info - extract from contacts array
     contacts = contact_data.get('contacts', [])
     emails = []
     phones = []
-    
+
     for contact in contacts:
         if contact.get('type') == 'email':
-            emails.append(contact.get('value'))
+            email_value = contact.get('value')
+            # Only add validated emails
+            if email_value and validate_email(email_value).is_valid:
+                emails.append(email_value)
         elif contact.get('type') == 'phone':
-            phones.append(contact.get('value'))
+            phone_value = contact.get('value')
+            # Only add validated phones
+            if phone_value and validate_phone(phone_value).is_valid:
+                phones.append(phone_value)
     
     if emails:
         fields['Primary Email'] = emails[0]
@@ -484,28 +588,36 @@ def _format_signalhire_data_for_airtable(contact_data: dict) -> dict:
         elif social_profile.get('type') == 'fb':  # Facebook
             fields['Facebook URL'] = social_profile.get('link')
     
-    # Extract all profile types dynamically
+    # Extract all profile types dynamically with validation
     profiles = contact_data.get('profiles', [])
     if profiles:
         profile_field_mapping = {
             'linkedin': 'LinkedIn URL',
             'facebook': 'Facebook',
             'twitter': 'Twitter',
-            'instagram': 'Instagram', 
+            'instagram': 'Instagram',
             'vimeo': 'Vimeo',
             'youtube': 'YouTube',
             'github': 'GitHub',
             'behance': 'Behance',
             'dribbble': 'Dribbble'
         }
-        
+
         for profile in profiles:
             profile_type = profile.get('type', '').lower()
             profile_url = profile.get('url')
-            
+
             if profile_url and profile_type in profile_field_mapping:
-                field_name = profile_field_mapping[profile_type]
-                fields[field_name] = profile_url
+                # Validate URLs before adding
+                if profile_type == 'linkedin':
+                    result = validate_linkedin_profile(profile_url)
+                    if result.is_valid:
+                        fields[profile_field_mapping[profile_type]] = result.cleaned_value
+                else:
+                    # Validate generic URL
+                    result = validate_url(profile_url)
+                    if result.is_valid:
+                        fields[profile_field_mapping[profile_type]] = result.cleaned_value
     
     # Skills
     skills = contact_data.get('skills', [])

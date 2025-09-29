@@ -23,6 +23,108 @@ from ..services.search_analysis_service import create_heavy_equipment_search_tem
 from ..services.signalhire_client import SignalHireClient
 from .reveal_commands import handle_api_error
 
+# Import validation utilities
+from ..lib.validation import (
+    ValidationResult,
+    ValidatorChain,
+    validate_string_length,
+    validate_integer_range,
+    validate_email,
+    validate_phone,
+    validate_signalhire_uid,
+)
+
+
+def validate_boolean_query(query: str | None, field_name: str = "Query") -> ValidationResult:
+    """
+    Validate Boolean search query syntax.
+
+    Args:
+        query: The query string to validate
+        field_name: Name of the field for error messages
+
+    Returns:
+        ValidationResult with validation status and cleaned query
+    """
+    if not query:
+        return ValidationResult(True, cleaned_value=query)  # Optional field
+
+    # Check for balanced parentheses
+    open_parens = query.count('(')
+    close_parens = query.count(')')
+
+    if open_parens != close_parens:
+        return ValidationResult(
+            False,
+            f"{field_name} has unbalanced parentheses: {open_parens} opening, {close_parens} closing"
+        )
+
+    # Check for valid Boolean operators
+    valid_operators = ['AND', 'OR', 'NOT']
+    words = query.split()
+
+    # Check for adjacent operators
+    for i in range(len(words) - 1):
+        if words[i] in valid_operators and words[i+1] in valid_operators:
+            return ValidationResult(
+                False,
+                f"{field_name} has adjacent Boolean operators: {words[i]} {words[i+1]}"
+            )
+
+    # Check for operators at start/end (except NOT at start)
+    if words and words[0] in ['AND', 'OR']:
+        return ValidationResult(
+            False,
+            f"{field_name} cannot start with {words[0]} operator"
+        )
+
+    if words and words[-1] in valid_operators:
+        return ValidationResult(
+            False,
+            f"{field_name} cannot end with {words[-1]} operator"
+        )
+
+    return ValidationResult(True, cleaned_value=query)
+
+
+def validate_search_parameters(
+    title: str | None,
+    keywords: str | None,
+    company: str | None,
+    location: str | None,
+    size: int
+) -> tuple[bool, list[str]]:
+    """
+    Validate all search parameters using the validation system.
+
+    Returns:
+        Tuple of (is_valid, list_of_errors)
+    """
+    errors = []
+
+    # Validate Boolean queries
+    for field_name, value in [
+        ("Title", title),
+        ("Keywords", keywords),
+        ("Company", company)
+    ]:
+        result = validate_boolean_query(value, field_name)
+        if not result.is_valid:
+            errors.append(result.error_message)
+
+    # Validate location length if provided
+    if location:
+        result = validate_string_length(location, min_length=2, max_length=100, field_name="Location")
+        if not result.is_valid:
+            errors.append(result.error_message)
+
+    # Validate size range
+    result = validate_integer_range(size, min_value=1, max_value=100, field_name="Size")
+    if not result.is_valid:
+        errors.append(result.error_message)
+
+    return len(errors) == 0, errors
+
 
 def format_prospect_output(prospect: dict[str, Any], format_type: str = "human") -> str:
     """Format a single prospect for output display."""
@@ -204,6 +306,14 @@ async def _handle_airtable_integration(results: dict[str, Any], config, check_du
                     failures += 1
                     continue
                 
+                # Validate prospect data
+                is_valid, warnings = validate_prospect_data(prospect)
+                if warnings:
+                    name = prospect.get('full_name') or prospect.get('fullName', 'Unknown')
+                    echo(f"   ⚠️  Data quality issues for {name}:")
+                    for warning in warnings:
+                        echo(f"      • {warning}")
+
                 # Check for duplicates if requested
                 if check_duplicates:
                     existing = await _check_airtable_duplicate(
@@ -213,7 +323,7 @@ async def _handle_airtable_integration(results: dict[str, Any], config, check_du
                         echo(f"   🔄 Skipping duplicate: {prospect.get('full_name', signalhire_id)}")
                         duplicates_skipped += 1
                         continue
-                
+
                 # Format prospect data for Airtable with schema validation
                 airtable_fields = _format_prospect_for_airtable(prospect, available_fields)
                 
@@ -310,6 +420,45 @@ def _parse_location(location: str) -> tuple[str, str, str]:
         country = ''
     
     return city, province_state, country
+
+
+def validate_prospect_data(prospect: dict[str, Any]) -> tuple[bool, list[str]]:
+    """
+    Validate prospect data before adding to Airtable.
+
+    Returns:
+        Tuple of (is_valid, list_of_warnings)
+    """
+    warnings = []
+
+    # Validate SignalHire ID if present
+    signalhire_id = prospect.get('uid') or prospect.get('id')
+    if signalhire_id:
+        result = validate_signalhire_uid(signalhire_id)
+        if not result.is_valid:
+            warnings.append(f"Invalid SignalHire ID format: {signalhire_id[:8]}...")
+
+    # Validate email if present
+    email = prospect.get('email')
+    if email:
+        result = validate_email(email)
+        if not result.is_valid:
+            warnings.append(f"Invalid email format: {email}")
+
+    # Validate phones if present
+    phones = prospect.get('phones', [])
+    if isinstance(phones, list):
+        for phone in phones[:3]:  # Check first 3 phones
+            if isinstance(phone, str):
+                result = validate_phone(phone)
+                if not result.is_valid:
+                    warnings.append(f"Invalid phone format: {phone}")
+
+    # Check for required fields
+    if not prospect.get('full_name') and not prospect.get('fullName'):
+        warnings.append("Missing full name")
+
+    return len(warnings) == 0, warnings
 
 
 def _format_prospect_for_airtable(prospect: dict[str, Any], available_fields: set = None) -> dict:
@@ -615,6 +764,21 @@ def search(
             "Use --title, --location, --company, --industry, --keywords, or --name",
             err=True,
         )
+        ctx.exit(1)
+
+    # Validate search parameters using validation system
+    is_valid, validation_errors = validate_search_parameters(
+        title, keywords, company, location, size
+    )
+
+    if not is_valid:
+        echo(style("❌ Search Validation Failed:", fg='red', bold=True), err=True)
+        for error in validation_errors:
+            echo(style(f"  • {error}", fg='red'), err=True)
+        echo("\n💡 Tips for Boolean queries:", err=True)
+        echo("  • Use AND, OR, NOT operators in UPPERCASE", err=True)
+        echo("  • Balance your parentheses", err=True)
+        echo("  • Don't end queries with operators", err=True)
         ctx.exit(1)
 
     # API-only: require API key
