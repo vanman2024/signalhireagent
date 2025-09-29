@@ -123,43 +123,64 @@ def status():
     # Check environment variables
     import os
     
-    airtable_token = os.getenv('AIRTABLE_TOKEN')
+    airtable_token = os.getenv('AIRTABLE_API_KEY') or os.getenv('AIRTABLE_TOKEN')
     airtable_base_id = os.getenv('AIRTABLE_BASE_ID')
     
-    echo(f"🔑 Airtable Token: {'✅ Set' if airtable_token else '❌ Not set'}")
+    echo(f"🔑 Airtable API Key: {'✅ Set' if airtable_token else '❌ Not set'}")
     echo(f"📋 Airtable Base ID: {'✅ Set' if airtable_base_id else '❌ Not set'}")
     
     if not airtable_token:
-        echo(f"\n💡 {style('Set your Airtable token:', fg='yellow')}")
-        echo("   export AIRTABLE_TOKEN='your-token-here'")
+        echo(f"\n💡 {style('Set your Airtable API key:', fg='yellow')}")
+        echo("   export AIRTABLE_API_KEY='your-api-key-here'")
+        echo("   # Legacy support: export AIRTABLE_TOKEN='your-token-here'")
         
     if not airtable_base_id:
         echo(f"\n💡 {style('Set your Airtable base ID:', fg='yellow')}")
         echo("   export AIRTABLE_BASE_ID='your-base-id-here'")
     
-    # Check cache status
-    try:
-        cache_dir = Path.home() / '.signalhire-agent' / 'cache'
-        revealed_cache = cache_dir / 'revealed_contacts.json'
-        
-        echo(f"\n📂 Cache Status:")
-        echo(f"   Cache Directory: {'✅ Exists' if cache_dir.exists() else '❌ Missing'}")
-        echo(f"   Revealed Contacts: {'✅ Found' if revealed_cache.exists() else '❌ Not found'}")
-        
-        if revealed_cache.exists():
-            import json
-            with open(revealed_cache) as f:
-                cache_data = json.load(f)
-            echo(f"   Cached Contacts: {len(cache_data)} total")
+    # Check Airtable integration status
+    if airtable_token and airtable_base_id:
+        try:
+            import httpx
+            echo(f"\n📋 Airtable Integration:")
             
-            # Count revealed vs unrevealed
-            revealed_count = sum(1 for contact in cache_data.values() 
-                               if contact.get('contacts') and len(contact['contacts']) > 0)
-            echo(f"   With Contact Info: {revealed_count}")
-            echo(f"   Without Contact Info: {len(cache_data) - revealed_count}")
+            # Test connection to Airtable
+            base_id = airtable_base_id
+            table_id = os.getenv('AIRTABLE_TABLE_ID', 'tbl0uFVaAfcNjT2rS')
             
-    except Exception as e:
-        echo(f"   ⚠️  Cache check failed: {e}")
+            url = f"https://api.airtable.com/v0/{base_id}/{table_id}"
+            headers = {"Authorization": f"Bearer {airtable_token}"}
+            params = {"maxRecords": 3, "fields": ["Full Name", "Status"]}
+            
+            with httpx.Client() as client:
+                response = client.get(url, headers=headers, params=params)
+                if response.status_code == 200:
+                    data = response.json()
+                    records = data.get('records', [])
+                    echo(f"   🟢 Connection: ✅ Active")
+                    echo(f"   📊 Table ID: {table_id}")
+                    echo(f"   📝 Sample Records: {len(records)} found")
+                    
+                    # Count by status if available
+                    if records:
+                        statuses = {}
+                        for record in records:
+                            status = record.get('fields', {}).get('Status', 'Unknown')
+                            statuses[status] = statuses.get(status, 0) + 1
+                        echo(f"   📈 Status Distribution: {dict(statuses)}")
+                else:
+                    echo(f"   🔴 Connection: ❌ Failed (HTTP {response.status_code})")
+                    
+        except Exception as e:
+            echo(f"   ⚠️  Airtable check failed: {e}")
+    else:
+        echo(f"\n📋 Airtable Integration: ⚠️  Not configured")
+    
+    # Show modern workflow steps
+    echo(f"\n🚀 Modern Workflow:")
+    echo(f"   1. Search → Airtable: signalhire-agent search --to-airtable")
+    echo(f"   2. Reveal Contacts: signalhire-agent airtable sync-direct")
+    echo(f"   3. Check Status: signalhire-agent airtable status")
 
 
 @click.command()
