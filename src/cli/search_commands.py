@@ -254,6 +254,64 @@ async def _check_airtable_duplicate(client: httpx.AsyncClient, api_key: str, bas
     return len(data.get('records', [])) > 0
 
 
+def _parse_location(location: str) -> tuple[str, str, str]:
+    """Parse location string into city, province/state, and country components."""
+    if not location or location == 'Unknown Location':
+        return '', '', ''
+    
+    # Common location formats from SignalHire:
+    # "City, Province, Country"
+    # "City, State, Country" 
+    # "City, Country"
+    # "Province, Country"
+    # "Country"
+    
+    parts = [part.strip() for part in location.split(',')]
+    
+    if len(parts) >= 3:
+        # "City, Province/State, Country"
+        city = parts[0]
+        province_state = parts[1]
+        country = parts[2]
+    elif len(parts) == 2:
+        # "City, Country" or "Province/State, Country"
+        # Check if first part looks like a known province/state or city
+        part1, part2 = parts[0], parts[1]
+        
+        # Known Canadian provinces and US states for better parsing
+        provinces_states = {
+            'ontario', 'quebec', 'british columbia', 'alberta', 'manitoba', 'saskatchewan',
+            'nova scotia', 'new brunswick', 'newfoundland and labrador', 'prince edward island',
+            'northwest territories', 'nunavut', 'yukon',
+            'california', 'texas', 'florida', 'new york', 'pennsylvania', 'illinois', 'ohio',
+            'georgia', 'north carolina', 'michigan', 'new jersey', 'virginia', 'washington',
+            'arizona', 'massachusetts', 'tennessee', 'indiana', 'maryland', 'missouri',
+            'wisconsin', 'colorado', 'minnesota', 'south carolina', 'alabama', 'louisiana'
+        }
+        
+        if part1.lower() in provinces_states:
+            # "Province/State, Country"
+            city = ''
+            province_state = part1
+            country = part2
+        else:
+            # "City, Country"
+            city = part1
+            province_state = ''
+            country = part2
+    elif len(parts) == 1:
+        # Just "Country" or a single location
+        city = ''
+        province_state = ''
+        country = parts[0]
+    else:
+        city = ''
+        province_state = ''
+        country = ''
+    
+    return city, province_state, country
+
+
 def _format_prospect_for_airtable(prospect: dict[str, Any], available_fields: set = None) -> dict:
     """Format a search prospect for Airtable insertion with schema validation."""
     # Extract basic info - handle different API response formats
@@ -271,6 +329,9 @@ def _format_prospect_for_airtable(prospect: dict[str, Any], available_fields: se
     # SignalHire ID
     signalhire_id = prospect.get('uid') or prospect.get('id')
     
+    # Parse location into separate components
+    city, province_state, country = _parse_location(location)
+    
     # Build complete field mapping
     all_fields = {
         "Full Name": name,
@@ -278,7 +339,10 @@ def _format_prospect_for_airtable(prospect: dict[str, Any], available_fields: se
         "Status": "New",
         "Job Title": title,
         "Company": company,
-        "Location": location
+        "Location": location,  # Keep original for fallback
+        "City": city,
+        "Province/State": province_state,
+        "Country": country
     }
     
     # Filter based on available schema if provided
