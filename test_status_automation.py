@@ -25,16 +25,17 @@ async def test_status_update():
     print("🧪 Testing Automatic Status Updates")
     print("=" * 50)
     
-    # Check environment variables
-    airtable_api_key = os.getenv('AIRTABLE_API_KEY')
+    # Check environment variables (try both naming conventions)
+    airtable_api_key = os.getenv('AIRTABLE_API_KEY') or os.getenv('AIRTABLE_TOKEN')
     signalhire_api_key = os.getenv('SIGNALHIRE_API_KEY')
     
     print(f"🔑 Airtable API Key: {'✅ Set' if airtable_api_key else '❌ Missing'}")
     print(f"🔑 SignalHire API Key: {'✅ Set' if signalhire_api_key else '❌ Missing'}")
     
     if not airtable_api_key:
-        print("\n❌ AIRTABLE_API_KEY environment variable is required")
+        print("\n❌ Airtable API key environment variable is required")
         print("   export AIRTABLE_API_KEY='your-airtable-token'")
+        print("   OR export AIRTABLE_TOKEN='your-airtable-token'")
         return False
     
     # Test with a sample SignalHire ID (replace with actual ID from your Airtable)

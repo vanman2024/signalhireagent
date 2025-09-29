@@ -47,10 +47,11 @@ async def update_airtable_contacts_status(signalhire_ids: List[str], status_fiel
         airtable_table_id: Airtable table ID for contacts
     """
     if not airtable_api_key:
-        airtable_api_key = os.getenv('AIRTABLE_API_KEY')
+        # Try both environment variable names used in the codebase
+        airtable_api_key = os.getenv('AIRTABLE_API_KEY') or os.getenv('AIRTABLE_TOKEN')
         
     if not airtable_api_key:
-        echo(style("⚠️  Airtable API key not found - skipping status updates", fg='yellow'))
+        echo(style("⚠️  Airtable API key not found (AIRTABLE_API_KEY or AIRTABLE_TOKEN) - skipping status updates", fg='yellow'))
         return
     
     if not signalhire_ids:
