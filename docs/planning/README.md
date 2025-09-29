@@ -12,7 +12,8 @@ This directory contains:
 
 ## Current Documents
 
-- `SCALE_TRACKING_STRATEGY.md` - Strategy for handling large-scale prospect tracking and management
+- `SCALE_TRACKING_STRATEGY.md` - Strategy for handling large-scale prospect tracking and management (SQLite approach - outdated, now using Airtable)
+- `FUTURE_ECOSYSTEM.md` - Future ML/AI integration between SignalHire Agent and RedAI Platform for training data pipeline
 
 ## Guidelines
 

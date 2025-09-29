@@ -1,5 +1,13 @@
 # Large-Scale Tracking & Deduplication Strategy
 
+**⚠️ STATUS: OUTDATED - This SQLite approach has been replaced by Airtable as the primary database**
+
+*Keeping for reference only. Current implementation uses Airtable for all tracking and deduplication.*
+
+---
+
+## Original Document (SQLite Approach - No Longer Used)
+
 This document outlines how to efficiently handle large datasets (7,000+ contacts) while avoiding duplicate reveals and managing API quotas.
 
 ## The Challenge: 7,000+ Heavy Equipment Mechanics
