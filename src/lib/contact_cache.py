@@ -1,4 +1,8 @@
-"""Utility helpers for caching revealed contact information locally.
+"""[LEGACY] Utility helpers for caching revealed contact information locally.
+
+⚠️ LEGACY MODULE: This module is primarily used for legacy reveal commands.
+The SignalHire Agent now uses Airtable as the primary source of truth.
+New workflow: Search → Airtable → Webhook → Reveal
 
 The cache allows CLI workflows to avoid re-revealing contacts that were already
 fetched previously while still making the data available for exports and other

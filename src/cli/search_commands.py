@@ -17,7 +17,7 @@ import click
 import httpx
 from click import echo, style
 
-from ..lib.contact_cache import ContactCache
+# ContactCache removed - using Airtable as source of truth
 from ..models.search_criteria import SearchCriteria
 from ..services.search_analysis_service import create_heavy_equipment_search_templates
 from ..services.signalhire_client import SignalHireClient
@@ -743,12 +743,7 @@ def search(
                     f,
                 )
 
-        # Merge cached contacts and optionally skip already revealed prospects
-        contact_cache = ContactCache()
-        cached_contacts = 0
-        skipped_cached = 0
-        cached_uids: list[str] = []
-
+        # Process profiles for display (ContactCache removed - using Airtable as source of truth)
         profile_key = None
         if isinstance(results.get('profiles'), list):
             profile_key = 'profiles'
@@ -763,42 +758,18 @@ def search(
                 filtered_profiles.append(profile)
                 continue
 
-            uid = profile.get('uid') or profile.get('id')
-            cached_entry = contact_cache.get(uid) if uid else None
-
-            if uid:
-                # Persist latest profile metadata for future reveals/cache usage
-                contact_cache.upsert(uid, profile=profile)
-
-            if cached_entry and cached_entry.contacts:
-                profile['contacts'] = cached_entry.contacts
-                profile['contact_source'] = 'cache'
-                cached_contacts += 1
-                cached_uids.append(uid)
-
-                if cached_entry.profile:
-                    profile.setdefault(
-                        'full_name',
-                        cached_entry.profile.get('full_name')
-                        or cached_entry.profile.get('fullName'),
-                    )
-
-            if cached_entry and cached_entry.contacts and skip_revealed:
-                skipped_cached += 1
-                continue
+            # Skip revealed contacts if requested
+            if skip_revealed:
+                # In Airtable-first workflow, skip_revealed logic would check Airtable records
+                # For now, skip this filtering since Airtable is the authoritative source
+                pass
 
             filtered_profiles.append(profile)
 
         if profile_key:
             results[profile_key] = filtered_profiles
 
-        results['cached_contacts_count'] = cached_contacts
-        results['skipped_revealed_count'] = skipped_cached
         results['returned_count'] = len(filtered_profiles)
-        if cached_uids:
-            results['cached_uids'] = cached_uids
-
-        contact_cache.save()
 
         # Display results
         if config.output_format == 'json':

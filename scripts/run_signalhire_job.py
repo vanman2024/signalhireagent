@@ -228,7 +228,9 @@ async def _run_workflow(args: argparse.Namespace) -> None:
     if not api_key:
         raise RuntimeError("SIGNALHIRE_API_KEY is not set in the environment")
 
-    configured_callback_url = os.getenv("SIGNALHIRE_CALLBACK_URL")
+    configured_callback_url = os.getenv("SIGNALHIRE_CALLBACK_URL") or os.getenv(
+        "PUBLIC_CALLBACK_URL"
+    )
     callback_url = configured_callback_url
     callback_server: CallbackServer | None = None
 
@@ -240,14 +242,14 @@ async def _run_workflow(args: argparse.Namespace) -> None:
         logging.info("Callback server started at %s", inferred_url)
         if not configured_callback_url:
             logging.warning(
-                "SIGNALHIRE_CALLBACK_URL is not set; using %s for outgoing reveal requests.\n"
-                "Ensure this URL is reachable by SignalHire (e.g., via tunnel).",
+                "SIGNALHIRE_CALLBACK_URL/PUBLIC_CALLBACK_URL not set; using %s for outgoing reveal requests.\n"
+                "Ensure this URL is reachable by SignalHire (e.g., via tunnel or public reverse proxy).",
                 inferred_url,
             )
     else:
         if not configured_callback_url:
             raise RuntimeError(
-                "SIGNALHIRE_CALLBACK_URL is not set. Either export it or run with --start-callback-server."
+                "SIGNALHIRE_CALLBACK_URL or PUBLIC_CALLBACK_URL is not set. Either export one of them or run with --start-callback-server."
             )
 
     async with SignalHireClient(api_key=api_key, callback_url=callback_url) as client:

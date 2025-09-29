@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 """
-Migrate Local Cache to Airtable
+[DEPRECATED] Migrate Local Cache to Airtable
+
+⚠️ DEPRECATED: This migration script is no longer needed.
+The SignalHire Agent now uses Airtable as the primary source of truth.
+New workflow: Search → Airtable → Webhook → Reveal
 
 PURPOSE: Migrate existing SignalHire data from local JSON cache to Airtable tables
 USAGE: python3 migrate_local_cache_to_airtable.py [--dry-run]
-PART OF: SignalHire Agent data migration
+PART OF: SignalHire Agent data migration (legacy)
 CONNECTS TO: Local cache files, Airtable MCP server
 """
 

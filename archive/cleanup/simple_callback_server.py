@@ -88,6 +88,12 @@ async def update_airtable_contact(signalhire_id: str, email: str = None, phone: 
                 if field_name and profile_url and not current_fields.get(field_name):
                     update_fields[field_name] = profile_url
         
+        # Update Status field - set to "Revealed" if we have contact info, "No Contacts" if we don't
+        if email or phone_number or secondary_email or profile_urls:
+            update_fields['Status'] = 'Revealed'
+        else:
+            update_fields['Status'] = 'No Contacts'
+        
         if not update_fields:
             logger.info(f"No new contact info to update for {signalhire_id}")
             return

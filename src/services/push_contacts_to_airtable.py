@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 """
-Push SignalHire Contacts to Airtable
+[DEPRECATED] Push SignalHire Contacts to Airtable
+
+⚠️ DEPRECATED: This script is no longer needed.
+The SignalHire Agent now adds contacts directly to Airtable during search.
+Use: signalhire-agent search --to-airtable instead
 
 PURPOSE: Push contacts with revealed information directly to Airtable using MCP tools
 USAGE: python3 push_contacts_to_airtable.py
-PART OF: SignalHire to Airtable automation workflow
+PART OF: SignalHire to Airtable automation workflow (legacy)
 CONNECTS TO: SignalHire contact cache, Airtable MCP server
 """
 

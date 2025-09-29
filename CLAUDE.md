@@ -24,29 +24,56 @@ tests/
 └── unit/               # Unit tests for individual components
 ```
 
+## 🎯 Development vs Usage Modes
+
+### 🔧 **Development Mode** (for code changes)
+When modifying the codebase or testing new features:
+```bash
+# For development and testing changes
+python3 -m src.cli.main search --title "test"
+python3 -m src.cli.main airtable sync-direct --dry-run
+```
+
+### 🚀 **Production Usage** (for actual work)
+For daily operations and real searches:
+```bash
+# Production CLI - installed and ready
+signalhire-agent search --title "Heavy Equipment Technician" --location "Canada"
+signalhire-agent airtable sync-direct --max-contacts 10
+signalhire-agent search templates  # Show optimal templates
+```
+
 ## CLI Commands for AI Agents
 
 **📖 Complete Reference**: See `/home/vanman2025/signalhireagent/docs/cli-commands.md`
 
-### 🚀 **Proper CLI Usage**
+### 🚀 **Proper Production CLI Usage**
 
 **CLI Command**: `signalhire-agent` (works like GitHub CLI)
 
-**ALWAYS use the simple command format** - like `gh` for GitHub CLI:
+**CRITICAL**: Always use `signalhire-agent` for real work, not development commands!
 
-### Quick Examples:
-- **"Find software engineers in California"** → `signalhire-agent search --title "Software Engineer" --location "California"`
-- **"Check my daily limits"** → `signalhire-agent status --credits`
-- **"Get heavy equipment technicians"** → `signalhire-agent search --title "Heavy Equipment Technician" --location "Canada"`
-- **"Reveal contacts from search"** → `signalhire-agent reveal bulk --search-file prospects.json --output contacts.csv`
-- **"Sync to Airtable with categorization"** → `signalhire-agent airtable-sync --base-id "your-base-id" --auto-categorize`
+### Current Workflow Examples:
+```bash
+# 1. Search Heavy Equipment Techs with Airtable integration
+signalhire-agent search --title "(Heavy Equipment Technician) OR (Heavy Equipment Mechanic)" --keywords "(technician OR mechanic OR maintenance OR repair) NOT (operator OR driver OR supervisor)" --location "Canada" --size 5 --to-airtable --check-duplicates
+
+# 2. Check existing Airtable sync options
+signalhire-agent airtable sync-direct --dry-run
+
+# 3. Show available templates  
+signalhire-agent search templates
+
+# 4. Check API status and limits
+signalhire-agent status --credits
+```
 
 ### Key Features:
-- Search with Boolean operators (AND, OR, NOT)
-- Contact deduplication and filtering
-- Geographic and job title analysis
-- Automatic 5000/day limit tracking (search profiles + reveals)
-- Progress tracking and resume capability
+- **Airtable Integration**: `--to-airtable --check-duplicates` for direct sync
+- **Heavy Equipment Templates**: Built-in Boolean operators to exclude operators/drivers
+- **Status Management**: Contacts added with Status="New", reveal updates to "Revealed"/"No Contacts"
+- **Deduplication**: SignalHire ID-based duplicate detection
+- **Progress Tracking**: Real-time feedback on add/skip/fail operations
 
 ## 🚨 CRITICAL: Development vs Production Protocol
 

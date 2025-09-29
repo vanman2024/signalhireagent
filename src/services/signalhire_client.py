@@ -22,6 +22,8 @@ import structlog
 
 from ..lib.contact_cache import normalize_contacts
 
+DEFAULT_CALLBACK_URL = "http://64.225.1.24/signalhire/callback"
+
 
 @dataclass
 class APIResponse:
@@ -675,11 +677,22 @@ class SignalHireClient:
         # Allow environment variables to override defaults
         env_base = os.getenv("SIGNALHIRE_API_BASE_URL")
         env_prefix = os.getenv("SIGNALHIRE_API_PREFIX")
+        env_callback = os.getenv("SIGNALHIRE_CALLBACK_URL") or os.getenv(
+            "PUBLIC_CALLBACK_URL"
+        )
+        env_default_callback = os.getenv("SIGNALHIRE_DEFAULT_CALLBACK_URL")
+        resolved_callback = (
+            callback_url
+            or env_callback
+            or env_default_callback
+            or DEFAULT_CALLBACK_URL
+        )
+
         self.api_key = api_key or os.getenv("SIGNALHIRE_API_KEY")
         self.base_url = (env_base if env_base else base_url).rstrip("/")
         prefix_value = env_prefix if env_prefix else api_prefix
         self.api_prefix = ("/" + prefix_value.strip("/")) if prefix_value else ""
-        self.callback_url = callback_url
+        self.callback_url = resolved_callback.strip() if resolved_callback else None
         self.rate_limiter = RateLimiter(max_requests=600, time_window=60)  # 600/minute
         self.session: httpx.AsyncClient | None = None
         self._credits_cache: dict[str, Any] | None = None
@@ -690,6 +703,28 @@ class SignalHireClient:
         self.max_retries: int = 3
         self.retry_backoff_base: float = 0.25
         self.logger = structlog.get_logger(__name__)
+
+        if callback_url:
+            self.logger.debug(
+                "Using callback URL override supplied to client",
+                callback_url=self.callback_url,
+            )
+        elif env_callback:
+            self.logger.debug(
+                "Using callback URL from environment",
+                callback_url=self.callback_url,
+            )
+        elif env_default_callback:
+            self.logger.debug(
+                "Using callback URL override from SIGNALHIRE_DEFAULT_CALLBACK_URL",
+                callback_url=self.callback_url,
+            )
+        else:
+            self.logger.info(
+                "Using default DigitalOcean callback URL",
+                callback_url=self.callback_url,
+            )
+
         # Queue management
         self.batch_queue = BatchQueue(max_batch_size=10, max_daily_contacts=5000)
         # Enhanced retry strategy
@@ -963,10 +998,15 @@ class SignalHireClient:
                     status_code=503,
                 )
 
-            resp = await self._make_request("POST", "/candidate/search", json={
-                "items": [prospect_id],
-                "callbackUrl": self.callback_url or "https://your-callback-endpoint.com/signalhire"
-            })
+            callback_destination = self.callback_url or DEFAULT_CALLBACK_URL
+            resp = await self._make_request(
+                "POST",
+                "/candidate/search",
+                json={
+                    "items": [prospect_id],
+                    "callbackUrl": callback_destination,
+                },
+            )
             attempt += 1
             self.retry_strategy.record_attempt(
                 resp.success, resp.status_code, resp.error
