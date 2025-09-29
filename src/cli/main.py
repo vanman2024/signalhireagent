@@ -375,6 +375,7 @@ def doctor(ctx, ping):
 
 
 # Import and register commands after main is defined
+from .airtable_commands import airtable  # noqa: E402
 from .analyze_commands import analyze  # noqa: E402
 from .config_commands import config  # noqa: E402
 from .dedupe_commands import dedupe  # noqa: E402
@@ -394,6 +395,7 @@ main.add_command(export)
 main.add_command(dedupe)
 main.add_command(analyze)
 main.add_command(filter_contacts)
+main.add_command(airtable)
 
 
 if __name__ == '__main__':

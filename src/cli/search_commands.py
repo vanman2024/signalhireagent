@@ -136,7 +136,7 @@ def _show_search_templates() -> None:
 
 
 async def execute_search(
-    search_criteria: SearchCriteria, config, logger
+    search_criteria: SearchCriteria, config, logger, exclude_revealed: bool = False
 ) -> dict[str, Any]:
     """Execute the search operation using appropriate client."""
 
@@ -157,6 +157,11 @@ async def execute_search(
         "yearsOfCurrentExperienceTo": search_criteria.experience_to,
         "openToWork": search_criteria.open_to_work,
     }
+    
+    # Add contactsFetched filter when excluding already-revealed prospects
+    if exclude_revealed:
+        search_dict["contactsFetched"] = False
+    
     search_dict = {k: v for k, v in search_dict.items() if v is not None}
 
     # Scroll pagination support
@@ -228,6 +233,11 @@ async def execute_search(
     help='Skip prospects whose contacts are already cached locally',
 )
 @click.option(
+    '--exclude-revealed',
+    is_flag=True,
+    help='Exclude already-revealed prospects from SignalHire API search (preserves search quota)',
+)
+@click.option(
     '--continue-search', is_flag=True, help='Continue previous search using pagination'
 )
 @click.option(
@@ -268,6 +278,7 @@ def search(
     size,
     output,
     skip_revealed,
+    exclude_revealed,
     continue_search,
     scroll_id,
     request_id,
@@ -388,6 +399,7 @@ def search(
         echo(f"  Results per page: {size}")
         echo("  Mode: API")
         echo(f"  Continue search: {continue_search}")
+        echo(f"  Exclude revealed: {exclude_revealed}")
         if scroll_id:
             echo(f"  Scroll ID: {scroll_id[:20]}...")
 
@@ -420,7 +432,7 @@ def search(
 
     try:
         # Run async search
-        results = asyncio.run(execute_search(search_criteria, config, logger))
+        results = asyncio.run(execute_search(search_criteria, config, logger, exclude_revealed))
 
         # If requested, fetch all remaining pages via scroll
         if all_pages:

@@ -28,13 +28,18 @@ tests/
 
 **📖 Complete Reference**: See `/home/vanman2025/signalhireagent/docs/cli-commands.md`
 
-When the user gives natural language requests, use the CLI command mappings in the reference file:
+### 🚀 **Proper CLI Usage**
+
+**CLI Command**: `signalhire-agent` (works like GitHub CLI)
+
+**ALWAYS use the simple command format** - like `gh` for GitHub CLI:
 
 ### Quick Examples:
-- **"Find software engineers in California"** → `signalhire search --title "Software Engineer" --location "California"`
-- **"Merge these contact files"** → `signalhire dedupe merge --input "file1.json,file2.json" --output merged.json`
-- **"Check my daily limits"** → `signalhire status --credits`
-- **"Remove operators from contacts"** → `signalhire filter job-title --input contacts.json --output filtered.json --exclude-job-titles "operator"`
+- **"Find software engineers in California"** → `signalhire-agent search --title "Software Engineer" --location "California"`
+- **"Check my daily limits"** → `signalhire-agent status --credits`
+- **"Get heavy equipment technicians"** → `signalhire-agent search --title "Heavy Equipment Technician" --location "Canada"`
+- **"Reveal contacts from search"** → `signalhire-agent reveal bulk --search-file prospects.json --output contacts.csv`
+- **"Sync to Airtable with categorization"** → `signalhire-agent airtable-sync --base-id "your-base-id" --auto-categorize`
 
 ### Key Features:
 - Search with Boolean operators (AND, OR, NOT)

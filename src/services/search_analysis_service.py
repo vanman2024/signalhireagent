@@ -158,18 +158,69 @@ def create_heavy_equipment_search_templates() -> dict[str, dict[str, str]]:
             "description": "Basic heavy equipment mechanic search",
         },
         "heavy_equipment_mechanic_exclude_operators": {
-            "title": "(Heavy Equipment Mechanic) AND NOT (Operator OR Driver)",
-            "keywords": "mechanic OR technician OR repair OR maintenance",
+            "title": "(Heavy Equipment Mechanic) NOT (Operator OR Driver)",
+            "keywords": "(mechanic OR technician OR repair OR maintenance) NOT (operator OR driver)",
             "description": "Heavy equipment mechanics excluding operators and drivers",
         },
         "diesel_technician_focused": {
-            "title": "(Diesel Technician) OR (Heavy Equipment Technician) OR (Equipment Mechanic)",
-            "keywords": "diesel OR hydraulic OR troubleshoot OR repair OR CAT OR Caterpillar",
-            "description": "Focused on diesel and equipment technicians",
+            "title": "(Heavy Equipment Technician) OR (Heavy Equipment Mechanic) OR (Heavy Duty Mechanic) OR (Diesel Technician) OR (Equipment Mechanic)",
+            "keywords": "(technician OR mechanic OR maintenance OR repair) NOT (operator OR driver OR supervisor)",
+            "description": "Complete heavy equipment technicians and mechanics (excludes operators)",
         },
         "construction_equipment_specialist": {
             "title": "(Construction Equipment) AND (Mechanic OR Technician OR Specialist)",
             "keywords": "bulldozer OR excavator OR loader OR grader OR crane",
             "description": "Construction equipment specialists",
+        },
+        # Red Seal Trade Templates - Scalable System
+        "automotive_service_technician": {
+            "title": "(Automotive Service Technician) OR (Auto Mechanic) OR (Vehicle Technician) OR (Car Mechanic)",
+            "keywords": "(automotive OR vehicle OR car OR truck OR brake OR engine) NOT (driver OR operator)",
+            "description": "Automotive service technicians and mechanics (Red Seal)",
+        },
+        "electrician": {
+            "title": "(Electrician) OR (Electrical Technician) OR (Electrical Worker)",
+            "keywords": "(electrical OR wiring OR circuit OR voltage OR installation) NOT (operator OR helper)",
+            "description": "Electricians and electrical technicians (Red Seal)",
+        },
+        "plumber": {
+            "title": "(Plumber) OR (Plumbing Technician) OR (Pipefitter)",
+            "keywords": "(plumbing OR pipe OR water OR sewer OR gas) NOT (helper OR laborer)",
+            "description": "Plumbers and plumbing technicians (Red Seal)",
+        },
+        "welder": {
+            "title": "(Welder) OR (Welding Technician) OR (Fabricator)",
+            "keywords": "(welding OR fabrication OR TIG OR MIG OR arc) NOT (helper OR laborer)",
+            "description": "Welders and welding technicians (Red Seal)",
+        },
+        "millwright": {
+            "title": "(Millwright) OR (Industrial Mechanic) OR (Maintenance Mechanic)",
+            "keywords": "(millwright OR industrial OR maintenance OR machinery) NOT (operator OR laborer)",
+            "description": "Millwrights and industrial mechanics (Red Seal)",
+        },
+        "hvac_technician": {
+            "title": "(HVAC Technician) OR (Refrigeration Mechanic) OR (Climate Control Technician)",
+            "keywords": "(HVAC OR refrigeration OR heating OR cooling OR ventilation) NOT (helper OR installer)",
+            "description": "HVAC and refrigeration technicians (Red Seal)",
+        },
+        "carpenter": {
+            "title": "(Carpenter) OR (Construction Carpenter) OR (Framer)",
+            "keywords": "(carpenter OR framing OR construction OR wood) NOT (helper OR laborer)",
+            "description": "Carpenters and construction specialists (Red Seal)"
+        },
+        "crane_operator": {
+            "title": "(Crane Operator) OR (Mobile Crane Operator) OR (Tower Crane Operator)",
+            "keywords": "crane OR operator OR rigging OR lifting",
+            "description": "Crane operators (Red Seal)",
+        },
+        "instrumentation_technician": {
+            "title": "(Instrumentation Technician) OR (Instrument Mechanic) OR (Control Systems Technician)",
+            "keywords": "(instrumentation OR control OR calibration OR measurement) NOT (operator OR helper)",
+            "description": "Instrumentation and control technicians (Red Seal)"
+        },
+        "machinist": {
+            "title": "(Machinist) OR (CNC Machinist) OR (Tool and Die Maker)",
+            "keywords": "(machinist OR CNC OR lathe OR mill OR precision) NOT (operator OR helper)",
+            "description": "Machinists and precision workers (Red Seal)"
         },
     }

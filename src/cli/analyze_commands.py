@@ -155,7 +155,7 @@ def search_templates():
 
     click.echo("\n🔍 Heavy Equipment Mechanic Search Templates")
     click.echo(
-        "Use these with: signalhire search --title \"[TITLE]\" --keywords \"[KEYWORDS]\""
+        "Use these with: signalhire-agent search --title \"[TITLE]\" --keywords \"[KEYWORDS]\""
     )
 
     for name, template in templates.items():
@@ -164,7 +164,7 @@ def search_templates():
         click.echo(f"  Keywords: {template['keywords']}")
         click.echo(f"  Description: {template['description']}")
         click.echo(
-            f"  Command: signalhire search --title \"{template['title']}\" --keywords \"{template['keywords']}\""
+            f"  Command: signalhire-agent search --title \"{template['title']}\" --keywords \"{template['keywords']}\""
         )
 
     click.echo("\n💡 Pro Tips:")

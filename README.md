@@ -1,4 +1,4 @@
-# SignalHire API
+# SignalHire Agent
 
 AI-powered lead generation automation for SignalHire with full API integration. Search for prospects, reveal contact information, and export data using SignalHire's official API with comprehensive Boolean search capabilities.
 
@@ -27,36 +27,107 @@ AI-powered lead generation automation for SignalHire with full API integration. 
 
 ## 🚀 Quick Start
 
-### Installation
+### Installation & Setup
 
-**Install with pipx (Recommended):**
+**Prerequisites:**
+- Python 3.11+ 
+- SignalHire API key
+
+**Clone and Setup:**
 ```bash
-# Install pipx if you haven't already
-python3 -m pip install --user pipx
-python3 -m pipx ensurepath
+# Clone the repository
+git clone https://github.com/vanman2024/signalhireagent.git
+cd signalhireagent
 
-# Install SignalHire Agent
-pipx install git+https://github.com/vanman2024/signalhireagent.git
-
-# The CLI is now available globally
+# The CLI is available immediately - no installation needed
 signalhire-agent --version
 ```
 
-**Alternative: Install with pip:**
+## 📋 Step-by-Step CLI Process (Complete Workflow)
+
+### Phase 1: Search Strategy & Templates
 ```bash
-pip install git+https://github.com/vanman2024/signalhireagent.git
-signalhire-agent --version
+# 1. Check available search templates for your trade
+signalhire-agent analyze search-templates
+
+# 2. Use comprehensive template (example: heavy equipment)
+signalhire-agent search \
+  --title "(Diesel Technician) OR (Heavy Equipment Technician) OR (Equipment Mechanic)" \
+  --keywords "diesel OR hydraulic OR troubleshoot OR repair OR CAT OR Caterpillar" \
+  --location "Canada" \
+  --size 50 \
+  --output /tmp/search_results.json
+
+# Results: Found 2,614 prospects covering all variations
 ```
+
+### Phase 2: Contact Revelation
+```bash
+# 3. Reveal contact information for prospects
+signalhire-agent reveal \
+  --search-file /tmp/search_results.json \
+  --bulk-size 10 \
+  --output /tmp/revealed_contacts.csv
+
+# Results: Reuses cache when available, reveals new contacts asynchronously
+# Credits used: Only for new reveals (saves money)
+```
+
+### Phase 3: Automated Processing & Airtable Sync
+```bash
+# 4. Process through Universal Adaptive System and sync to Airtable
+signalhire-agent airtable sync --reveal-contacts --max-reveals 10 --trade-focus heavy-equipment
+
+# This automatically:
+# - Reveals contact info for cached prospects
+# - Processes through Universal Categorization Engine
+# - Applies intelligent trade detection and categorization
+# - Syncs to Airtable with dynamic field expansion
+# - Handles new dropdown/multiselect items via pending review tables
+```
+
+### Phase 4: Monitor & Verify
+```bash
+# 5. Check status and results
+signalhire-agent status --credits
+signalhire-agent airtable status
+signalhire-agent analyze job-titles --input /tmp/revealed_contacts.csv
+
+# 6. Verify Airtable sync (check your Airtable base)
+# - Contacts appear with intelligent categorization
+# - Priority scores and lead quality metrics auto-generated
+# - New trade variations added to pending review tables
+```
+
+## 🔄 What Happens During Automation
+
+### Universal Adaptive System Processing
+1. **Load Cached Contacts**: Finds revealed contacts in local cache
+2. **Enhanced Categorization**: Processes through Universal Categorization Engine
+   - Detects: Heavy Equipment Technician vs Operator
+   - Identifies: Experience level (Apprentice → Journeyperson → Manager)
+   - Extracts: Equipment brands, certifications, locations
+3. **Dynamic Field Expansion**: Handles new items not in existing Airtable dropdowns
+   - Creates pending review entries for quality control
+   - Prevents sync failures from unknown categories
+4. **Business Intelligence**: Generates priority scores and lead quality metrics
+5. **Airtable Sync**: Updates base with categorized, validated contact data
+
+### Cache System Benefits
+- **Revealed Contacts Only**: Only processed, revealed contacts go to Airtable (not all search results)
+- **Scale Management**: Avoids 150K/month search result overload
+- **Credit Efficiency**: Reuses existing reveals, only pays for new contacts
+- **Quality Focus**: Organization/categorization happens on valuable contact data
 
 ### Configuration
 
-After installation, configure your SignalHire API key:
+Configure your SignalHire API key:
 
 ```bash
-# Option 1: Environment variable (recommended for pipx/pip installs)
+# Option 1: Environment variable (recommended)
 export SIGNALHIRE_API_KEY="your-api-key-here"
 
-# Option 2: Create .env file in your working directory
+# Option 2: Create .env file in project directory
 echo "SIGNALHIRE_API_KEY=your-api-key-here" > .env
 
 # Option 3: Use the CLI config command
@@ -67,14 +138,11 @@ signalhire-agent config show
 ```
 
 **Key Features:**
-- ✅ **pip/pipx installable**: Standard Python package installation
-- ✅ **Global CLI**: Available system-wide after installation
+- ✅ **Ready to use**: Works immediately after cloning - no complex installation
+- ✅ **Simple CLI**: Use `signalhire-agent` command directly like GitHub CLI
 - ✅ **Auto-configuration**: Environment automatically configured with your credentials
 - ✅ **Fast startup**: Commands start instantly with optimized dependency loading
 - ✅ **Universal**: Works on Windows/WSL/Linux/Mac
-- ✅ **Version management**: Semantic versioning with automated releases
-
-**Current Version**: `v1.1.2` - [View Releases](https://github.com/vanman2024/signalhireagent/releases)
 
 ## 📈 Real-World Case Study: Professional Lead Generation
 
@@ -85,7 +153,7 @@ signalhire-agent config show
 **Solution**: Used Boolean search strategy to capture all job title variations:
 ```bash
 # Single comprehensive search covering all variations
-signalhire search \
+signalhire-agent search \
   --title "(Senior Developer) OR (Software Engineer) OR (Full Stack Developer)" \
   --location "United States" \
   --size 100 --all-pages --max-pages 75
@@ -170,23 +238,23 @@ signalhire-agent doctor
 
 ```bash
 # Check system health and dependencies (runs slower due to checks)
-signalhire doctor
+signalhire-agent doctor
 
 # View configuration
-signalhire config list
+signalhire-agent config list
 
 # Check credits (fast)
-signalhire status --credits
+signalhire-agent status --credits
 ```
 
 ### 2. Search for Prospects
 
 ```bash
 # Simple search
-signalhire search --title "Software Engineer" --location "San Francisco"
+signalhire-agent search --title "Software Engineer" --location "San Francisco"
 
 # Advanced Boolean search (SignalHire Search API)
-signalhire search \
+signalhire-agent search \
   --title "(Software AND Engineer) OR Developer" \
   --location "New York, New York, United States" \
   --company "(Google OR Microsoft) AND Tech" \
@@ -195,7 +263,7 @@ signalhire search \
   --output prospects.json
 
 # Software Engineer example (tested)
-signalhire search \
+signalhire-agent search \
   --title "Software Engineer" \
   --location "United States" \
   --keywords "python OR javascript OR react OR node" \
@@ -213,14 +281,14 @@ signalhire search \
 
 ```bash
 # Reveal contacts using Person API (callback-based)
-signalhire reveal --search-file prospects.json --output contacts.csv
+signalhire-agent reveal --search-file prospects.json --output contacts.csv
 
 # Reveal by LinkedIn URL directly
-signalhire reveal --linkedin-url "https://www.linkedin.com/in/johndoe" --callback-url "https://your-domain.com/callback"
+signalhire-agent reveal --linkedin-url "https://www.linkedin.com/in/johndoe" --callback-url "https://your-domain.com/callback"
 
 # Reveal by email or phone
-signalhire reveal --identifier "john@example.com" --callback-url "https://your-domain.com/callback"
-signalhire reveal --identifier "+1-555-123-4567" --callback-url "https://your-domain.com/callback"
+signalhire-agent reveal --identifier "john@example.com" --callback-url "https://your-domain.com/callback"
+signalhire-agent reveal --identifier "+1-555-123-4567" --callback-url "https://your-domain.com/callback"
 ```
 
 **Person API Features**:
@@ -236,20 +304,20 @@ signalhire reveal --identifier "+1-555-123-4567" --callback-url "https://your-do
 
 ```bash
 # 🔍 STEP 1: Search and get prospect data
-signalhire search \
+signalhire-agent search \
   --title "Heavy Equipment Mechanic" \
   --location "Canada" \
   --limit 250 \
   --output heavy_equipment_mechanics_canada.json
 
 # 📋 Check what you found
-signalhire export preview heavy_equipment_mechanics_canada.json
+signalhire-agent export preview heavy_equipment_mechanics_canada.json
 
 # 🖥️ STEP 2: Start callback server (in separate terminal)
-signalhire callback-server start --port 8000
+signalhire-agent callback-server start --port 8000
 
 # 📞 STEP 3: Bulk reveal all contacts
-signalhire reveal bulk \
+signalhire-agent reveal bulk \
   --search-file heavy_equipment_mechanics_canada.json \
   --callback-url "http://localhost:8000/callback" \
   --batch-size 100 \
@@ -257,22 +325,22 @@ signalhire reveal bulk \
   --monitor
 
 # 📊 STEP 4: Check results
-signalhire export summary revealed_contacts.csv
+signalhire-agent export summary revealed_contacts.csv
 ```
 
 **Quick Bulk Reveal Options**:
 ```bash
 # From search results file
-signalhire reveal bulk --search-file prospects.json --output contacts.csv
+signalhire-agent reveal bulk --search-file prospects.json --output contacts.csv
 
 # From specific UIDs (if you have them)
-signalhire reveal bulk --uids "uid1,uid2,uid3" --output contacts.csv
+signalhire-agent reveal bulk --uids "uid1,uid2,uid3" --output contacts.csv
 
 # From LinkedIn URLs
-signalhire reveal bulk --linkedin-urls "url1,url2" --output contacts.csv
+signalhire-agent reveal bulk --linkedin-urls "url1,url2" --output contacts.csv
 
 # Monitor progress in real-time
-signalhire reveal bulk --search-file prospects.json --output contacts.csv --monitor --verbose
+signalhire-agent reveal bulk --search-file prospects.json --output contacts.csv --monitor --verbose
 ```
 
 **Bulk Reveal Features**:
@@ -290,7 +358,7 @@ Complete search → reveal → export pipeline:
 
 ```bash
 # Using search parameters
-signalhire workflow lead-generation \
+signalhire-agent workflow lead-generation \
   --title "Software Engineer" \
   --location "Silicon Valley" \
   --company "Startup" \
@@ -299,7 +367,7 @@ signalhire workflow lead-generation \
   --list-name "Q4 Tech Leads"
 
 # Using search criteria file
-signalhire workflow lead-generation \
+signalhire-agent workflow lead-generation \
   --search-criteria search_config.json \
   --output-dir ./campaigns/q4-2024
 ```
@@ -308,9 +376,131 @@ signalhire workflow lead-generation \
 Enrich existing prospect list with contact information:
 
 ```bash
-signalhire workflow prospect-enrichment \
+signalhire-agent workflow prospect-enrichment \
   --prospect-list existing_leads.csv \
   --output-dir ./enriched
+```
+
+### 6. Airtable Automation (Universal Adaptive System)
+
+**Complete SignalHire → Airtable automation with intelligent categorization:**
+
+```bash
+# Search and auto-categorize for Canadian Red Seal trades
+signalhire-agent search \
+  --title "Heavy Equipment Technician" \
+  --location "Canada" \
+  --keywords "technician mechanic maintenance NOT operator NOT driver" \
+  --size 30
+
+# Process through Universal Adaptive System and sync to Airtable
+signalhire-agent airtable-sync \
+  --base-id "your-airtable-base-id" \
+  --table-name "Contacts" \
+  --auto-categorize \
+  --trade-focus "heavy-equipment"
+```
+
+**Key Automation Features:**
+- 🧠 **Universal Categorization Engine**: Self-learning system for ALL Red Seal trades
+- 📊 **Dynamic Field Expansion**: Automatically handles new dropdown/multiselect items
+- 🔧 **Trade Detection**: Accurately distinguishes technicians from operators
+- 📋 **Pending Review Tables**: Quality control for new categorizations
+- 🎯 **Business Intelligence**: Auto-generates priority scores and lead quality metrics
+- 📱 **Contact Validation**: Phone/email formatting and LinkedIn profile linking
+
+**Supported Red Seal Trades:**
+- Heavy Equipment Technicians, Millwrights, Electricians, Plumbers, Welders
+- Automotive Service Technicians, HVAC Technicians, and 40+ other trades
+- Hierarchical detection: Apprentice → Journeyperson → Lead Hand → Foreman → Manager
+
+### 7. Local Cache System
+
+**Efficient contact management with local caching:**
+
+```bash
+# Check existing revealed contacts cache
+signalhire-agent cache status
+
+# Search cache for specific trades
+signalhire-agent cache search --trade "heavy-equipment" --location "Canada"
+
+# Export cache subset to CSV for Airtable bulk upload
+signalhire-agent cache export \
+  --filter "trade=heavy-equipment" \
+  --format csv \
+  --output heavy_equipment_contacts.csv
+```
+
+**Cache Features:**
+- 💾 **Persistent Storage**: Revealed contacts stored locally to avoid re-revealing
+- 🔍 **Smart Search**: Filter by trade, location, company, experience level
+- 📊 **Usage Tracking**: Monitor credit usage and daily limits
+- 🔄 **Incremental Updates**: Only process new contacts, skip existing ones
+
+## 🚀 Future Architecture (Terminal + Cloud Automation)
+
+### Current: Local MCP Server
+```
+Terminal (you) → Local CLI → Local MCP → Airtable API
+```
+
+### Future: Remote HTTP MCP Servers
+```
+Terminal (you) → Local CLI → Remote HTTP MCP (Railway/Vercel) → Airtable API
+                                    ↓
+                               Webhook Automation
+```
+
+**Benefits of Remote Architecture:**
+- ✅ **Keep terminal workflow** - no UI needed
+- ✅ **24/7 automation** - webhooks and background jobs
+- ✅ **Scalable processing** - handle large data volumes
+- ✅ **Real-time sync** - immediate SignalHire → Airtable updates
+
+**Planned Commands (Future):**
+```bash
+# Deploy automation to cloud
+signalhire-agent deploy automation --platform railway
+
+# Use remote processing
+signalhire-agent workflow red-seal-automation --remote
+
+# Monitor cloud jobs
+signalhire-agent status --remote-jobs --live
+```
+
+### 🤖 AI/ML Enhancement Roadmap
+
+**Current Categorization System:**
+- ✅ Rule-based pattern matching with hardcoded keywords
+- ✅ Works for basic trade categorization 
+- ❌ Limited scalability and accuracy
+
+**Future AI/ML Integration:**
+```bash
+# Train ML model on existing contact data
+signalhire-agent ai train --dataset revealed-contacts.json --model trade-classifier
+
+# Use AI for intelligent categorization
+signalhire-agent categorize --ai-powered --confidence-threshold 0.85
+
+# Export training data for RedAI system integration
+signalhire-agent ai export-training-data --format redai-compatible
+```
+
+**Planned AI Features:**
+- 🧠 **Machine Learning Models**: Train on job title, company, skills data
+- 📊 **Confidence Scoring**: AI-powered accuracy ratings for categorizations
+- 🔄 **Active Learning**: Improve model accuracy with user feedback
+- 🎯 **RedAI Integration**: Export structured training data for future AI systems
+- 📈 **Predictive Analytics**: Forecast hiring trends and skill demands
+
+**Technology Stack (Future):**
+- **Models**: scikit-learn, TensorFlow, or Hugging Face transformers
+- **Features**: Job title NLP, company industry mapping, skills extraction
+- **Training Data**: 1000+ categorized contacts from SignalHire reveals
+- **Integration**: RESTful AI endpoints for real-time classification
 
 ## ⏱️ Scheduling Daily Runs
 
@@ -346,16 +536,16 @@ Note: UI-based bulk export workflow is not supported in API-only mode.
 
 ```bash
 # Convert between formats
-signalhire export convert prospects.json --format xlsx
+signalhire-agent export convert prospects.json --format xlsx
 
 # Export with specific columns
-signalhire export operation results.json \
+signalhire-agent export operation results.json \
   --format csv \
   --columns "full_name,email_work,current_company" \
   --include-contacts
 
 # List available export columns
-signalhire export operation --list-columns
+signalhire-agent export operation --list-columns
 ```
 
 ### 6. Status and Monitoring

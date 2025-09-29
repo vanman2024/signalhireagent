@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal
+from typing import Literal
 
 from pydantic import BaseModel, Field, HttpUrl
 
-if TYPE_CHECKING:
-    from .education import EducationEntry
-    from .experience import ExperienceEntry
+from .education import EducationEntry
+from .experience import ExperienceEntry
 
 
 class PersonLocation(BaseModel):
