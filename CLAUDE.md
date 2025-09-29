@@ -43,6 +43,29 @@ signalhire-agent airtable sync-direct --max-contacts 10
 signalhire-agent search templates  # Show optimal templates
 ```
 
+## 🔍 Airtable MCP - Quick Data Checks
+
+**Use Airtable MCP directly for efficient table inspection instead of writing test scripts!**
+
+```bash
+# Base ID: appQoYINM992nBZ50
+# Table ID: tbl0uFVaAfcNjT2rS (Contacts table)
+
+# Quick table structure check
+mcp__airtable__describe_table --baseId "appQoYINM992nBZ50" --tableId "tbl0uFVaAfcNjT2rS" --detailLevel "identifiersOnly"
+
+# See sample records
+mcp__airtable__list_records --baseId "appQoYINM992nBZ50" --tableId "tbl0uFVaAfcNjT2rS" --maxRecords 3
+
+# Search for specific contacts
+mcp__airtable__search_records --baseId "appQoYINM992nBZ50" --tableId "tbl0uFVaAfcNjT2rS" --searchTerm "Heavy Equipment"
+
+# Get specific record by ID
+mcp__airtable__get_record --baseId "appQoYINM992nBZ50" --tableId "tbl0uFVaAfcNjT2rS" --recordId "recXXXXXXXXXX"
+```
+
+**This is MUCH more efficient than writing Python test scripts!**
+
 ## CLI Commands for AI Agents
 
 **📖 Complete Reference**: See `/home/vanman2025/signalhireagent/docs/cli-commands.md`
