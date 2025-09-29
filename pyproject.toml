@@ -36,10 +36,6 @@ dependencies = [
     "pydantic-settings>=2.0.0",
     "email-validator>=2.0.0",
 
-    # Web framework for callback server
-    "fastapi>=0.100.0",
-    "uvicorn>=0.20.0",
-
     # Data processing and CSV export
     "pandas>=2.0.0",
 
@@ -104,10 +100,7 @@ Documentation = "https://docs.signalhire-agent.com"
 "Bug Tracker" = "https://github.com/signalhire-agent/signalhire-agent/issues"
 
 [project.scripts]
-signalhire-agent = "cli.main:main"
-
-[project.entry-points."pip_install_hooks"]
-post_install = "cli.setup:post_install"
+signalhire-agent = "src.cli.main:cli"
 
 [tool.setuptools.packages.find]
 where = ["src"]
