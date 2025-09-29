@@ -219,25 +219,45 @@ def _show_search_templates() -> None:
     templates = create_heavy_equipment_search_templates()
 
     echo("\n🔍 Heavy Equipment Mechanic Search Templates")
+    echo("📋 Complete workflow with Airtable integration")
+
+    # Show primary recommended template first
+    primary_template = templates.get('diesel_technician_focused', {})
+    echo(f"\n🎯 RECOMMENDED: Heavy Equipment Technician (Complete Workflow)")
+    echo(f"  Title: {primary_template.get('title', '')}")
+    echo(f"  Keywords: {primary_template.get('keywords', '')}")
+    echo(f"  Description: {primary_template.get('description', '')}")
+    echo(style("\n  ✅ Full Command (Copy & Paste):", fg='green', bold=True))
     echo(
-        "Use these with: signalhire search --title \"[TITLE]\" "
-        '--keywords "[KEYWORDS]"'
+        f'  signalhire-agent search --title "{primary_template.get("title", "")}" '
+        f'--keywords "{primary_template.get("keywords", "")}" '
+        f'--location "Canada" --size 100 --to-airtable --check-duplicates'
     )
 
+    # Show other templates
+    echo("\n📚 Other Available Templates:")
     for name, template in templates.items():
-        echo(f"\n📋 {name.replace('_', ' ').title()}:")
-        echo(f"  Title: {template['title']}")
-        echo(f"  Keywords: {template['keywords']}")
-        echo(f"  Description: {template['description']}")
-        echo(
-            "  Command: signalhire search --title "
-            f'"{template["title"]}" --keywords "{template["keywords"]}"'
-        )
+        if name != 'diesel_technician_focused':  # Skip the primary one we already showed
+            echo(f"\n📋 {name.replace('_', ' ').title()}:")
+            echo(f"  Title: {template['title']}")
+            echo(f"  Keywords: {template['keywords']}")
+            echo(f"  Description: {template['description']}")
+            echo(
+                f'  Command: signalhire-agent search --title "{template["title"]}" '
+                f'--keywords "{template["keywords"]}" --location "Canada" '
+                f'--size 100 --to-airtable --check-duplicates'
+            )
+
+    echo("\n🚀 Complete Workflow Steps:")
+    echo("  1. Search: Use template above with --to-airtable --check-duplicates")
+    echo("  2. Reveal: signalhire-agent airtable sync-direct --max-contacts 100")
+    echo("  3. Monitor: signalhire-agent status --credits")
 
     echo("\n💡 Pro Tips:")
-    echo("  • Use AND NOT to exclude operators and drivers")
-    echo("  • Combine equipment brands (CAT, Komatsu, John Deere)")
-    echo("  • Focus on repair/maintenance skills vs operations")
+    echo("  • Always use --to-airtable --check-duplicates for consistency")
+    echo("  • Set --size 100 for larger result sets")
+    echo("  • Add --location 'Canada' for regional targeting")
+    echo("  • Monitor credits with status command (1200 available)")
 
 
 async def _get_airtable_schema(client: httpx.AsyncClient, api_key: str, base_id: str, table_id: str) -> set:

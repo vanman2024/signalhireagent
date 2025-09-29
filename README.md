@@ -45,24 +45,24 @@ python3 test_complete_integration.py
 
 ### **Step 3: Run Your First Automation**
 ```bash
-# Step 1: Search Heavy Equipment Technicians using optimal template
-signalhire-agent search --title "(Heavy Equipment Technician) OR (Heavy Equipment Mechanic) OR (Heavy Duty Mechanic) OR (Diesel Technician) OR (Equipment Mechanic)" --keywords "(technician OR mechanic OR maintenance OR repair) NOT (operator OR driver OR supervisor)" --location "Canada" --limit 20
-signalhire-agent airtable sync-direct --search-results --max-contacts 20
+# Step 1: View available templates with complete workflows
+signalhire-agent search templates
 
-# Step 2: Start callback server (run in separate terminal)
-python3 archive/cleanup/simple_callback_server.py &
+# Step 2: Search Heavy Equipment Technicians (template with Airtable integration)
+signalhire-agent search --title "(Heavy Equipment Technician) OR (Heavy Equipment Mechanic) OR (Heavy Duty Mechanic) OR (Diesel Technician) OR (Equipment Mechanic)" --keywords "(technician OR mechanic OR maintenance OR repair) NOT (operator OR driver OR supervisor)" --location "Canada" --size 100 --to-airtable --check-duplicates
 
-# Step 3: Reveal contacts with Status="New" from Airtable
-signalhire-agent reveal --from-airtable --status "New" --callback-url "http://157.245.213.190/signalhire/callback"
+# Step 3: Reveal contact information for found prospects
+signalhire-agent airtable sync-direct --max-contacts 100
 
-# Watch contacts in Airtable automatically update to:
-# - Status="Revealed" with emails/phones (successful)
-# - Status="No Contacts" (no contact info available)
-# - AI-detected trade categories and skills
-# - Zero duplicates guaranteed by SignalHire ID
+# Step 4: Monitor credit usage
+signalhire-agent status --credits
 ```
 
-**✅ Done!** You now have a Status-based contact pipeline that manages the entire prospect lifecycle in Airtable.
+**✅ Done!** You now have a complete SignalHire → Airtable workflow:
+- Searches automatically add to Airtable with deduplication
+- Reveal command processes contacts directly from SignalHire API
+- Status tracking: "New" → "Revealed" or "No Contacts"
+- Zero duplicates guaranteed by SignalHire ID validation
 
 ## 🏗️ **Airtable Architecture**
 
