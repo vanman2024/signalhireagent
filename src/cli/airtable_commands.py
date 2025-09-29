@@ -484,8 +484,24 @@ def _format_signalhire_data_for_airtable(contact_data: dict) -> dict:
                 skill_names.append(str(skill))
         fields['Skills'] = ', '.join(skill_names)
     
-    # Status - always set to New for revealed contacts
-    fields['Status'] = 'New'
+    # Status based on contact revelation state using Airtable dropdown option IDs
+    # Revelation workflow statuses:
+    # "New" = "selHuOMFb98Q1nSpA" - Contact added but no revelation request made yet
+    # "Contacted" = "selCdUR2ADvZG8SbI" - Revelation request sent, waiting for results  
+    # "Revealed" = "selJfOFUDHriiWSMs" - Has actual contact info (email/phone)
+    # "No Contacts" = "selu4tmP79JA16PHe" - Revelation completed but only LinkedIn found
+    # NOTE: "Not Interested" should be removed from dropdown (not used in revelation workflow)
+    
+    # Check revelation results
+    has_linkedin = fields.get('LinkedIn URL') is not None
+    has_contact_info = emails or phones
+    
+    if has_contact_info:
+        fields['Status'] = 'selJfOFUDHriiWSMs'  # "Revealed" - Has actual contact info (email/phone)
+    elif has_linkedin:
+        fields['Status'] = 'selu4tmP79JA16PHe'  # "No Contacts" - Only LinkedIn found, no email/phone
+    else:
+        fields['Status'] = 'selHuOMFb98Q1nSpA'  # "New" - No revelation data available
     
     return fields
 

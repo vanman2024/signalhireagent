@@ -7,12 +7,14 @@ reveal contact information for prospects using bulk operations.
 
 import asyncio
 import json
+import os
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import click
+import httpx
 from click import echo, style
 from rich.console import Console
 from rich.progress import (
@@ -28,6 +30,85 @@ from rich.progress import (
 from ..lib.contact_cache import CachedContact, ContactCache
 from ..models.operations import RevealOp
 from ..services.signalhire_client import SignalHireClient
+
+
+async def update_airtable_contacts_status(signalhire_ids: List[str], status_field_id: str, 
+                                        airtable_api_key: str = None, 
+                                        airtable_base_id: str = "appQoYINM992nBZ50",
+                                        airtable_table_id: str = "tbl0uFVaAfcNjT2rS"):
+    """
+    Update status for contacts in Airtable based on SignalHire IDs.
+    
+    Args:
+        signalhire_ids: List of SignalHire IDs to update
+        status_field_id: Airtable field ID for the status (e.g., 'selCdUR2ADvZG8SbI' for 'Contacted')
+        airtable_api_key: Airtable API key (optional, uses environment if not provided)
+        airtable_base_id: Airtable base ID
+        airtable_table_id: Airtable table ID for contacts
+    """
+    if not airtable_api_key:
+        airtable_api_key = os.getenv('AIRTABLE_API_KEY')
+        
+    if not airtable_api_key:
+        echo(style("⚠️  Airtable API key not found - skipping status updates", fg='yellow'))
+        return
+    
+    if not signalhire_ids:
+        return
+        
+    echo(f"📋 Updating Airtable status for {len(signalhire_ids)} contacts...")
+    
+    successful_updates = 0
+    failed_updates = 0
+    
+    async with httpx.AsyncClient() as client:
+        headers = {"Authorization": f"Bearer {airtable_api_key}"}
+        
+        for signalhire_id in signalhire_ids:
+            try:
+                # Find existing record by SignalHire ID
+                search_url = f"https://api.airtable.com/v0/{airtable_base_id}/{airtable_table_id}"
+                search_params = {
+                    "filterByFormula": f"{{SignalHire ID}} = '{signalhire_id}'",
+                    "maxRecords": 1,
+                    "fields": ["Full Name", "Status"]
+                }
+                
+                response = await client.get(search_url, headers=headers, params=search_params)
+                response.raise_for_status()
+                
+                records = response.json().get('records', [])
+                
+                if records:
+                    record_id = records[0]['id']
+                    contact_name = records[0].get('fields', {}).get('Full Name', signalhire_id)
+                    
+                    # Update status using field ID
+                    update_url = f"{search_url}/{record_id}"
+                    payload = {
+                        "fields": {
+                            "Status": status_field_id  # Use Airtable field ID directly
+                        }
+                    }
+                    
+                    response = await client.patch(update_url, headers=headers, json=payload)
+                    response.raise_for_status()
+                    
+                    successful_updates += 1
+                    echo(f"   ✅ Updated status for {contact_name}")
+                else:
+                    echo(f"   ⚠️  Contact not found in Airtable: {signalhire_id}")
+                    failed_updates += 1
+                    
+            except httpx.HTTPError as e:
+                failed_updates += 1
+                echo(f"   ❌ Failed to update {signalhire_id}: {e}")
+            except Exception as e:
+                failed_updates += 1
+                echo(f"   ❌ Error updating {signalhire_id}: {e}")
+    
+    if successful_updates > 0:
+        echo(f"📊 Airtable status updates: {successful_updates} successful, {failed_updates} failed")
 
 
 def handle_api_error(error: str, status_code: int | None = None, logger=None) -> None:
@@ -528,6 +609,16 @@ async def execute_reveal_with_progress(
     )
 
     with progress_callback:
+        # Update Airtable status to "Contacted" before sending revelation requests
+        try:
+            await update_airtable_contacts_status(
+                signalhire_ids=prospect_uids,
+                status_field_id="selCdUR2ADvZG8SbI"  # "Contacted" status field ID
+            )
+        except Exception as e:
+            echo(style(f"⚠️  Failed to update Airtable status: {e}", fg='yellow'))
+            logger.warning(f"Airtable status update failed: {e}")
+
         # API-only client
         api_client = SignalHireClient(api_key=config.api_key)
         logger.info(
@@ -685,6 +776,16 @@ async def execute_reveal(
     """Execute the reveal operation using appropriate client."""
 
     bulk_size = options.get('bulk_size', 1000)
+
+    # Update Airtable status to "Contacted" before sending revelation requests
+    try:
+        await update_airtable_contacts_status(
+            signalhire_ids=prospect_uids,
+            status_field_id="selCdUR2ADvZG8SbI"  # "Contacted" status field ID
+        )
+    except Exception as e:
+        echo(style(f"⚠️  Failed to update Airtable status: {e}", fg='yellow'))
+        logger.warning(f"Airtable status update failed: {e}")
 
     # API-only client
     api_client = SignalHireClient(api_key=config.api_key)
