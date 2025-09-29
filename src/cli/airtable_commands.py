@@ -438,6 +438,10 @@ def _format_signalhire_data_for_airtable(contact_data: dict) -> dict:
     if location_parts:
         fields['Location'] = ', '.join(location_parts)
     
+    # SignalHire Profile URL
+    if contact_data.get('uid'):
+        fields['SignalHire Profile'] = f"https://www.signalhire.com/candidates/{contact_data['uid']}"
+    
     # Social profiles - extract from social array
     social = contact_data.get('social', [])
     for social_profile in social:
