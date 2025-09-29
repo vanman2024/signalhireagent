@@ -352,21 +352,34 @@ async def _fetch_signalhire_contact(client: httpx.AsyncClient, api_key: str, uid
 
 async def _update_airtable_contact(client: httpx.AsyncClient, api_key: str, base_id: str,
                                   table_id: str, signalhire_id: str, contact_data: dict):
-    """Update or create contact in Airtable."""
+    """Update or create contact in Airtable with improved deduplication."""
     # First, find existing record by SignalHire ID
     url = f"https://api.airtable.com/v0/{base_id}/{table_id}"
     headers = {"Authorization": f"Bearer {api_key}"}
     
-    # Search for existing record
+    # Enhanced search for existing record with better filtering
     search_params = {
         "filterByFormula": f"{{SignalHire ID}} = '{signalhire_id}'",
-        "maxRecords": 1
+        "maxRecords": 10  # Get more records to catch all duplicates
     }
     
     response = await client.get(url, headers=headers, params=search_params)
     response.raise_for_status()
     
     existing_records = response.json().get('records', [])
+    
+    # If multiple records found, log warning about duplicates
+    if len(existing_records) > 1:
+        echo(f"   ⚠️  Found {len(existing_records)} existing records for {signalhire_id}")
+        # Sort by creation date to keep the oldest/most complete
+        existing_records.sort(key=lambda r: r.get('createdTime', ''))
+        echo(f"   🔄 Will update the first record: {existing_records[0]['id']}")
+        
+        # Log duplicate record IDs for manual cleanup
+        duplicate_ids = [r['id'] for r in existing_records[1:]]
+        if duplicate_ids:
+            echo(f"   📝 Duplicate records found: {duplicate_ids}")
+            # Could add automatic cleanup here later
     
     # Prepare update fields from SignalHire data
     update_fields = _format_signalhire_data_for_airtable(contact_data)

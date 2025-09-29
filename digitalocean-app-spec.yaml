@@ -1,0 +1,14 @@
+name: signalhire-callback
+region: nyc
+services:
+  - name: callback-server
+    environment_slug: python
+    instance_size_slug: basic-xxs
+    instance_count: 1
+    run_command: bash -lc 'python src/services/signalhire_webhook_processor.py --host 0.0.0.0 --port 8080'
+    http_port: 8080
+    routes:
+      - path: /
+    git:
+      repo_clone_url: https://github.com/vanman2024/signalhireagent.git
+      branch: main
