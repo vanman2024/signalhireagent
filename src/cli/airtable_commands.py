@@ -341,7 +341,10 @@ async def _fetch_signalhire_contact(client: httpx.AsyncClient, api_key: str, uid
     try:
         response = await client.get(url, headers=headers)
         response.raise_for_status()
-        return response.json()
+        data = response.json()
+        
+        
+        return data
     except httpx.HTTPError as e:
         echo(f"   ⚠️  SignalHire API error for {uid}: {e}")
         return None
@@ -407,14 +410,22 @@ def _format_signalhire_data_for_airtable(contact_data: dict) -> dict:
     if contact_data.get('company'):
         fields['Company'] = contact_data['company']
     
-    # Contact info
-    emails = contact_data.get('emails', [])
+    # Contact info - extract from contacts array
+    contacts = contact_data.get('contacts', [])
+    emails = []
+    phones = []
+    
+    for contact in contacts:
+        if contact.get('type') == 'email':
+            emails.append(contact.get('value'))
+        elif contact.get('type') == 'phone':
+            phones.append(contact.get('value'))
+    
     if emails:
         fields['Primary Email'] = emails[0]
         if len(emails) > 1:
             fields['Secondary Email'] = emails[1]
     
-    phones = contact_data.get('phones', [])
     if phones:
         fields['Phone Number'] = phones[0]
     
@@ -427,11 +438,13 @@ def _format_signalhire_data_for_airtable(contact_data: dict) -> dict:
     if location_parts:
         fields['Location'] = ', '.join(location_parts)
     
-    # Social profiles
-    if contact_data.get('linkedinUrl'):
-        fields['LinkedIn URL'] = contact_data['linkedinUrl']
-    if contact_data.get('facebookUrl'):
-        fields['Facebook'] = contact_data['facebookUrl']
+    # Social profiles - extract from social array
+    social = contact_data.get('social', [])
+    for social_profile in social:
+        if social_profile.get('type') == 'li':  # LinkedIn
+            fields['LinkedIn URL'] = social_profile.get('link')
+        elif social_profile.get('type') == 'fb':  # Facebook
+            fields['Facebook URL'] = social_profile.get('link')
     
     # Extract all profile types dynamically
     profiles = contact_data.get('profiles', [])
