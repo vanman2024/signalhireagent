@@ -8,10 +8,13 @@ search for prospects using various criteria and filters.
 import asyncio
 import json
 import logging
+import os
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 import click
+import httpx
 from click import echo, style
 
 from ..lib.contact_cache import ContactCache
@@ -133,6 +136,194 @@ def _show_search_templates() -> None:
     echo("  • Use AND NOT to exclude operators and drivers")
     echo("  • Combine equipment brands (CAT, Komatsu, John Deere)")
     echo("  • Focus on repair/maintenance skills vs operations")
+
+
+async def _get_airtable_schema(client: httpx.AsyncClient, api_key: str, base_id: str, table_id: str) -> set:
+    """Get the available field names from Airtable table schema."""
+    try:
+        # Get a single record to see what fields exist
+        url = f"https://api.airtable.com/v0/{base_id}/{table_id}"
+        headers = {"Authorization": f"Bearer {api_key}"}
+        params = {"maxRecords": 1}
+        
+        response = await client.get(url, headers=headers, params=params)
+        response.raise_for_status()
+        
+        data = response.json()
+        records = data.get('records', [])
+        
+        if records:
+            # Get field names from the first record
+            return set(records[0].get('fields', {}).keys())
+        else:
+            # If no records exist, return common field names
+            return {'Full Name', 'SignalHire ID', 'Status', 'Job Title', 'Company', 'Location'}
+            
+    except Exception as e:
+        echo(f"   ⚠️  Could not fetch schema, using default fields: {e}")
+        return {'Full Name', 'SignalHire ID', 'Status'}
+
+
+async def _handle_airtable_integration(results: dict[str, Any], config, check_duplicates: bool, ctx):
+    """Handle adding search results to Airtable with deduplication."""
+    echo(f"\n📋 Adding search results to Airtable...")
+    
+    # Get environment variables
+    airtable_api_key = os.getenv('AIRTABLE_API_KEY')
+    airtable_base_id = os.getenv('AIRTABLE_BASE_ID', 'appQoYINM992nBZ50')
+    airtable_table_id = os.getenv('AIRTABLE_TABLE_ID', 'tbl0uFVaAfcNjT2rS')
+    
+    if not airtable_api_key:
+        echo(style("Error: AIRTABLE_API_KEY environment variable required", fg='red'), err=True)
+        ctx.exit(1)
+    
+    # Extract prospects from results
+    profile_key = 'profiles' if results.get('profiles') else 'prospects'
+    prospects = results.get(profile_key, [])
+    
+    if not prospects:
+        echo("ℹ️  No prospects to add to Airtable")
+        return
+    
+    successful_adds = 0
+    duplicates_skipped = 0
+    failures = 0
+    
+    async with httpx.AsyncClient() as client:
+        # Get table schema first to avoid validation errors
+        echo(f"   🔍 Detecting Airtable schema...")
+        available_fields = await _get_airtable_schema(client, airtable_api_key, airtable_base_id, airtable_table_id)
+        echo(f"   📋 Available fields: {sorted(available_fields)}")
+        
+        for prospect in prospects:
+            try:
+                # Extract SignalHire ID
+                signalhire_id = prospect.get('uid') or prospect.get('id')
+                if not signalhire_id:
+                    echo(f"   ⚠️  Skipping prospect - no SignalHire ID")
+                    failures += 1
+                    continue
+                
+                # Check for duplicates if requested
+                if check_duplicates:
+                    existing = await _check_airtable_duplicate(
+                        client, airtable_api_key, airtable_base_id, airtable_table_id, signalhire_id
+                    )
+                    if existing:
+                        echo(f"   🔄 Skipping duplicate: {prospect.get('full_name', signalhire_id)}")
+                        duplicates_skipped += 1
+                        continue
+                
+                # Format prospect data for Airtable with schema validation
+                airtable_fields = _format_prospect_for_airtable(prospect, available_fields)
+                
+                # Add to Airtable with Status=New
+                await _add_prospect_to_airtable(
+                    client, airtable_api_key, airtable_base_id, airtable_table_id, airtable_fields
+                )
+                
+                successful_adds += 1
+                echo(f"   ✅ Added: {airtable_fields.get('Full Name', signalhire_id)}")
+                
+            except Exception as e:
+                failures += 1
+                echo(f"   ❌ Failed to add prospect: {e}")
+    
+    echo(f"\n📊 Airtable Results:")
+    echo(f"   ✅ Successfully added: {successful_adds}")
+    if check_duplicates:
+        echo(f"   🔄 Duplicates skipped: {duplicates_skipped}")
+    echo(f"   ❌ Failed: {failures}")
+
+
+async def _check_airtable_duplicate(client: httpx.AsyncClient, api_key: str, base_id: str, 
+                                   table_id: str, signalhire_id: str) -> bool:
+    """Check if a contact already exists in Airtable by SignalHire ID."""
+    url = f"https://api.airtable.com/v0/{base_id}/{table_id}"
+    headers = {"Authorization": f"Bearer {api_key}"}
+    
+    params = {
+        "filterByFormula": f"{{SignalHire ID}} = '{signalhire_id}'",
+        "maxRecords": 1
+    }
+    
+    response = await client.get(url, headers=headers, params=params)
+    response.raise_for_status()
+    
+    data = response.json()
+    return len(data.get('records', [])) > 0
+
+
+def _format_prospect_for_airtable(prospect: dict[str, Any], available_fields: set = None) -> dict:
+    """Format a search prospect for Airtable insertion with schema validation."""
+    # Extract basic info - handle different API response formats
+    name = prospect.get('full_name') or prospect.get('fullName') or 'Unknown'
+    title = prospect.get('current_title') or prospect.get('currentTitle') or prospect.get('title')
+    company = prospect.get('current_company') or prospect.get('currentCompany') or prospect.get('company')
+    location = prospect.get('location', 'Unknown Location')
+    
+    # Fallback: derive title/company from experience if missing
+    if (not title or not company) and isinstance(prospect.get('experience'), list) and prospect['experience']:
+        exp0 = prospect['experience'][0]
+        title = title or exp0.get('title')
+        company = company or exp0.get('company')
+    
+    # SignalHire ID
+    signalhire_id = prospect.get('uid') or prospect.get('id')
+    
+    # Build complete field mapping
+    all_fields = {
+        "Full Name": name,
+        "SignalHire ID": signalhire_id,
+        "Status": "New",
+        "Job Title": title,
+        "Company": company,
+        "Location": location
+    }
+    
+    # Filter based on available schema if provided
+    if available_fields:
+        # Only include fields that exist in the Airtable schema
+        fields = {}
+        for field_name, value in all_fields.items():
+            if field_name in available_fields and value:
+                fields[field_name] = value
+        
+        # Ensure we always have the minimum required fields
+        if "Full Name" in available_fields:
+            fields["Full Name"] = name
+        if "SignalHire ID" in available_fields:
+            fields["SignalHire ID"] = signalhire_id
+        if "Status" in available_fields:
+            fields["Status"] = "New"
+    else:
+        # Fallback to old behavior - minimal fields with values
+        fields = {
+            "Full Name": name,
+            "SignalHire ID": signalhire_id,
+            "Status": "New"
+        }
+        
+        # Add optional fields only if they have values
+        if title:
+            fields["Job Title"] = title
+        if company:
+            fields["Company"] = company
+        if location and location != 'Unknown Location':
+            fields["Location"] = location
+    
+    return fields
+
+
+async def _add_prospect_to_airtable(client: httpx.AsyncClient, api_key: str, base_id: str,
+                                   table_id: str, fields: dict):
+    """Add a new prospect to Airtable."""
+    url = f"https://api.airtable.com/v0/{base_id}/{table_id}"
+    headers = {"Authorization": f"Bearer {api_key}"}
+    
+    payload = {"fields": fields}
+    response = await client.post(url, headers=headers, json=payload)
+    response.raise_for_status()
 
 
 async def execute_search(
@@ -262,6 +453,12 @@ async def execute_search(
 @click.option(
     '--dry-run', is_flag=True, help='Show what would be searched without executing'
 )
+@click.option(
+    '--to-airtable', is_flag=True, help='Add search results directly to Airtable with Status=New'
+)
+@click.option(
+    '--check-duplicates', is_flag=True, help='Check Airtable for existing contacts before adding'
+)
 @click.argument('preset', required=False)
 @click.pass_context
 def search(
@@ -285,6 +482,8 @@ def search(
     dry_run,
     all_pages,
     max_pages,
+    to_airtable,
+    check_duplicates,
     preset,
 ):
     """
@@ -296,26 +495,23 @@ def search(
 
     \b
     EXAMPLES:
+      # 🔧 HEAVY EQUIPMENT TECHNICIANS (Recommended workflow)
+      signalhire-agent search --title "(Heavy Equipment Technician) OR (Heavy Equipment Mechanic)" --keywords "(technician OR mechanic OR maintenance OR repair) NOT (operator OR driver OR supervisor)" --location "Canada" --size 10 --to-airtable --check-duplicates
+
       # Basic search
-      signalhire search --title "Software Engineer" --location "San Francisco"
+      signalhire-agent search --title "Software Engineer" --location "San Francisco"
 
-      # Advanced Boolean search
-      signalhire search --title "(Python OR JavaScript) AND Senior" --company "Google OR Microsoft"
-
-      # Industry-specific search
-      signalhire search --title "VP Engineering" --industry "Technology" --experience-from 10
-
-      # Save results for later reveal
-      signalhire search --title "Product Manager" --company "Startup" --output prospects.csv
-
-      # Large paginated search
-      signalhire search --title "Designer" --size 100 --continue-search
-
-      # Skip prospects that already have cached contact data
-      signalhire search --title "Mechanic" --skip-revealed --output prospects.json
+      # Advanced Boolean search with Airtable
+      signalhire-agent search --title "(Python OR JavaScript) AND Senior" --company "Google OR Microsoft" --to-airtable
 
       # Show built-in Boolean templates
-      signalhire search templates
+      signalhire-agent search templates
+
+      # Continue previous search
+      signalhire-agent search --continue-search
+
+      # Large paginated search without duplicates
+      signalhire-agent search --title "Designer" --size 100 --check-duplicates --to-airtable
 
     \b
     BOOLEAN OPERATORS:
@@ -563,6 +759,12 @@ def search(
             echo(
                 f"\n📄 {remaining} more prospects available. Use --continue-search to get next batch."
             )
+
+        # Handle Airtable integration
+        if to_airtable:
+            asyncio.run(_handle_airtable_integration(
+                results, config, check_duplicates, ctx
+            ))
 
         # Success metrics
         prospects_found = len(
