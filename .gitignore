@@ -686,4 +686,8 @@ agents.log
 # ====================
 # PROJECT SPECIFIC ADDITIONS
 # ====================
-# Add your project-specific ignores below this line
+# Add your project-specific ignores below this line# Sensitive files to exclude
+.codex/codex.toml
+archive/legacy_tests/
+.multiagent/core/sync_agent_mcp.py
+.archive/legacy_tests/
