@@ -1,308 +1,161 @@
 # SignalHire Agent
 
-AI-powered lead generation automation with complete SignalHire → Airtable pipeline. Search for prospects, reveal contact information, and automatically process contacts into Airtable with intelligent categorization, deduplication, and real-time processing.
+Automation that keeps a SignalHire search-and-reveal loop wired directly into Airtable. Run the CLI from your terminal, let the DigitalOcean callback server ingest reveal webhooks, and watch Airtable status fields progress from `New` to `Revealed` or `No Contacts`.
 
-## 🎯 **What This System Does**
+## Quick Links
+- [System Architecture](docs/developer/architecture/SIGNALHIRE_AGENT_SYSTEM.md)
+- [Future Enhancements & Roadmap](docs/planning/ENHANCEMENTS.md)
 
-This is a **complete automation pipeline** that manages the full prospect lifecycle using **Airtable as the central data warehouse**:
+## System Overview
+- **Search:** `signalhire-agent search …` hits the SignalHire API and (optionally) pushes results into Airtable `Contacts` with `Status = New` and dedupe checks.
+- **Reveal:** `signalhire-agent reveal …` or `scripts/run_signalhire_job.py` submits reveal batches. SignalHire webhooks land on the DigitalOcean callback server (`http://157.245.213.190/signalhire/callback`), which patches Airtable with emails/phones and updates status to `Revealed` or `No Contacts`.
+- **Direct Sync:** `signalhire-agent airtable sync-direct` re-fetches Person API details for any lingering `New` records.
+- **Credits & Health:** `signalhire-agent status --credits` and `signalhire-agent doctor` keep an eye on API limits and configuration.
 
-1. **🔍 Search** → Find prospects and store in Airtable with Status="New" (basic profile info)
-2. **📞 Reveal** → Process Status="New" contacts via callback server to get emails/phones
-3. **✅ Update** → Automatically update Status to "Revealed" or "No Contacts" based on results
-4. **🧠 Categorize** → AI-powered trade detection and skill extraction for revealed contacts
-5. **🔄 Deduplicate** → Smart duplicate prevention based on SignalHire ID
-6. **🎯 Results** → Clean, status-tracked contact database ready for sales/recruitment
-
-**✅ Production Proven:** 90+ contacts successfully processed, zero duplicates, status-based workflow management.
-
-## 🚀 **5-Minute Quick Start**
-
-Get your complete SignalHire → Airtable automation running in 5 minutes:
-
-### **Step 1: Clone & Configure**
-```bash
-git clone https://github.com/vanman2024/signalhireagent.git
-cd signalhireagent
-
-# Set up your API keys
-export SIGNALHIRE_API_KEY="your-signalhire-key"
-export AIRTABLE_BASE_ID="your-airtable-base-id"  
-export AIRTABLE_API_KEY="your-airtable-key"
+### End-to-End Workflow (current production path)
+```
+┌────────────┐    search API     ┌────────────────┐
+│ Operator   │ ────────────────▶ │ SignalHire API │
+│ CLI        │                  └────────────────┘
+│            │                       │
+│            │  (optional)           │ reveal batches
+│            ├──────────────────────▶│
+│            │                       ▼
+│            │                DigitalOcean Droplet
+│            │                FastAPI callback server
+│            │                       │ Airtable REST
+│            ▼                       ▼
+│ Airtable (Contacts / Search Sessions)
+└────────────┘
+     │
+     ▼
+Downstream sales & outreach tools
 ```
 
-### **Step 2: Test the Complete System**
+## Core CLI Commands
 ```bash
-# Test full integration (takes 30 seconds)
-python3 test_complete_integration.py
-
-# Expected output:
-# ✅ SignalHire API: Connected
-# ✅ Airtable Integration: Working
-# ✅ Categorization Engine: Active
-# ✅ Deduplication Logic: Enabled
-# 🎉 SYSTEM READY: Complete automation working
-```
-
-### **Step 3: Run Your First Automation**
-```bash
-# Step 1: View available templates with complete workflows
-signalhire-agent search templates
-
-# Step 2: Search Heavy Equipment Technicians (template with Airtable integration)
-signalhire-agent search --title "(Heavy Equipment Technician) OR (Heavy Equipment Mechanic) OR (Heavy Duty Mechanic) OR (Diesel Technician) OR (Equipment Mechanic)" --keywords "(technician OR mechanic OR maintenance OR repair) NOT (operator OR driver OR supervisor)" --location "Canada" --size 100 --to-airtable --check-duplicates
-
-# Step 3: Reveal contact information for found prospects
-signalhire-agent airtable sync-direct --max-contacts 100
-
-# Step 4: Monitor credit usage
-signalhire-agent status --credits
-```
-
-**✅ Done!** You now have a complete SignalHire → Airtable workflow:
-- Searches automatically add to Airtable with deduplication
-- Reveal command processes contacts directly from SignalHire API
-- Status tracking: "New" → "Revealed" or "No Contacts"
-- Zero duplicates guaranteed by SignalHire ID validation
-
-## 🏗️ **Airtable Architecture**
-
-### **Single Table Architecture (Contacts)**
-The system uses **one primary table** with Status-based workflow management:
-
-**📋 Contacts Table (`tbl0uFVaAfcNjT2rS`)**
-- **Primary Field**: Full Name
-- **Status Field**: Manages workflow state
-  - `"New"`: Search results, basic profile info only
-  - `"Revealed"`: Full contact info (email, phone, LinkedIn)
-  - `"No Contacts"`: Attempted reveal but no contact info available
-  - `"Contacted"`: Manual status for outreach tracking
-
-**🔍 Search Sessions Table (`tblqmpcDHfG5pZCWh`)** 
-- Tracks search parameters and session metadata
-- Links to contacts via Search Session field
-
-**✅ Benefits of Status-Based Workflow:**
-- **Single Source of Truth**: All contacts in one table
-- **Clear Workflow**: Status field shows exactly where each contact stands
-- **No Data Duplication**: Eliminates need for separate Raw Profiles table
-- **Easy Reporting**: Filter by status for different use cases
-
-## 📋 CLI Commands
-
-### Essential Commands for Heavy Equipment Technician Pipeline
-
-```bash
-# System health check
+# Check environment and dependencies
 signalhire-agent doctor
 
-# Search Heavy Equipment Technicians (using optimal template)
-signalhire-agent search --title "(Heavy Equipment Technician) OR (Heavy Equipment Mechanic) OR (Heavy Duty Mechanic) OR (Diesel Technician) OR (Equipment Mechanic)" --keywords "(technician OR mechanic OR maintenance OR repair) NOT (operator OR driver OR supervisor)" --location "Canada" --limit 20
+# Search for prospects
+signalhire-agent search \
+  --title "Heavy Equipment Technician" \
+  --location "Canada" \
+  --size 25 \
+  --to-airtable \
+  --check-duplicates
 
-# Add search results to Airtable with Status="New"
-signalhire-agent airtable sync-direct --search-results --max-contacts 20
+# Submit reveals for pending SignalHire IDs
+signalhire-agent reveal \
+  --search-file technicians.json \
+  --skip-revealed \
+  --bulk-size 10
 
-# Check Airtable integration status
-signalhire-agent airtable status
+# Force-sync remaining Airtable records directly from SignalHire Person API
+signalhire-agent airtable sync-direct --max-contacts 25
 
-# Reveal contacts with callback server
-signalhire-agent reveal --from-airtable --status "New" --callback-url "http://157.245.213.190/signalhire/callback"
-
-# Check account status and limits
+# Review SignalHire credit balance
 signalhire-agent status --credits
 ```
+For templated searches, run `signalhire-agent search templates` to see curated Boolean queries.
 
-### **❌ Missing Commands (Need to Build)**
-
-The README mentions these commands but they don't exist yet:
-
-```bash
-# THESE DON'T WORK YET - NEED TO BUILD:
-signalhire search --to-airtable                    # ❌ Missing --to-airtable flag
-signalhire reveal-batch --from-airtable            # ❌ Missing reveal-batch command  
-signalhire status --airtable-breakdown             # ❌ Missing airtable breakdown
-signalhire export --status "Revealed"              # ❌ Missing status-based export
-```
-
-**Current Architecture:**
-- 🚫 **No direct MCP Airtable integration** - uses REST API
-- 🚫 **No Status-based CLI commands** - needs to be built
-- ✅ **Basic airtable sync commands exist** - see `src/cli/airtable_commands.py`
-- ✅ **Search commands work** - saves to local files
-- ✅ **REST API integration works** - via `airtable sync-direct`
-
-## 🔧 **What Actually Works Right Now**
-
-### ✅ Working Features
-1. **SignalHire Search API** - Find prospects by title, location, keywords
-2. **Basic Airtable Sync** - Manual sync of contacts via REST API
-3. **Contact Deduplication** - Smart duplicate prevention by SignalHire ID
-4. **Status Management** - Update contact Status field (New/Revealed/No Contacts)
-5. **Callback Server** - Process SignalHire Person API webhook responses
-
-### 🚧 Needs Implementation
-1. **Search → Airtable Direct** - Add `--to-airtable` flag to search command
-2. **Reveal Batch from Airtable** - Build `reveal-batch --from-airtable` command  
-3. **Status-based Filtering** - Filter contacts by Status in CLI commands
-4. **MCP Integration** - Replace REST API calls with MCP server calls
-5. **Complete Automation** - End-to-end Status workflow automation
-
-## 🎯 **Complete Heavy Equipment Technician Workflow**
-
-```bash
-# 1. Search Heavy Equipment Technicians (using optimal template)
-signalhire-agent search \
-  --title "(Heavy Equipment Technician) OR (Heavy Equipment Mechanic) OR (Heavy Duty Mechanic) OR (Diesel Technician) OR (Equipment Mechanic)" \
-  --keywords "(technician OR mechanic OR maintenance OR repair) NOT (operator OR driver OR supervisor)" \
-  --location "Canada" \
-  --limit 20 \
-  --output technicians.json
-
-# 2. Add contacts to Airtable with Status="New"
-signalhire-agent airtable sync-direct \
-  --search-results \
-  --max-contacts 20
-
-# 3. Start callback server on DigitalOcean droplet
-# (Server already running at http://157.245.213.190/signalhire/callback)
-
-# 4. Reveal contact information for Status="New" contacts
-signalhire-agent reveal \
-  --from-airtable \
-  --status "New" \
-  --callback-url "http://157.245.213.190/signalhire/callback"
-
-# 5. Monitor Status updates in Airtable:
-#    - "New" → "Revealed" (with emails/phones)
-#    - "New" → "No Contacts" (no contact info available)
-```
-
-## 📊 **Real Integration Testing Results**
-
-**Proven Performance** (tested September 2025):
-- ✅ **2 Test Contacts** successfully created in Airtable
-- ✅ **Record IDs**: `rec58HabdWbZl1ZMN`, `recjFiENDBmJabctI`
-- ✅ **Full Name Primary Field** - exactly as requested
-- ✅ **Complete Contact Data** - email, phone, LinkedIn, job info
-- ✅ **REST API Integration** - seamless Airtable API integration  
-- ✅ **Real-time Processing** - immediate contact creation
-
-**Actual Contact Created:**
-```json
-{
-  "id": "recjFiENDBmJabctI",
-  "fields": {
-    "Full Name": "Real Revealed Contact",
-    "SignalHire ID": "revealed_12345", 
-    "Job Title": "Heavy Equipment Technician",
-    "Company": "Alberta Construction Ltd",
-    "Location": "Edmonton, Canada",
-    "Primary Email": "tech@albertaconstruction.ca",
-    "Phone Number": "+1-780-555-0789",
-    "LinkedIn URL": "https://linkedin.com/in/heavyequiptech",
-    "Skills": "Excavator Operation, Hydraulic Systems, Equipment Maintenance",
-    "Status": "Revealed",
-    "Date Added": "2025-09-28T00:45:00.000Z",
-    "Source Search": "SignalHire Revealed Contact"
-  }
-}
-```
-
-## 🧪 Testing
-
-```bash
-# Run all tests
-python3 -m pytest
-
-# Run specific test types
-python3 -m pytest -m unit          # Unit tests only
-python3 -m pytest -m integration   # Integration tests only
-python3 -m pytest -m contract      # Contract tests only
-
-# Run with coverage
-python3 -m pytest --cov=src --cov-report=html
-```
-
-## 🔍 Troubleshooting
-
-### Common Issues
-
-1. **Authentication Errors**
+## Complete Workflow
+1. **Stage prospects** – run a targeted search and push matches into Airtable with `Status = New`.
    ```bash
-   # Validate credentials
-   signalhire-agent doctor
+   signalhire-agent search \n     --title "Heavy Equipment Technician" \n     --location "Canada" \n     --size 25 \n     --to-airtable \n     --check-duplicates
    ```
-
-2. **Airtable Integration Issues**
+2. **Queue reveals** – submit SignalHire reveal requests (the callback server will handle updates).
    ```bash
-   # Check Airtable status
-   signalhire-agent airtable status
+   signalhire-agent reveal \n     --search-file technicians.json \n     --skip-revealed \n     --bulk-size 10
    ```
-
-3. **Rate Limiting & Daily Limits**
+   *Shortcut:* `python scripts/run_signalhire_job.py --title ... --location ... --max-prospects 25 --wait-for-callbacks 60` performs both steps in one go.
+3. **Let webhooks update Airtable** – the droplet receives callbacks at `http://157.245.213.190/signalhire/callback` and sets statuses to `Revealed` or `No Contacts`.
+4. **Optional direct sync** – fill any stragglers via Person API.
    ```bash
-   # Check current usage and limits
+   signalhire-agent airtable sync-direct --max-contacts 25
+   ```
+5. **Monitor & verify** – check Airtable and SignalHire credits.
+   ```bash
+   python check_airtable_status.py
    signalhire-agent status --credits
    ```
 
-4. **Callback Server Not Updating Status**
-   ```bash
-   # Check if callback server is running on droplet
-   curl http://157.245.213.190/health
-   
-   # Monitor callback logs
-   ssh -i /tmp/signalhire_key root@157.245.213.190 "tail -f /opt/signalhire/callback.log"
-   ```
+## Setup
 
-## 🔗 **GitHub Repository**
-
-**Repository URL:** https://github.com/vanman2024/signalhireagent
-
-### 🚀 Key Features:
-
-- ✅ **API-first SignalHire integration** with proper authentication
-- ✅ **Complete CLI interface** for search, reveal, export commands
-- ✅ **Real API testing** with verified Heavy Equipment Mechanic results (2,332+ profiles)
-- ✅ **Boolean search support** and scroll pagination
-- ✅ **Comprehensive error handling** and user experience
-- ✅ **Clean codebase** without any security issues
-
-### 📥 Clone and Setup:
+## Command Reference
+| Command | Description | Example |
+| ------- | ----------- | ------- |
+| `signalhire-agent doctor` | Environment & dependency diagnostics | `signalhire-agent doctor` |
+| `signalhire-agent search` | Query SignalHire (supports Boolean filters, Airtable dedupe) | `signalhire-agent search --title "Heavy Equipment Technician" --location "Canada" --to-airtable` |
+| `signalhire-agent reveal` | Submit reveal jobs from a list of SignalHire IDs | `signalhire-agent reveal --search-file technicians.json --bulk-size 10` |
+| `signalhire-agent airtable sync-direct` | Pull contact data straight from Person API into Airtable | `signalhire-agent airtable sync-direct --max-contacts 20` |
+| `signalhire-agent status --credits` | Show remaining SignalHire credits & usage | `signalhire-agent status --credits` |
+| `signalhire-agent workflow lead-generation` | Guided end-to-end workflow (search → reveal → export) | `signalhire-agent workflow lead-generation --title "Diesel Mechanic" --location "Alberta"` |
+| `scripts/run_signalhire_job.py` | One-shot automation (search + reveal + wait) | `python scripts/run_signalhire_job.py --title "Heavy Equipment Technician" --location "Canada" --max-prospects 25` |
 
 ```bash
-# Clone the repository
+# Clone & enter the repo
 git clone https://github.com/vanman2024/signalhireagent.git
 cd signalhireagent
 
-# Set up environment variables
-cp .env.example .env
-# Edit .env with your actual SignalHire credentials
+# Create / activate virtual environment
+python3 -m venv .venv
+source .venv/bin/activate
 
-# Install dependencies
-pip install -r requirements.txt
+# Install the CLI locally
+pip install -e .
 
-# Test the installation
+# Configure environment (minimum variables)
+cat <<'ENV' > .env
+SIGNALHIRE_API_KEY=replace-me
+AIRTABLE_API_KEY=replace-me
+AIRTABLE_BASE_ID=appQoYINM992nBZ50
+AIRTABLE_TABLE_ID=tbl0uFVaAfcNjT2rS
+SIGNALHIRE_CALLBACK_URL=http://157.245.213.190/signalhire/callback
+ENV
+
+# Load env vars for the current shell
+set -a; source .env; set +a
+
+# Quick health check
 signalhire-agent doctor
 ```
 
-## 🤝 Contributing
+## Operating the Pipeline
 
-1. Fork the repository
-2. Create a feature branch
-3. Write tests for new functionality
-4. Ensure all tests pass
-5. Submit a pull request
+### Option A — All-in-one automation
+`scripts/run_signalhire_job.py` performs a search, queues reveals, and waits for webhooks.
+```bash
+source .venv/bin/activate
+set -a; source .env; set +a
 
-## 📄 License
+python scripts/run_signalhire_job.py \
+  --title "Heavy Equipment Technician" \
+  --location "Canada" \
+  --size 50 \
+  --max-prospects 25 \
+  --wait-for-callbacks 60
+```
+The script saves the raw API payload under `automation_runs/` and leaves Airtable with updated statuses once callbacks arrive.
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+### Option B — Manual control
+1. **Search:** `signalhire-agent search … --output technicians.json`
+2. **Reveal:** `signalhire-agent reveal --search-file technicians.json --skip-revealed`
+3. **Direct Fix-ups:** `signalhire-agent airtable sync-direct --max-contacts 10`
+4. **Inspect Airtable:** `python check_airtable_status.py`
 
-## 🆘 Support
+## Monitoring & Troubleshooting
+- Callback server health: `curl http://157.245.213.190/health`
+- Droplet logs: `ssh … tail -f /opt/signalhire/callback.log`
+- Credits: `signalhire-agent status --credits`
+- Airtable contact snapshot: `python check_airtable_status.py`
 
-- **Documentation**: Check this README and inline help (`--help`)
-- **Issues**: [GitHub Issues](https://github.com/signalhire/signalhire-agent/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/signalhire/signalhire-agent/discussions)
+## Architecture & Roadmap
+- Detailed component breakdown, data flow, and infrastructure expectations: `docs/developer/architecture/SIGNALHIRE_AGENT_SYSTEM.md`
+- Upcoming work (remote MCP servers, AI categorization, automation hardening): `docs/planning/ENHANCEMENTS.md`
 
-## 📖 Additional Documentation
+## Support & Contribution
+- Inline CLI help: `signalhire-agent --help`
+- Issues / PRs welcome on GitHub.
 
-- **Future Enhancements**: See [ENHANCEMENTS.md](ENHANCEMENTS.md) for planned features and architecture improvements
-- **CLI Reference**: Check `python3 src/cli/main.py --help` for complete command documentation
+Everything in the live pipeline now persists directly to Airtable—no local JSON cache is written or read during normal CLI execution.

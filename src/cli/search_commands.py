@@ -19,6 +19,7 @@ from click import echo, style
 
 # ContactCache removed - using Airtable as source of truth
 from ..models.search_criteria import SearchCriteria
+from ..services.airtable_client import AirtableClientError, AirtableContactIndex
 from ..services.search_analysis_service import create_heavy_equipment_search_templates
 from ..services.signalhire_client import SignalHireClient
 from .reveal_commands import handle_api_error
@@ -166,8 +167,8 @@ def format_search_results(results: dict[str, Any], format_type: str = "human") -
     profiles = results.get('prospects') or results.get('profiles') or []
     current_batch = len(profiles)
     scroll_id = results.get('scroll_id') or results.get('scrollId')
-    cached_count = results.get('cached_contacts_count', 0)
-    skipped_cached = results.get('skipped_revealed_count', 0)
+    airtable_existing = results.get('airtable_existing_contacts', 0)
+    skipped_existing = results.get('skipped_existing_contacts', 0)
 
     output = []
     output.append("🔍 Search Results")
@@ -177,13 +178,13 @@ def format_search_results(results: dict[str, Any], format_type: str = "human") -
     )
     output.append(f"Current batch: {current_batch} prospects")
 
-    if cached_count:
+    if airtable_existing:
         output.append(
-            f"Cached contacts available: {style(str(cached_count), fg='cyan')}"
+            f"Existing contacts in Airtable: {style(str(airtable_existing), fg='cyan')}"
         )
-    if skipped_cached:
+    if skipped_existing:
         output.append(
-            f"Skipped (already revealed & cached): {style(str(skipped_cached), fg='yellow')}"
+            f"Skipped (already revealed in Airtable): {style(str(skipped_existing), fg='yellow')}"
         )
 
     if scroll_id:
@@ -654,7 +655,7 @@ async def execute_search(
 @click.option(
     '--skip-revealed/--include-revealed',
     default=False,
-    help='Skip prospects whose contacts are already cached locally',
+    help='Skip prospects that already have contact info in Airtable',
 )
 @click.option(
     '--exclude-revealed',
@@ -927,7 +928,7 @@ def search(
                     f,
                 )
 
-        # Process profiles for display (ContactCache removed - using Airtable as source of truth)
+        # Process profiles for display with Airtable context
         profile_key = None
         if isinstance(results.get('profiles'), list):
             profile_key = 'profiles'
@@ -935,18 +936,36 @@ def search(
             profile_key = 'prospects'
 
         original_profiles = results.get(profile_key, []) if profile_key else []
-        filtered_profiles = []
+        filtered_profiles: list[dict[str, Any]] = []
+
+        airtable_index = None
+        existing_contacts = 0
+        skipped_existing = 0
+        try:
+            index_candidate = AirtableContactIndex.build_sync()
+            if index_candidate.ready:
+                airtable_index = index_candidate
+            elif skip_revealed:
+                echo(style('⚠️  AIRTABLE_API_KEY or AIRTABLE_BASE_ID not set; cannot skip already revealed contacts.', fg='yellow'))
+        except AirtableClientError as airtable_error:
+            if skip_revealed:
+                echo(style(f'⚠️  Airtable lookup failed: {airtable_error}', fg='yellow'))
 
         for profile in original_profiles:
             if not isinstance(profile, dict):
                 filtered_profiles.append(profile)
                 continue
 
-            # Skip revealed contacts if requested
-            if skip_revealed:
-                # In Airtable-first workflow, skip_revealed logic would check Airtable records
-                # For now, skip this filtering since Airtable is the authoritative source
-                pass
+            uid = profile.get('uid') or profile.get('id')
+            airtable_entry = airtable_index.entry_for(uid) if airtable_index and uid else None
+            if airtable_entry:
+                profile['airtable_status'] = airtable_entry.status
+                profile['airtable_has_contact'] = airtable_entry.has_contact_info
+                if airtable_entry.has_contact_info:
+                    existing_contacts += 1
+                    if skip_revealed:
+                        skipped_existing += 1
+                        continue
 
             filtered_profiles.append(profile)
 
@@ -954,6 +973,9 @@ def search(
             results[profile_key] = filtered_profiles
 
         results['returned_count'] = len(filtered_profiles)
+        if airtable_index:
+            results['airtable_existing_contacts'] = existing_contacts
+            results['skipped_existing_contacts'] = skipped_existing
 
         # Display results
         if config.output_format == 'json':

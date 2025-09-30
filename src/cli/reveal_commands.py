@@ -27,7 +27,11 @@ from rich.progress import (
     TimeRemainingColumn,
 )
 
-from ..lib.contact_cache import CachedContact, ContactCache
+from ..services.airtable_client import (
+    AirtableClientError,
+    AirtableContactIndex,
+    AirtableContactRecord,
+)
 from ..models.operations import RevealOp
 from ..services.signalhire_client import SignalHireClient
 
@@ -216,12 +220,15 @@ def handle_api_error(error: str, status_code: int | None = None, logger=None) ->
         echo("  • Contact SignalHire support if the problem persists")
 
 
+
+
+
+
 def format_prospect_uids(prospect_uids: list[str], format_type: str = "human") -> str:
     """Format prospect UIDs for output display."""
     if format_type == "json":
         return json.dumps(prospect_uids, indent=2)
 
-    # Human-readable format
     output = []
     output.append(f"📋 Prospect UIDs ({len(prospect_uids)} total):")
     for i, uid in enumerate(prospect_uids[:10], 1):  # Show first 10
@@ -242,8 +249,7 @@ def format_reveal_results(results: dict[str, Any], format_type: str = "human") -
     operation_id = results.get('operation_id', 'N/A')
     total_prospects = results.get('total_prospects', 0)
     revealed_count = results.get('revealed_count', 0)
-    cached_count = results.get('cached_reused_count', 0)
-    needs_refresh_count = results.get('needs_refresh_count', 0)
+    skipped_existing_count = results.get('skipped_existing_count', 0)
     failed_count = results.get('failed_count', 0)
     credits_used = results.get('credits_used', 0)
 
@@ -255,14 +261,9 @@ def format_reveal_results(results: dict[str, Any], format_type: str = "human") -
         f"Newly revealed: {style(str(revealed_count), fg='green', bold=True)}"
     )
 
-    if cached_count:
+    if skipped_existing_count:
         output.append(
-            f"Reused from local cache: {style(str(cached_count), fg='cyan', bold=True)}"
-        )
-
-    if needs_refresh_count > 0:
-        output.append(
-            f"Needs refresh (no local contacts cached): {style(str(needs_refresh_count), fg='yellow')}"
+            f"Already had contact info in Airtable: {style(str(skipped_existing_count), fg='cyan', bold=True)}"
         )
 
     if failed_count > 0:
@@ -270,12 +271,10 @@ def format_reveal_results(results: dict[str, Any], format_type: str = "human") -
 
     output.append(f"Credits used: {style(str(credits_used), fg='yellow')}")
 
-    # Success rate counts cached contacts as successful reuse
-    total_success = revealed_count + cached_count
-    success_rate = (total_success / total_prospects * 100) if total_prospects > 0 else 0
-    output.append(f"Success rate: {success_rate:.1f}% (including cached contacts)")
+    success_denominator = max(total_prospects, 1)
+    success_rate = (revealed_count / success_denominator) * 100
+    output.append(f"Success rate: {success_rate:.1f}% (newly revealed contacts)")
 
-    # Show sample revealed contacts
     prospects = results.get('prospects', [])
     revealed_prospects = [
         p
@@ -429,32 +428,31 @@ def deduplicate_work_items(items: Iterable[ProspectWorkItem]) -> List[ProspectWo
 
 def partition_prospects(
     items: Iterable[ProspectWorkItem],
-    cache: ContactCache,
+    airtable_index: Optional[AirtableContactIndex],
     skip_existing: bool,
 ) -> Tuple[
     List[ProspectWorkItem],
-    List[Tuple[ProspectWorkItem, CachedContact]],
-    List[ProspectWorkItem],
+    List[Tuple[ProspectWorkItem, AirtableContactRecord]],
 ]:
-    """Split prospects into pending reveals, cached results, and needs-refresh lists."""
+    """Split prospects into pending reveals and already-revealed contacts."""
 
     pending: List[ProspectWorkItem] = []
-    cached: List[Tuple[ProspectWorkItem, CachedContact]] = []
-    needs_refresh: List[ProspectWorkItem] = []
+    already_revealed: List[Tuple[ProspectWorkItem, AirtableContactRecord]] = []
 
     for item in items:
-        cached_entry = cache.get(item.uid)
-        if cached_entry:
-            cached.append((item, cached_entry))
+        if not item.uid:
+            pending.append(item)
             continue
 
-        if skip_existing and item.contacts_fetched:
-            needs_refresh.append(item)
-            continue
+        entry = airtable_index.entry_for(item.uid) if airtable_index else None
+        if entry and entry.has_contact_info:
+            if skip_existing:
+                already_revealed.append((item, entry))
+                continue
 
         pending.append(item)
 
-    return pending, cached, needs_refresh
+    return pending, already_revealed
 
 
 def save_reveal_results(
@@ -906,7 +904,6 @@ def reveal(
 
     config = ctx.obj['config']
     logger = ctx.obj.get('logger')
-    contact_cache = ContactCache()
     _ = api_only  # Browser mode is disabled; flag retained for CLI compatibility
 
     work_items: List[ProspectWorkItem] = [
@@ -937,26 +934,31 @@ def reveal(
     profiles_by_uid = {
         item.uid: item.profile for item in work_items if item.profile
     }
-    if profiles_by_uid:
-        contact_cache.merge_profiles(
-            {uid: profile for uid, profile in profiles_by_uid.items() if profile}
-        )
 
-    pending_items, cached_hits, needs_refresh_items = partition_prospects(
-        work_items, contact_cache, skip_existing
+    airtable_index = None
+    try:
+        candidate_index = AirtableContactIndex.build_sync()
+        if candidate_index.ready:
+            airtable_index = candidate_index
+        elif skip_existing:
+            echo(style('⚠️  AIRTABLE_API_KEY or AIRTABLE_BASE_ID not set; cannot skip already revealed contacts.', fg='yellow'))
+    except AirtableClientError as airtable_error:
+        if skip_existing:
+            echo(style(f'⚠️  Airtable lookup failed: {airtable_error}', fg='yellow'))
+
+    pending_items, already_revealed = partition_prospects(
+        work_items, airtable_index, skip_existing
     )
 
     total_unique = len(work_items)
     total_pending = len(pending_items)
-    cached_count = len(cached_hits)
-    needs_refresh_count = len(needs_refresh_items)
+    already_revealed_count = len(already_revealed)
 
     if config.verbose:
         echo(f"📊 Total unique prospects: {total_unique}")
         echo(f"   Pending API reveals: {total_pending}")
-        echo(f"   Cached contacts available: {cached_count}")
-        if needs_refresh_count:
-            echo(f"   Needs refresh (no local cache): {needs_refresh_count}")
+        if already_revealed_count:
+            echo(f"   Skipping already revealed contacts: {already_revealed_count}")
 
     if config.browser_mode and total_pending > 0:
         echo(
@@ -981,16 +983,13 @@ def reveal(
 
     pending_uids = [item.uid for item in pending_items]
 
+
+
     def render_dry_run() -> None:
         echo("🧪 Dry Run - Reveal operation summary:")
         echo(f"  Total prospects considered: {total_unique}")
         echo(f"  Pending API reveals: {total_pending}")
-        echo(f"  Reusing cached contacts: {cached_count}")
-        if needs_refresh_count:
-            echo(
-                "  Needs refresh (no cached contacts): "
-                f"{needs_refresh_count}"
-            )
+        echo(f"  Already revealed in Airtable: {already_revealed_count}")
         echo(f"  Skip already revealed flag: {skip_existing}")
 
         if total_pending > 0:
@@ -1010,13 +1009,14 @@ def reveal(
                     credits_response = asyncio.run(api_client.check_credits())
                     if credits_response.success:
                         credits_data = credits_response.data or {}
-                        current_credits = credits_data.get('credits_remaining', 0)
+                        current_credits = credits_data.get("credits_remaining", 0)
                         estimated_cost = total_pending
                         daily_status = asyncio.run(
                             api_client.rate_limiter.check_daily_limits()
                         )
 
-                        echo("\n💰 Credit & Daily Usage Analysis:")
+                        echo("")
+                        echo("💰 Credit & Daily Usage Analysis:")
                         echo(
                             f"  Current balance: {style(str(current_credits), fg='green', bold=True)} credits"
                         )
@@ -1039,8 +1039,7 @@ def reveal(
                             else:
                                 echo(
                                     style(
-                                        "  ❌ Would exceed daily limit! Need "
-                                        f"{estimated_cost - daily_status['remaining']} more credits",
+                                        f"  ❌ Operation would exceed daily limit! Need {estimated_cost - daily_status['remaining']} more credits",
                                         fg='red',
                                         bold=True,
                                     )
@@ -1089,142 +1088,99 @@ def reveal(
                 except Exception as exc:  # noqa: BLE001
                     echo(style(f"  ⚠️  Credit check failed: {exc}", fg='yellow'))
         else:
-            echo("  No API calls required — all contacts available from cache")
+            echo("  No API calls required — Airtable already has contact data for all prospects")
 
-        if cached_count:
-            echo("\n📦 Cached prospects ready:")
-            for idx, (item, _) in enumerate(cached_hits[:5], 1):
-                echo(f"  {idx}. {item.uid} (cached)")
+        if already_revealed_count:
+            echo("")
+            echo("📦 Existing contacts in Airtable:")
+            for idx, (item, _) in enumerate(already_revealed[:5], 1):
+                echo(f"  {idx}. {item.uid}")
+            if already_revealed_count > 5:
+                echo(f"  ... and {already_revealed_count - 5} more")
 
         if total_pending > 0:
-            echo("\n📋 Sample prospect UIDs to reveal:")
+            echo("")
+            echo("📋 Sample prospect UIDs to reveal:")
             for idx, uid in enumerate(pending_uids[:5], 1):
                 echo(f"  {idx}. {uid}")
             if total_pending > 5:
                 echo(f"  ... and {total_pending - 5} more")
-            echo(
-                f"\n💰 Estimated cost: {total_pending} credits (1 per new reveal)"
-            )
+            echo("")
+            echo(f"💰 Estimated cost: {total_pending} credits (1 per new reveal)")
 
-        if needs_refresh_count:
-            echo(
-                "\n⚠️  Some prospects have contactsFetched but no cached contacts. "
-                "Run again with --no-skip-existing to refresh local data if needed."
-            )
-
-        echo("\n✅ Reveal parameters validated. Remove --dry-run to execute.")
-
+        echo("")
+        echo("✅ Reveal parameters validated. Remove --dry-run to execute.")
     if dry_run:
         render_dry_run()
         return
 
-    def compose_results(api_result: Optional[dict[str, Any]]) -> dict[str, Any]:
-        final: dict[str, Any] = {
-            "operation_id": (
-                api_result.get('operation_id', 'op_unknown')
-                if api_result
-                else 'cache_only'
-            ),
-            "total_prospects": total_unique,
-            "revealed_count": api_result.get('revealed_count', 0) if api_result else 0,
-            "cached_reused_count": cached_count,
-            "needs_refresh_count": needs_refresh_count,
-            "failed_count": api_result.get('failed_count', 0) if api_result else 0,
-            "credits_used": api_result.get('credits_used', 0) if api_result else 0,
-            "prospects": [],
-        }
 
-        warnings: List[str] = []
-        if api_result and api_result.get('warnings'):
-            warnings.extend(api_result['warnings'])
-        if needs_refresh_count:
-            warnings.append(
-                "Contacts previously revealed but not cached locally. "
-                "Run with --no-skip-existing to refresh if you need those details."
-            )
-        final['warnings'] = warnings
+def compose_results(api_result: Optional[dict[str, Any]]) -> dict[str, Any]:
+    revealed_count = api_result.get('revealed_count', 0) if api_result else 0
+    failed_count = api_result.get('failed_count', 0) if api_result else 0
+    credits_used = api_result.get('credits_used', 0) if api_result else 0
+    operation_id = (
+        api_result.get('operation_id', 'op_unknown') if api_result else 'no_operation'
+    )
 
-        api_entries: Dict[str, Dict[str, Any]] = {}
-        if api_result:
-            for record in api_result.get('prospects', []):
-                uid = record.get('uid') or record.get('id') or record.get('prospect_id')
-                if not uid:
-                    continue
-                profile = record.get('profile') or profiles_by_uid.get(uid)
-                contacts = record.get('contacts') or []
-                if contacts:
-                    contact_cache.upsert(uid, contacts=contacts, profile=profile, metadata={'source': 'api'})
-                elif profile:
-                    contact_cache.upsert(uid, profile=profile)
-                entry = {
-                    'uid': uid,
-                    'status': record.get('status', 'success' if contacts else 'unknown'),
-                    'contacts': contacts,
-                    'profile': profile,
-                    'source': 'api',
-                    'error': record.get('error'),
-                    'credits_used': record.get('credits_used', 0),
-                }
-                if profile:
-                    entry['full_name'] = profile.get('full_name') or profile.get('fullName')
-                api_entries[uid] = entry
+    final: dict[str, Any] = {
+        'operation_id': operation_id,
+        'total_prospects': total_unique,
+        'revealed_count': revealed_count,
+        'skipped_existing_count': len(already_revealed),
+        'failed_count': failed_count,
+        'credits_used': credits_used,
+        'prospects': [],
+        'warnings': [],
+    }
 
-        cached_map: Dict[str, Dict[str, Any]] = {}
-        for item, cached_contact in cached_hits:
-            contact_cache.upsert(item.uid, profile=item.profile)
-            entry_profile = cached_contact.profile or item.profile
+    if api_result and api_result.get('warnings'):
+        final['warnings'] = list(api_result['warnings'])
+
+    if api_result:
+        for record in api_result.get('prospects', []):
+            uid = record.get('uid') or record.get('id') or record.get('prospect_id')
+            if not uid:
+                continue
+            profile = record.get('profile') or profiles_by_uid.get(uid)
+            contacts = record.get('contacts') or []
             entry = {
-                'uid': item.uid,
-                'status': 'success',
-                'contacts': cached_contact.contacts,
-                'profile': entry_profile,
-                'source': 'cache',
-                'first_revealed_at': cached_contact.first_revealed_at,
-                'last_updated_at': cached_contact.last_updated_at,
+                'uid': uid,
+                'status': record.get('status', 'success' if contacts else 'unknown'),
+                'contacts': contacts,
+                'profile': profile,
+                'source': 'signalhire-api',
+                'error': record.get('error'),
+                'credits_used': record.get('credits_used', 0),
             }
-            if isinstance(entry_profile, dict):
-                entry['full_name'] = entry_profile.get('full_name') or entry_profile.get('fullName')
-            cached_map[item.uid] = entry
-
-        needs_refresh_map: Dict[str, Dict[str, Any]] = {}
-        for item in needs_refresh_items:
-            entry = {
-                'uid': item.uid,
-                'status': 'needs_refresh',
-                'contacts': [],
-                'profile': item.profile,
-                'source': 'skip',
-                'warning': 'Contact data not cached locally. Re-run with --no-skip-existing to refresh.',
-            }
-            needs_refresh_map[item.uid] = entry
-
-        for item in work_items:
-            uid = item.uid
-            if uid in api_entries:
-                final['prospects'].append(api_entries[uid])
-            elif uid in cached_map:
-                final['prospects'].append(cached_map[uid])
-            elif uid in needs_refresh_map:
-                final['prospects'].append(needs_refresh_map[uid])
-            else:
-                final['prospects'].append(
-                    {
-                        'uid': uid,
-                        'status': 'unknown',
-                        'contacts': [],
-                        'profile': item.profile,
-                        'source': 'unknown',
-                    }
+            if profile:
+                entry['full_name'] = (
+                    profile.get('full_name')
+                    or profile.get('fullName')
+                    or profile.get('name')
                 )
+            final['prospects'].append(entry)
 
-        if api_result and api_result.get('export_file_path'):
-            final['export_file_path'] = api_result['export_file_path']
+    for item, airtable_record in already_revealed:
+        entry = {
+            'uid': item.uid,
+            'status': 'skipped_existing',
+            'source': 'airtable',
+            'airtable_status': airtable_record.status,
+            'airtable_has_contact': airtable_record.has_contact_info,
+            'profile': profiles_by_uid.get(item.uid),
+        }
+        final['prospects'].append(entry)
 
-        return final
+    if api_result and api_result.get('export_file_path'):
+        final['export_file_path'] = api_result['export_file_path']
+
+    return final
+
+
 
     if total_pending == 0:
         final_results = compose_results(None)
-        contact_cache.save()
 
         if config.output_format == 'json':
             result_output = json.dumps(final_results, indent=2)
@@ -1239,17 +1195,9 @@ def reveal(
         else:
             echo(result_output)
 
-        if cached_count:
-            echo(
-                f"\n♻️  Reused {cached_count} contacts from local cache (no new credits used)"
-            )
-        if needs_refresh_count:
-            echo(
-                style(
-                    "⚠️  Some contacts are missing locally. Run with --no-skip-existing to refresh.",
-                    fg='yellow',
-                )
-            )
+        if already_revealed_count:
+            echo("")
+            echo(f"♻️  Skipped {already_revealed_count} contacts already revealed in Airtable")
         return
 
     # Execute reveal for pending prospects
@@ -1285,7 +1233,6 @@ def reveal(
         )
 
         final_results = compose_results(api_result)
-        contact_cache.save()
 
         if config.output_format == 'json':
             result_output = json.dumps(final_results, indent=2)
@@ -1306,16 +1253,10 @@ def reveal(
             echo(
                 f"\n✅ Successfully revealed {revealed_count} contacts using {credits_used} credits"
             )
-        if final_results.get('cached_reused_count'):
+        skipped_existing_count = final_results.get('skipped_existing_count', 0)
+        if skipped_existing_count:
             echo(
-                f"♻️  Reused {final_results['cached_reused_count']} contacts from local cache"
-            )
-        if final_results.get('needs_refresh_count'):
-            echo(
-                style(
-                    "⚠️  Some contacts still need refresh. Run with --no-skip-existing to fetch them.",
-                    fg='yellow',
-                )
+                f"♻️  Skipped {skipped_existing_count} contacts already revealed in Airtable"
             )
         if final_results.get('failed_count'):
             echo(
