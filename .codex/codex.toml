@@ -1,7 +1,0 @@
-[mcpServers.airtable-mcp-server]
-command = "docker"
-args = ["run", "-i", "--rm", "-e", "NODE_ENV", "-e", "AIRTABLE_API_KEY", "mcp/airtable-mcp-server"]
-
-[mcpServers.airtable-mcp-server.env]
-NODE_ENV = "production"
-AIRTABLE_API_KEY = "patd82cuB40AeSIU3.8d787265039f1bd33ac69f0194f4c6c547605033948e44592af88c742ff14aa4"
